@@ -1,0 +1,54 @@
+{
+  "schema": "rahp-registry-source-history-package/v1",
+  "source_repository": "sankarshanmukhopadhyay/rahp-toolkit",
+  "capture": {
+    "schema": "rahp-source-issue-history-export/v1",
+    "source_repository": "sankarshanmukhopadhyay/rahp-toolkit",
+    "source_collections": {
+      "issues": 12,
+      "issues/comments": 19,
+      "issues/events": 85
+    },
+    "records": {
+      "issues": {
+        "count": 769,
+        "sha256": "932613b5d03a13e0069f9031d5e9bbba66b1797d67660c3e34796c0651b3e8d7"
+      },
+      "comments": {
+        "count": 1797,
+        "sha256": "f21132cf3597c943531b59cbd34c2343fdcba85b4253874a2fbe3652e8d579a9"
+      },
+      "events": {
+        "count": 6967,
+        "sha256": "490a4106f591eab99cd1f92b98fc94cea2066e0907158687c8f0aac2c38d2cf4"
+      }
+    },
+    "original_source_authoritative": true,
+    "complete_full_timeline_mirror": false,
+    "scope_note": "Captures GitHub issue list, issue comments and repository-wide issue events; does not separately retrieve issue-specific timeline-only event classes, linked artifacts or independently verify every embedded external URL. Raw API issue/comment/event records preserve source authorship as returned."
+  },
+  "files": {
+    "issues": {
+      "source_count": 769,
+      "raw_sha256": "932613b5d03a13e0069f9031d5e9bbba66b1797d67660c3e34796c0651b3e8d7",
+      "gzip_sha256": "6c0551ff3ddec5fd5210759f7f582a8c35ce3e98405bc8c1c5fbb68f228fae59",
+      "gzip_bytes": 1121376
+    },
+    "comments": {
+      "source_count": 1797,
+      "raw_sha256": "f21132cf3597c943531b59cbd34c2343fdcba85b4253874a2fbe3652e8d579a9",
+      "gzip_sha256": "6bf019c50f7b1257995a61ffd68eedc3932e4f4c076be85cf526e8f21550c92c",
+      "gzip_bytes": 1160271
+    },
+    "events": {
+      "source_count": 6967,
+      "raw_sha256": "490a4106f591eab99cd1f92b98fc94cea2066e0907158687c8f0aac2c38d2cf4",
+      "gzip_sha256": "0e39d5cb5331bc9121c3cd56d89fada045bf185e98df7d36913743a8e9cd13f2",
+      "gzip_bytes": 9487703
+    }
+  },
+  "content_authority": "original GitHub issue/comment/event source URLs",
+  "complete_full_timeline_mirror": false,
+  "accepted_assurance_determinations": 0,
+  "scope_note": "Portable source-history package only. Does not include per-issue timeline-only events, external attachments or upstream evidence bytes; no authority transfer."
+}
