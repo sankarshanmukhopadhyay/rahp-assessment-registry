@@ -18,15 +18,16 @@
   },
   "owners": {
     "registry": "sankarshanmukhopadhyay/rahp-assessment-registry",
-    "current_active_issue": "https://github.com/sankarshanmukhopadhyay/rahp-toolkit/issues/1203",
-    "handoff": "not_accepted",
+    "current_active_issue": "https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/4",
+    "handoff": "accepted",
     "upstream": "OpenVTC/verifiable-trust-infrastructure",
-    "execution": "sankarshanmukhopadhyay/rahp-toolkit"
+    "execution": "sankarshanmukhopadhyay/rahp-toolkit",
+    "historical_source_issue": "https://github.com/sankarshanmukhopadhyay/rahp-toolkit/issues/1203"
   },
   "lifecycle": {
-    "state": "proposed",
+    "state": "active",
     "updated_on": "2026-11-16",
-    "reason": "Shadow pilot; no transfer or closure of the original assessment issue."
+    "reason": "Registry #4 is accepted as the coordination and external evidence owner; the original Toolkit issue is a historical source record. RAHP controller remains separately authoritative for execution and specialist returns."
   },
   "assessment": {
     "change_classification": "strengthened",
@@ -49,13 +50,13 @@
     {
       "id": "DTG-0001-R1",
       "status": "open",
-      "owner": "https://github.com/sankarshanmukhopadhyay/rahp-toolkit/issues/1203",
+      "owner": "https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/4",
       "question": "Are forged, altered, wrong-purpose or unresolved positive network responses rejected along the actual consumer path without authoritative effects?"
     },
     {
       "id": "DTG-0001-R2",
       "status": "open",
-      "owner": "https://github.com/sankarshanmukhopadhyay/rahp-toolkit/issues/1203",
+      "owner": "https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/4",
       "question": "Are unsigned refusals handled as non-authorizing failures, and does downstream deployment preserve verification and version compatibility?"
     }
   ],
