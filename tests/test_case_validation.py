@@ -14,6 +14,36 @@ class CaseValidationTest(unittest.TestCase):
     def setUpClass(cls):
         cls.pilot = json.loads((ROOT / "cases/dtg/network-answer-proof-2026-11.json").read_text())
 
+    def test_unowned_referral_rejected(self):
+        case = deepcopy(self.pilot)
+        case["referrals"] = [{"role": "specialist_assessor", "status": "requested"}]
+        self.assertIn("referrals[0]: missing canonical source issue", validate(case))
+
+    def test_false_specialist_return_rejected(self):
+        case = deepcopy(self.pilot)
+        case["referrals"] = [{"role": "specialist_assessor",
+            "repository": "sankarshanmukhopadhyay/dtg-privacy-implementation-profile",
+            "issue_url": "https://github.com/sankarshanmukhopadhyay/dtg-privacy-implementation-profile/issues/1",
+            "contract": "rahp-assessor-result/v1", "status": "returned"}]
+        self.assertIn("referrals[0]: returned result must cite source URI", validate(case))
+
+    def test_role_contract_mismatch_rejected(self):
+        case = deepcopy(self.pilot)
+        case["referrals"] = [{"role": "evidence_producer",
+            "repository": "sankarshanmukhopadhyay/trust-protocol-interop-lab",
+            "issue_url": "https://github.com/sankarshanmukhopadhyay/trust-protocol-interop-lab/issues/1",
+            "contract": "rahp-assessor-result/v1", "status": "requested"}]
+        self.assertIn("referrals[0]: contract/role mismatch", validate(case))
+
+    def test_referral_shape_accepted_without_claiming_execution(self):
+        case = deepcopy(self.pilot)
+        case["referrals"] = [{"role": "evidence_producer",
+            "repository": "sankarshanmukhopadhyay/trust-protocol-interop-lab",
+            "issue_url": "https://github.com/sankarshanmukhopadhyay/trust-protocol-interop-lab/issues/1",
+            "contract": "rahp-evidence-producer-result/v1", "status": "requested"}]
+        self.assertEqual(validate(case), [])
+        self.assertEqual(case["assessment"]["determination"], "not_assessed")
+
     def test_pilot_valid(self):
         self.assertEqual(validate(self.pilot), [])
         self.assertEqual(run(), [])
