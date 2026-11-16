@@ -11,10 +11,14 @@ import urllib.request
 from pathlib import Path
 
 REGISTRY = "sankarshanmukhopadhyay/rahp-assessment-registry"
-MARKER = re.compile(r"<!-- registry-assessment-key:([^<>\\n]+) -->")
+MARKER = re.compile(r"<!-- registry-assessment-key:([^<>\n]+) -->")
 KEY = re.compile(r"^[a-z0-9][a-z0-9:._/-]{7,180}$")
 SHA = re.compile(r"^[0-9a-f]{40}$")
 URL = "https://api.github.com/repos/" + REGISTRY + "/issues"
+# Reviewed, bounded manual transfer. A finding-to-case map is not inferred from a release.
+MIGRATED_FINDINGS = {
+    "4cdb4f9a7399aea0a55a": {"issue_number": 4, "case_id": "RAHP-AR-DTG-0001"},
+}
 
 
 class IntakeError(ValueError):
@@ -70,6 +74,7 @@ def plan(events, issues):
     if not isinstance(events, list) or not events:
         raise IntakeError("intake requires a nonempty event array")
     index = index_issues(issues)
+    by_number = {i.get("number"): i for i in issues if "pull_request" not in i}
     decisions, seen = [], set()
     for item in events:
         event = validate_event(item)
@@ -78,6 +83,16 @@ def plan(events, issues):
             raise IntakeError("duplicate assessment key in one batch; consolidate first")
         seen.add(key)
         owner = index.get(key)
+        migrated = MIGRATED_FINDINGS.get(event["finding_id"])
+        if migrated:
+            canonical = by_number.get(migrated["issue_number"])
+            if not canonical or canonical.get("state") != "open" or (
+                f"<!-- rahp-registry-case:{migrated['case_id']} -->" not in (canonical.get("body") or "")
+            ):
+                raise IntakeError("migrated finding has no verified open registry case owner")
+            if owner and owner["number"] != canonical["number"]:
+                raise IntakeError("migrated finding conflicts with assessment-key owner")
+            owner = canonical
         if owner:
             if owner.get("state") != "open":
                 raise IntakeError("closed owner requires explicit governed reassessment; no reopening")
