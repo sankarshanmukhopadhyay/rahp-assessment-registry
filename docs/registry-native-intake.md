@@ -2,7 +2,7 @@
 
 The [Registry intake pilot](../.github/workflows/registry-intake-pilot.yml) executes the normal `registry_intake.py` consumer from the **registry repository**, using GitHub's native repository-scoped Actions token with Issues-write permission. It does not need a Toolkit-to-registry PAT.
 
-Its initial manifest is intentionally restricted to one already reviewed, transferred finding: [the RAHP #1203 → registry #4 pilot](../intake/manifests/network-answer-pilot.json). Both dry-run and explicit apply must return `existing-owner` for issue #4; a create action fails the workflow. It cannot mint a second assurance result or mutate Toolkit issues.
+The workflow also performs a **no-write dry-run automatically on main when its workflow, intake script or pinned manifest changes**. Only a manual dispatch with `apply=true` can request write mode. Its initial manifest is intentionally restricted to one already reviewed, transferred finding: [the RAHP #1203 → registry #4 pilot](../intake/manifests/network-answer-pilot.json). Both dry-run and explicit apply must return `existing-owner` for issue #4; a create action fails the workflow. It cannot mint a second assurance result or mutate Toolkit issues.
 
 1. Open Actions → **Registry intake pilot (manual)** → Run workflow.
 2. Leave `apply=false` for the first dry-run. Inspect the job summary and receipt artifact.
