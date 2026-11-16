@@ -1,0 +1,666 @@
+version: 3
+qualification:
+  materiality: [high, critical]
+  assurance_impact: [potentially-breaking, breaking]
+
+composition_rules:
+  - id: trust-tasks--credential-spec
+    requires_repository_tokens: [trust-tasks, cred-spec]
+  - id: credential-spec--zkp
+    requires_repository_tokens: [cred-spec, zkp]
+  - id: credential-spec--vds
+    requires_repository_tokens: [cred-spec, vds]
+  - id: trust-tasks--zkp
+    requires_repository_tokens: [trust-tasks, zkp]
+  - id: trust-tasks--vds
+    requires_repository_tokens: [trust-tasks, vds]
+
+semantic_rules:
+  # Covered means durable ownership, not PASS or evidence completion.
+  # Administrator changes remain combined reviews under the existing #121 key.
+  - id: community-vetted-statement-migration
+    when:
+      dimensions: [composition, governance]
+      concerns: [community-vetted-statement]
+    outcome: covered
+    covered_by: rahp-toolkit#870
+
+  - id: approved-join-redelivery
+    when:
+      dimensions: [authorization, lifecycle]
+      concerns: [approved-join-redelivery]
+    outcome: covered
+    covered_by: rahp-toolkit#898
+
+  - id: signing-key-enrolment-replacement
+    when:
+      dimensions: [security, authorization, lifecycle]
+      concerns: [signing-key-replacement]
+    outcome: covered
+    covered_by: rahp-toolkit#899
+
+  - id: published-pcs-admission
+    when:
+      dimensions: [privacy, security, composition]
+      concerns: [hidden-vetter-dependency]
+    outcome: covered
+    covered_by: rahp-toolkit#889
+
+  - id: declared-error-propagation
+    when:
+      dimensions: [security, composition]
+      concerns: [declared-error-propagation]
+    outcome: covered
+    covered_by: rahp-toolkit#691
+
+  - id: relationship-correlation-privacy
+    when:
+      dimensions: [privacy]
+      concerns: [correlation, persistent-identifier]
+    outcome: dpip
+    dpip:
+      affected_interactions: [credential-proof-trust-task-consequential-execution]
+      affected_reference_flows:
+        - "DTG Credential -> ZKP presentation -> Trust Task -> retained outcome evidence"
+      affected_invariants:
+        - no-unnecessary-cross-context-correlation
+        - correlation-scope-does-not-expand-through-composition
+        - retained-evidence-does-not-defeat-selective-disclosure
+      affected_claims:
+        - pairwise-identifiers-preserve-declared-correlation-scope
+        - zero-knowledge-disclosure-remains-private-after-task-wrapping
+        - retained-task-proof-status-and-outcome-evidence-do-not-enable-unintended-linkage
+      suspected_surfaces:
+        - relationship DID and edge identifiers
+        - status and policy discovery traffic
+        - retained relationship evidence
+        - deliberate-correlation mechanisms
+      question: >-
+        Across composed DTG relationship flows using relationship DIDs, asymmetric
+        edge declarations and deliberate-correlation mechanisms, do declared,
+        observable and effective correlation scope remain aligned, or can protocol
+        metadata, retained evidence, discovery/status traffic, or one side of an
+        asymmetric edge expand correlation beyond the explicitly declared scope?
+
+  - id: device-metadata-privacy
+    when:
+      dimensions: [privacy]
+      concerns: [metadata, correlation]
+    outcome: dpip
+    dpip:
+      affected_interactions: [device-presence-and-metadata]
+      affected_reference_flows:
+        - "device/install -> heartbeat or presence update -> retained service metadata"
+      affected_invariants:
+        - no-unnecessary-cross-context-correlation
+        - metadata-does-not-expand-declared-correlation-scope
+      affected_claims:
+        - device-metadata-is-bounded-to-the-declared-operational-scope
+      suspected_surfaces:
+        - device or install display metadata
+        - heartbeat payloads
+        - retained presence records
+      question: >-
+        Does device or install metadata transmitted in heartbeat/presence traffic
+        create an unnecessary stable or human-readable correlation surface beyond
+        the declared operational scope?
+
+  - id: rp-wallet-origin-binding
+    when:
+      dimensions: [privacy, authorization]
+      concerns: [data-minimization, origin-binding]
+    outcome: no-action
+    rationale: >-
+      Origin-bound RP wallet resolution that reduces disclosure to one already-bound
+      persona is assurance-strengthening when browser-attested origin remains the
+      authority boundary and consequential sign-in consent remains separate. Keep the
+      finding visible in the portfolio controller; escalate only if another semantic
+      rule identifies a privacy, security, correlation, or authorization regression.
+
+  - id: delegation-credential-composition
+    when:
+      dimensions: [authorization, lifecycle, composition]
+      concerns: [delegation]
+    outcome: combined
+    review_mode: combined
+
+  - id: redress-contestability-combined
+    when:
+      dimensions: [redress, governance]
+      concerns: [contestability]
+    outcome: combined
+    review_mode: combined
+
+  - id: spec-dependency-alignment
+    when:
+      dimensions: [composition, lifecycle]
+      concerns: [dependency-alignment]
+    outcome: combined
+    review_mode: combined
+
+  - id: data-room-custody-lifecycle
+    when:
+      dimensions: [authorization, lifecycle, composition, security]
+      concerns: [data-room-custody, key-lifecycle, membership-authority]
+    outcome: combined
+    review_mode: combined
+
+  - id: persona-provenance-boundary
+    when:
+      dimensions: [composition, security, privacy]
+      concerns: [provenance, context-boundary]
+    outcome: combined
+    review_mode: combined
+
+  - id: admin-scope-authority
+    when:
+      dimensions: [authorization, security, composition]
+      concerns: [admin-scope, authority-boundary]
+    outcome: combined
+    review_mode: combined
+
+  - id: credential-retrieval-disclosure
+    when:
+      dimensions: [authorization, privacy, composition]
+      concerns: [credential-disclosure, retrieval-authority]
+    outcome: combined
+    review_mode: combined
+
+  - id: backup-evidence-integrity
+    when:
+      dimensions: [lifecycle, security]
+      concerns: [evidence-integrity, recovery-boundary]
+    outcome: combined
+    review_mode: combined
+
+  - id: untrusted-input-fail-closed
+    when:
+      dimensions: [security, authorization]
+      concerns: [untrusted-input, fail-closed]
+    outcome: no-action
+    rationale: >-
+      Treating recalled memory as untrusted data and refusing unaddressed inbound
+      consent requests are assurance-strengthening fail-closed boundaries. Preserve
+      the observations in the portfolio evidence, but do not create duplicate review
+      work unless a separate finding shows the boundary is bypassed or weakened.
+
+  - id: binder-enumerability-privacy
+    when:
+      dimensions: [privacy, security]
+      concerns: [enumerability, correlation]
+    outcome: dpip
+    dpip:
+      affected_interactions: [credential-proof-trust-task-consequential-execution]
+      affected_reference_flows:
+        - "DTG Credential -> digest-valued binder -> retained/composed verification evidence"
+      affected_invariants:
+        - no-unnecessary-cross-context-correlation
+        - retained-evidence-does-not-defeat-selective-disclosure
+      affected_claims:
+        - pairwise-identifiers-preserve-declared-correlation-scope
+        - retained-task-proof-status-and-outcome-evidence-do-not-enable-unintended-linkage
+      suspected_surfaces:
+        - unsalted digest-valued binders
+        - enumerable credential references
+        - retained verification evidence
+      question: >-
+        Can an observer enumerate or precompute unsalted digest-valued credential
+        binders, or join them across contexts, so that retained or composed evidence
+        reveals relationships beyond the intended disclosure and correlation scope?
+
+  - id: routine-release-or-plan
+    when:
+      dimensions: [release]
+      concerns: [aggregation]
+    # Dual-classified functional changes are material even if the release
+    # aggregation label also matched; never downgrade them to no-action.
+    unless:
+      change_kind: [behavior-change]
+    outcome: no-action
+    rationale: >-
+      Release markers and editorial merge plans aggregate already-visible constituent
+      changes. They remain in the portfolio evidence but do not create an additional
+      assurance proposition unless another semantic rule identifies material behavior.
+
+  # Judgment-derived semantic dispositions from controller #629.
+  - id: vac-presenter-binding
+    when:
+      dimensions: [authorization, security, composition]
+      concerns: [presenter-binding, bearer-authority]
+    outcome: combined
+    review_mode: combined
+
+  - id: credential-status-lifecycle
+    when:
+      dimensions: [lifecycle, security]
+      concerns: [credential-status, revocation-enforcement]
+    outcome: combined
+    review_mode: combined
+
+  - id: ci-supply-chain-hardening
+    when:
+      dimensions: [repository-security]
+      concerns: [ci-hardening]
+    outcome: no-action
+    rationale: >-
+      Pinned Actions, reduced publish-token scope and dependency automation are
+      repository supply-chain hardening. Preserve the observation as operational
+      security evidence, but do not create an independent DTG semantic assessment.
+
+  - id: vec-vetting-profile-evidence
+    when:
+      dimensions: [composition]
+      concerns: [vetting-profile-evidence]
+    outcome: covered
+    covered_by: vetting-admission-composition
+
+  - id: vetting-admission-composition
+    when:
+      dimensions: [authorization, governance, privacy, composition, lifecycle]
+      concerns: [admission-authority, vetting, disclosure, grant-lifecycle]
+    outcome: combined
+    review_mode: combined
+    rationale: >-
+      Admission/vetter authority and privacy are one composed proposition. The bounded
+      RAHP review must promote the privacy/correlation question through the canonical
+      RAHP to DPIP handoff rather than resolving privacy locally.
+
+  - id: key-custody-service-authority
+    when:
+      dimensions: [security, authorization, lifecycle, composition]
+      concerns: [key-custody, key-export, service-authority]
+    outcome: combined
+    review_mode: combined
+
+  - id: dependency-version-covered
+    when:
+      dimensions: [composition, release]
+      concerns: [dependency-version]
+    outcome: covered
+    covered_by: constituent-material-findings
+
+  - id: defensive-did-resolution
+    when:
+      dimensions: [security]
+      concerns: [defensive-resolution, fail-closed]
+    outcome: no-action
+    rationale: >-
+      Refusing did:webvh resolution for local-only names or non-public addresses is a
+      fail-closed resolver restriction. Preserve it as negative security evidence;
+      create a separate review only when a registered composition depends on the
+      removed local-resolution behavior.
+
+
+  # Exact-snapshot disposition families from controller #832.
+  - id: task-citation-convergence
+    when:
+      dimensions: [security, privacy, composition]
+      concerns: [task-citation, outcome-binding, correlation]
+    outcome: covered
+    covered_by: rahp-toolkit#690
+
+  - id: privileged-operation-step-up
+    when:
+      dimensions: [authorization, security, lifecycle]
+      concerns: [operation-bound-step-up, admin-promotion]
+    outcome: covered
+    covered_by: rahp-toolkit#795
+
+  - id: persona-reach-timeline
+    when:
+      dimensions: [privacy, lifecycle, composition]
+      concerns: [persona-reach, timeline-disclosure, correlation]
+    outcome: covered
+    covered_by: rahp-toolkit#768
+
+  - id: vetter-status-lifecycle
+    when:
+      dimensions: [authorization, governance, privacy, lifecycle]
+      concerns: [vetter-status, admission-authority, disclosure]
+    outcome: covered
+    covered_by: rahp-toolkit#798
+
+  - id: proof-required-bearer-divergence
+    when:
+      dimensions: [security, authorization, composition]
+      concerns: [proof-required, bearer-path, freshness]
+    outcome: covered
+    covered_by: rahp-toolkit#767
+
+  - id: trust-task-acceptance-window
+    when:
+      dimensions: [security, lifecycle, composition]
+      concerns: [acceptance-window, delivery-freshness, transport-equivalence]
+    outcome: covered
+    covered_by: rahp-toolkit#833
+
+  - id: trust-task-document-size-bound
+    when:
+      dimensions: [security]
+      concerns: [resource-bound, fail-closed]
+    outcome: no-action
+    rationale: >-
+      A specification-declared maximum document size is assurance-strengthening
+      resource-bounding metadata. Preserve it as evidence; open a new review only
+      if an implementation ignores, weakens, or inconsistently interprets the bound.
+
+  # Judgment-derived semantic dispositions from controller #818.
+  - id: acl-non-escalation-elevated-rights
+    when:
+      dimensions: [authorization, security, governance]
+      concerns: [authority-non-escalation, grantor-coverage, separation-of-duties]
+    outcome: covered
+    covered_by: rahp-toolkit#819
+
+  - id: key-custody-export-rotation
+    when:
+      dimensions: [security, authorization, lifecycle]
+      concerns: [key-custody, key-export, key-rotation]
+    outcome: covered
+    covered_by: rahp-toolkit#633
+
+  - id: proof-purpose-binding
+    when:
+      dimensions: [security, authorization, composition]
+      concerns: [proof-purpose, verification-relationship]
+    outcome: covered
+    covered_by: rahp-toolkit#820
+
+  - id: step-up-passkey-administration
+    when:
+      dimensions: [security, authorization, privacy]
+      concerns: [step-up, credential-enrolment, administrative-visibility]
+    outcome: covered
+    covered_by: rahp-toolkit#821
+
+  - id: trust-tasks-service-backup-transport
+    when:
+      dimensions: [security, authorization, lifecycle, composition]
+      concerns: [transport-equivalence, confidentiality, service-authority]
+    outcome: covered
+    covered_by: rahp-toolkit#822
+
+  - id: forge-projection-provenance
+    when:
+      dimensions: [composition, authorization, lifecycle]
+      concerns: [projection-provenance, freshness, role-mapping]
+    outcome: covered
+    covered_by: rahp-toolkit#797
+
+  - id: task-outcome-executor-binding
+    when:
+      dimensions: [security, composition]
+      concerns: [outcome-binding, executor-binding]
+    outcome: covered
+    covered_by: rahp-toolkit#690
+
+  - id: vsc-registry-routine-publication
+    when:
+      dimensions: [release]
+      concerns: [registry-publication]
+    outcome: no-action
+    rationale: >-
+      Routine VSC Registry publication, registration, editorial, or packaging changes
+      remain visible as portfolio evidence but do not create an independent RAHP
+      proposition. Escalate only when normalization identifies semantic changes to
+      context authority, versioning, interpretation, compatibility, verification, or
+      another assurance-relevant dimension.
+
+  - id: credential-registry-context-convergence
+    when:
+      dimensions: [composition, lifecycle]
+      concerns: [context-authority, registry-versioning]
+    outcome: covered
+    covered_by: rahp-toolkit#474
+
+  - id: openvtc-security-combined
+    when:
+      dimensions: [security, lifecycle]
+      concerns: [authorization]
+    outcome: combined
+    review_mode: combined
+
+  - id: openvtc-routine-alignment
+    when:
+      dimensions: [release]
+      concerns: [aggregation]
+    unless:
+      change_kind: [behavior-change]
+    outcome: no-action
+    rationale: >-
+      Material implementation/alignment or packaging evidence remains in the
+      portfolio controller, but absent a security/privacy trigger it does not
+      independently require another assurance run. Versioned release artifacts
+      inherit the dispositions of their constituent material changes rather than
+      creating duplicate assessment work.
+
+  - id: trust-tasks-framework-covered
+    when:
+      dimensions: [composition, lifecycle]
+      concerns: [framework-alignment]
+    outcome: covered
+    covered_by: trust-tasks--credential-spec
+
+# Transitional compatibility rules for callers that have not yet supplied an
+# instance normalization profile. Production DTG routing uses semantic_rules.
+finding_rules:
+  - id: relationship-correlation-privacy
+    outcome: dpip
+    repository_regex: '^(OpenVTC/|trustoverip/dtgwg-cred-spec$)'
+    title_regex: '(relationship DID|relationship edge|correlation scope|deliberate-correlation|policy discovery)'
+    dpip:
+      affected_interactions: [credential-proof-trust-task-consequential-execution]
+      affected_reference_flows:
+        - "DTG Credential -> ZKP presentation -> Trust Task -> retained outcome evidence"
+      affected_invariants:
+        - no-unnecessary-cross-context-correlation
+        - correlation-scope-does-not-expand-through-composition
+        - retained-evidence-does-not-defeat-selective-disclosure
+      affected_claims:
+        - pairwise-identifiers-preserve-declared-correlation-scope
+        - zero-knowledge-disclosure-remains-private-after-task-wrapping
+        - retained-task-proof-status-and-outcome-evidence-do-not-enable-unintended-linkage
+      suspected_surfaces:
+        - relationship DID and edge identifiers
+        - status and policy discovery traffic
+        - retained relationship evidence
+        - deliberate-correlation mechanisms
+      question: >-
+        Across composed DTG relationship flows using relationship DIDs, asymmetric
+        edge declarations and deliberate-correlation mechanisms, do declared,
+        observable and effective correlation scope remain aligned, or can protocol
+        metadata, retained evidence, discovery/status traffic, or one side of an
+        asymmetric edge expand correlation beyond the explicitly declared scope?
+
+  - id: device-metadata-privacy
+    outcome: dpip
+    repository_regex: '^OpenVTC/'
+    title_regex: '(device|install).*(name|label|heartbeat)|(heartbeat).*(name|label|device|install)'
+    dpip:
+      affected_interactions: [device-presence-and-metadata]
+      affected_reference_flows:
+        - "device/install -> heartbeat or presence update -> retained service metadata"
+      affected_invariants:
+        - no-unnecessary-cross-context-correlation
+        - metadata-does-not-expand-declared-correlation-scope
+      affected_claims:
+        - device-metadata-is-bounded-to-the-declared-operational-scope
+      suspected_surfaces:
+        - device or install display metadata
+        - heartbeat payloads
+        - retained presence records
+      question: >-
+        Does device or install metadata transmitted in heartbeat/presence traffic
+        create an unnecessary stable or human-readable correlation surface beyond
+        the declared operational scope?
+
+  - id: rp-wallet-origin-binding
+    outcome: no-action
+    repository_regex: '^OpenVTC/(vta-browser-plugin|verifiable-trust-infrastructure|openvtc)$'
+    title_regex: '(walletProfile|wallet profile|RP[- ]login|relying party.*wallet|site knows you as|origin[- ]bound|persona.*site)'
+    rationale: >-
+      Origin-bound RP wallet resolution that reduces disclosure to one already-bound
+      persona is assurance-strengthening when browser-attested origin remains the
+      authority boundary and consequential sign-in consent remains separate.
+
+  - id: delegation-credential-composition
+    outcome: combined
+    repository_regex: '.*'
+    title_regex: '(delegation credential|delegation.*credential|\bVDC\b)'
+    review_mode: combined
+
+  - id: redress-contestability-combined
+    outcome: combined
+    repository_regex: '.*'
+    title_regex: '(rejected applicant|refusal.*reason|reason.*refusal|redress|contestab)'
+    review_mode: combined
+
+  - id: spec-dependency-alignment
+    outcome: combined
+    repository_regex: '.*'
+    title_regex: '(trust-tasks-rs|specification dependency|spec dependency|specs now define|schema dependency)'
+    review_mode: combined
+
+  - id: data-room-custody-lifecycle
+    outcome: combined
+    repository_regex: '^(OpenVTC/|trustoverip/dtgwg-trust-tasks-tf$)'
+    title_regex: '(rooms|data rooms|epoch key chain|epoch link|group custody|presentation oracle)'
+    review_mode: combined
+
+  - id: persona-provenance-boundary
+    outcome: combined
+    repository_regex: '^(OpenVTC/|trustoverip/dtgwg-trust-tasks-tf$)'
+    title_regex: '(persona).*(present|operator surface|preview|projection|provenance|context-local)|(resolved entry is a projection)'
+    review_mode: combined
+
+  - id: admin-scope-authority
+    outcome: combined
+    repository_regex: '^(OpenVTC/verifiable-trust-infrastructure|trustoverip/dtgwg-trust-tasks-tf)$'
+    title_regex: '(provision).*(unrestricted admin|admin lives|how far it reaches|admin.*reach)'
+    review_mode: combined
+
+  - id: credential-retrieval-disclosure
+    outcome: combined
+    repository_regex: '^(OpenVTC/verifiable-trust-infrastructure|trustoverip/dtgwg-trust-tasks-tf)$'
+    title_regex: '(credentials/list|vault/credentials|returns a member.s credential bodies|credential bodies)'
+    review_mode: combined
+
+  - id: backup-evidence-integrity
+    outcome: combined
+    repository_regex: '^OpenVTC/verifiable-trust-infrastructure$'
+    title_regex: '(backup).*(spec debt|audit|evidence|family)'
+    review_mode: combined
+
+  - id: untrusted-input-fail-closed
+    outcome: no-action
+    repository_regex: '^OpenVTC/'
+    title_regex: '(recalled memory as untrusted data|unaddressed consent request is refused|page-task refusal)'
+    rationale: >-
+      Treating recalled memory as untrusted data and refusing unaddressed inbound
+      consent requests are assurance-strengthening fail-closed boundaries.
+
+  - id: binder-enumerability-privacy
+    outcome: dpip
+    repository_regex: '^trustoverip/dtgwg-cred-spec$'
+    title_regex: '(binder).*(unsalted|enumerable|blinding)|(unsalted).*(digest|binder)'
+    dpip:
+      affected_interactions: [credential-proof-trust-task-consequential-execution]
+      affected_reference_flows:
+        - "DTG Credential -> digest-valued binder -> retained/composed verification evidence"
+      affected_invariants:
+        - no-unnecessary-cross-context-correlation
+        - retained-evidence-does-not-defeat-selective-disclosure
+      affected_claims:
+        - pairwise-identifiers-preserve-declared-correlation-scope
+        - retained-task-proof-status-and-outcome-evidence-do-not-enable-unintended-linkage
+      suspected_surfaces:
+        - unsalted digest-valued binders
+        - enumerable credential references
+        - retained verification evidence
+      question: >-
+        Can an observer enumerate or precompute unsalted digest-valued credential
+        binders, or join them across contexts, so that retained or composed evidence
+        reveals relationships beyond the intended disclosure and correlation scope?
+
+  - id: routine-release-or-plan
+    outcome: no-action
+    repository_regex: '^trustoverip/'
+    title_regex: '(chore: release v[0-9]+\.[0-9]+\.[0-9]+|WD02 merge plan)'
+    rationale: >-
+      Release markers and editorial merge plans aggregate already-visible constituent changes.
+
+  - id: vac-presenter-binding
+    outcome: combined
+    repository_regex: '^OpenVTC/dtg-credentials$'
+    title_regex: '(VAC).*(bearer credential|audience|presenter)|(bearer credential).*(VAC|audience)'
+    review_mode: combined
+
+  - id: credential-status-lifecycle
+    outcome: combined
+    repository_regex: '^OpenVTC/dtg-credentials$'
+    title_regex: 'credentialStatus'
+    review_mode: combined
+
+  - id: ci-supply-chain-hardening
+    outcome: no-action
+    repository_regex: '^OpenVTC/'
+    title_regex: '(pin actions to commit SHAs|scope the publish token|Dependabot)'
+    rationale: Repository supply-chain hardening does not independently change DTG semantic assurance.
+
+  - id: vec-vetting-profile-evidence
+    outcome: covered
+    repository_regex: '^trustoverip/dtgwg-cred-spec$'
+    title_regex: '(informative).*(identity-vetting|vetting).*(VEC)|(identity-vetting profile).*(VEC)'
+    covered_by: vetting-admission-composition
+
+  - id: vetting-admission-composition
+    outcome: combined
+    repository_regex: '^(OpenVTC/(openvtc|verifiable-trust-infrastructure)|trustoverip/dtgwg-cred-spec)$'
+    title_regex: '(vetted admission|peer identity vetting|guided join|vetter directory|vetter registry|automatic vetter grants|identity-vetting profile|identity vetting|QR tickets|grant resend)'
+    review_mode: combined
+
+  - id: key-custody-service-authority
+    outcome: combined
+    repository_regex: '^OpenVTC/verifiable-trust-infrastructure$'
+    title_regex: '(never leaving the VTA|never leaves the VTA|service can fetch the keys|export one key|retire seeds|export-mnemonic)'
+    review_mode: combined
+
+  - id: dependency-version-covered
+    outcome: covered
+    repository_regex: '^OpenVTC/verifiable-trust-infrastructure$'
+    title_regex: 'dtg-credentials.*[0-9]+\.[0-9]+.*[0-9]+\.[0-9]+'
+    covered_by: constituent-material-findings
+
+  - id: defensive-did-resolution
+    outcome: no-action
+    repository_regex: '^OpenVTC/vta-browser-plugin$'
+    title_regex: '(refuse to resolve).*did:webvh.*(local-only|non-public address)'
+    rationale: Fail-closed resolver hardening remains evidence unless a registered composition depends on local resolution.
+
+  - id: openvtc-security-combined
+    outcome: combined
+    repository_regex: '^OpenVTC/'
+    title_regex: '(auth|keyId|internal key|signed|proof|personhood|conformance|invitation|lifecycle|cache)'
+    review_mode: combined
+
+  - id: openvtc-routine-alignment
+    outcome: no-action
+    repository_regex: '^OpenVTC/'
+    title_regex: '(release|SDK|sdk|design note|removal notice|tell a member|drift reaches zero|(^|[- ])v[0-9]+\.[0-9]+\.[0-9]+$)'
+    rationale: >-
+      Material implementation/alignment or packaging evidence remains in the
+      portfolio controller, but absent a security/privacy trigger it does not
+      independently require another assurance run. Versioned release artifacts
+      inherit the dispositions of their constituent material changes rather than
+      creating duplicate assessment work. A later higher-priority rule may override
+      this disposition.
+
+  - id: trust-tasks-framework-covered
+    outcome: covered
+    repository_regex: '^trustoverip/dtgwg-trust-tasks-(tf|spec)$'
+    title_regex: '(framework|registry|generated types|typed signing|dispatch|application-state|refusal|removal|publish|registered acl/change-role task)'
+    covered_by: trust-tasks--credential-spec
+
+fallback:
+  outcome: UNMAPPED
+  rationale: No normalized semantic routing rule matched; qualifying findings remain visible until instance profile coverage is added.
