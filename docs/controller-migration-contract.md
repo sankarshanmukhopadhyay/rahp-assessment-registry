@@ -52,3 +52,9 @@ The replacement execution path must demonstrate, through the actual controller c
 This document does **not** define a replacement result schema, authorize credential retargeting, enable Registry issue writes, remove Toolkit workflows, establish historical full-timeline completeness, or claim operational cutover. [The pinned DTG routing parity run](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/actions/runs/43877660730) establishes a narrower source-routing compatibility claim. Independent assessment and acceptance remain separate from CI and AI-assisted review.
 
 A release is **not warranted** until the Registry has a consumable, verified operational assessment boundary.
+
+## Pinned legacy identity preflight (2026-11-17)
+
+The read-only [controller identity preflight](../scripts/verify_controller_legacy_contract.py) executes the actual canonical Toolkit handoff and return-identity helpers at pinned Toolkit commit `70298566dc897669e22bf37759843d6b7c0597d2`. It verifies that repeat legacy referrals remain stable, semantic examination identity is distinct from numbered referral identity, issue #4 cannot be substituted for legacy Toolkit #1203, and the accepted Registry pilot has no active execution or imported result. CI retains a narrow JSON receipt. Negative tests reject changed source pins, fabricated PASS, arbitrary imported results and an invented active controller anchor.
+
+This preflight does **not** authenticate specialist returns, invoke the DPIP/Lab consumer, initiate an assessment, exercise a retry outbox, or qualify the controller cutover. It freezes legacy identity behavior as executable regression evidence before developing the actual cross-repository adapter.
