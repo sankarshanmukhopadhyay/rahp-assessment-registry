@@ -1,0 +1,431 @@
+version: 1
+schema: rahp-finding-normalization-profile/v1
+
+# These extraction rules are DTG instance data. They translate raw repository/title
+# language into the portable semantics consumed by RAHP core routing.
+mapping_rules:
+  # Judgment-derived families from #903/#904/#906; see the exact disposition ledger.
+  - id: community-vetted-statement-migration
+    repository_regex: '^(OpenVTC/verifiable-trust-infrastructure|trustoverip/dtgwg-(trust-tasks-tf|vsc-registry))$'
+    title_regex: '(community.{0,12}(own identity check|identity checks).{0,35}vetted/1|community records its own identity checks as vetted/1|Add the vetted and presented predicates as draft)'
+    semantics:
+      dimensions: [composition, governance]
+      concerns: [community-vetted-statement]
+      affected_surfaces: [statement-predicate, admission-flow]
+      change_kind: [specification-change]
+
+  - id: administrator-authority-lifecycle
+    repository_regex: '^(OpenVTC/verifiable-trust-infrastructure|trustoverip/dtgwg-(trust-tasks-tf|vti-spec))$'
+    title_regex: '(single.administrator mode|cooling.off actions|administrator action list|second.party consent recommended practice)'
+    semantics:
+      dimensions: [authorization, security, lifecycle, governance]
+      concerns: [authorization, administrative-lifecycle, independence-boundary]
+      affected_surfaces: [acl, administrative-authority, action-list]
+      change_kind: [behavior-change]
+
+  - id: approved-join-redelivery
+    repository_regex: '^(OpenVTC/(openvtc|verifiable-trust-infrastructure)|trustoverip/dtgwg-trust-tasks-tf)$'
+    title_regex: '(approved applicant can ask for (its|their) credentials again|approved join asks its community to re.send a credential)'
+    semantics:
+      dimensions: [authorization, lifecycle]
+      concerns: [approved-join-redelivery]
+      affected_surfaces: [membership-state, credential-delivery]
+      change_kind: [behavior-change]
+
+  - id: signing-key-enrolment-replacement
+    repository_regex: '^(OpenVTC/verifiable-trust-infrastructure|trustoverip/dtgwg-trust-tasks-tf)$'
+    title_regex: '(auth/signing.key).*(enroll 0[.]2|identity.s own authorization|key replacement)'
+    semantics:
+      dimensions: [security, authorization, lifecycle]
+      concerns: [signing-key-replacement]
+      affected_surfaces: [signing-authority, key-store]
+      change_kind: [behavior-change]
+
+  - id: published-pcs-admission
+    repository_regex: '^OpenVTC/verifiable-trust-infrastructure$'
+    title_regex: '(vetting.pcs).*(depend on published predicate.credential.system)'
+    semantics:
+      dimensions: [privacy, security, composition]
+      concerns: [hidden-vetter-dependency]
+      affected_surfaces: [admission-flow, retained-evidence, proof-dependency]
+      change_kind: [dependency-change]
+
+  - id: declared-error-propagation
+    repository_regex: '^OpenVTC/verifiable-trust-infrastructure$'
+    title_regex: '(trust.task rejection.s code and details|flattening to Protocol)'
+    semantics:
+      dimensions: [security, composition]
+      concerns: [declared-error-propagation]
+      affected_surfaces: [trust-task-error, client-result]
+      change_kind: [behavior-change]
+
+  - id: relationship-correlation-privacy
+    repository_regex: '^(OpenVTC/|trustoverip/dtgwg-cred-spec$)'
+    title_regex: '(relationship DID|relationship edge|correlation scope|correlation-scope|issuerScope|deliberate-correlation|policy discovery)'
+    semantics:
+      dimensions: [privacy]
+      concerns: [correlation, persistent-identifier]
+      affected_surfaces: [relationship-identifier, status-policy-discovery, retained-evidence]
+      change_kind: [behavior-change]
+
+  - id: device-metadata-privacy
+    repository_regex: '^OpenVTC/'
+    title_regex: '(device|install).*(name|label|heartbeat)|(heartbeat).*(name|label|device|install)'
+    semantics:
+      dimensions: [privacy]
+      concerns: [metadata, correlation]
+      affected_surfaces: [protocol-envelope, retained-state, device-presence]
+      change_kind: [behavior-change]
+
+  - id: rp-wallet-origin-binding
+    repository_regex: '^OpenVTC/(vta-browser-plugin|verifiable-trust-infrastructure|openvtc)$'
+    title_regex: '(walletProfile|wallet profile|RP[- ]login|relying party.*wallet|site knows you as|origin[- ]bound|persona.*site)'
+    semantics:
+      dimensions: [privacy, authorization]
+      concerns: [data-minimization, origin-binding]
+      affected_surfaces: [wallet-interface, relying-party-binding, persona-disclosure]
+      change_kind: [behavior-change]
+
+  - id: delegation-credential-composition
+    title_regex: '(delegation credential|delegation.*credential|\bVDC\b)'
+    semantics:
+      dimensions: [authorization, lifecycle, composition]
+      concerns: [delegation]
+      affected_surfaces: [credential, authority-state]
+      change_kind: [behavior-change]
+
+  - id: redress-contestability-combined
+    title_regex: '(rejected applicant|refusal.*reason|reason.*refusal|redress|contestab)'
+    semantics:
+      dimensions: [redress, governance]
+      concerns: [contestability]
+      affected_surfaces: [decision-outcome]
+      change_kind: [behavior-change]
+
+  - id: spec-dependency-alignment
+    title_regex: '(trust-tasks-rs|specification dependency|spec dependency|specs now define|schema dependency)'
+    semantics:
+      dimensions: [composition, lifecycle]
+      concerns: [dependency-alignment]
+      affected_surfaces: [specification-interface]
+      change_kind: [dependency-change]
+
+  - id: persona-provenance-boundary
+    repository_regex: '^(OpenVTC/|trustoverip/dtgwg-trust-tasks-tf$)'
+    title_regex: '(persona).*(present|operator surface|preview|projection|provenance|context-local)|(resolved entry is a projection)'
+    semantics:
+      dimensions: [composition, security, privacy]
+      concerns: [provenance, context-boundary]
+      affected_surfaces: [persona-projection, operator-surface, presentation-boundary]
+      change_kind: [behavior-change]
+
+  - id: admin-scope-authority
+    repository_regex: '^(OpenVTC/verifiable-trust-infrastructure|trustoverip/dtgwg-trust-tasks-tf)$'
+    title_regex: '(provision).*(unrestricted admin|admin lives|how far it reaches|admin.*reach)'
+    semantics:
+      dimensions: [authorization, security, composition]
+      concerns: [admin-scope, authority-boundary]
+      affected_surfaces: [provisioning, administrative-authority]
+      change_kind: [behavior-change]
+
+  - id: credential-retrieval-disclosure
+    repository_regex: '^(OpenVTC/verifiable-trust-infrastructure|trustoverip/dtgwg-trust-tasks-tf)$'
+    title_regex: '(credentials/list|vault/credentials|returns a member.s credential bodies|credential bodies)'
+    semantics:
+      dimensions: [authorization, privacy, composition]
+      concerns: [credential-disclosure, retrieval-authority]
+      affected_surfaces: [credential-store, trust-task-response]
+      change_kind: [behavior-change]
+
+  - id: data-room-custody-lifecycle
+    repository_regex: '^(OpenVTC/|trustoverip/dtgwg-trust-tasks-tf$)'
+    title_regex: '(rooms|data rooms|epoch key chain|epoch link|group custody|presentation oracle)'
+    semantics:
+      dimensions: [authorization, lifecycle, composition, security]
+      concerns: [data-room-custody, key-lifecycle, membership-authority]
+      affected_surfaces: [room-membership, epoch-key-chain, room-storage, presentation-boundary]
+      change_kind: [behavior-change]
+
+  - id: backup-evidence-integrity
+    repository_regex: '^OpenVTC/verifiable-trust-infrastructure$'
+    title_regex: '(backup).*(spec debt|audit|evidence|family)'
+    semantics:
+      dimensions: [lifecycle, security]
+      concerns: [evidence-integrity, recovery-boundary]
+      affected_surfaces: [backup, retained-state, audit-evidence]
+      change_kind: [behavior-change]
+
+  - id: untrusted-input-fail-closed
+    repository_regex: '^OpenVTC/'
+    title_regex: '(recalled memory as untrusted data|unaddressed consent request is refused|page-task refusal)'
+    semantics:
+      dimensions: [security, authorization]
+      concerns: [untrusted-input, fail-closed]
+      affected_surfaces: [agent-memory, inbound-request, consent-boundary]
+      change_kind: [behavior-change]
+
+  - id: binder-enumerability-privacy
+    repository_regex: '^trustoverip/dtgwg-cred-spec$'
+    title_regex: '(binder).*(unsalted|enumerable|blinding)|(unsalted).*(digest|binder)'
+    semantics:
+      dimensions: [privacy, security]
+      concerns: [enumerability, correlation]
+      affected_surfaces: [credential-binder, digest-reference]
+      change_kind: [behavior-change]
+
+  - id: routine-release-or-plan
+    repository_regex: '^trustoverip/'
+    title_regex: '(chore: release v[0-9]+\.[0-9]+\.[0-9]+|WD02 merge plan)'
+    semantics:
+      dimensions: [release]
+      concerns: [aggregation]
+      affected_surfaces: [release-artifact, editorial-plan]
+      change_kind: [release-change]
+
+  # Judgment-derived semantic coverage from controller #629 (2026-09-12).
+  # These rules classify proposition families, not snapshot-specific finding IDs.
+  - id: vac-presenter-binding
+    repository_regex: '^OpenVTC/dtg-credentials$'
+    title_regex: '(VAC).*(bearer credential|audience|presenter)|(bearer credential).*(VAC|audience)'
+    semantics:
+      dimensions: [authorization, security, composition]
+      concerns: [presenter-binding, bearer-authority, invocation-binding]
+      affected_surfaces: [credential, presentation-boundary, authority-state]
+      change_kind: [behavior-change]
+
+  - id: credential-status-lifecycle
+    repository_regex: '^OpenVTC/dtg-credentials$'
+    title_regex: 'credentialStatus'
+    semantics:
+      dimensions: [lifecycle, security]
+      concerns: [credential-status, revocation-enforcement]
+      affected_surfaces: [credential, status-discovery, verification-decision]
+      change_kind: [behavior-change]
+
+  - id: ci-supply-chain-hardening
+    repository_regex: '^OpenVTC/'
+    title_regex: '(pin actions to commit SHAs|scope the publish token|Dependabot)'
+    semantics:
+      dimensions: [repository-security]
+      concerns: [ci-hardening]
+      affected_surfaces: [ci-workflow, release-pipeline]
+      change_kind: [security-hardening]
+
+  - id: vec-vetting-profile-evidence
+    repository_regex: '^trustoverip/dtgwg-cred-spec$'
+    title_regex: '(informative).*(identity-vetting|vetting).*(VEC)|(identity-vetting profile).*(VEC)'
+    semantics:
+      dimensions: [composition]
+      concerns: [vetting-profile-evidence]
+      affected_surfaces: [specification-interface]
+      change_kind: [documentation-change]
+
+  - id: vetting-admission-composition
+    repository_regex: '^(OpenVTC/(openvtc|verifiable-trust-infrastructure)|trustoverip/dtgwg-cred-spec)$'
+    title_regex: '(vetted admission|peer identity vetting|guided join|vetter directory|vetter registry|automatic vetter grants|identity-vetting profile|identity vetting|QR tickets|grant resend)'
+    semantics:
+      dimensions: [authorization, governance, privacy, composition, lifecycle]
+      concerns: [admission-authority, vetting, disclosure, grant-lifecycle]
+      affected_surfaces: [admission-flow, vetter-registry, profile, ticket, grant-state]
+      change_kind: [behavior-change]
+
+  - id: key-custody-service-authority
+    repository_regex: '^OpenVTC/verifiable-trust-infrastructure$'
+    title_regex: '(never leaving the VTA|never leaves the VTA|service can fetch the keys|export one key|retire seeds|export-mnemonic)'
+    semantics:
+      dimensions: [security, authorization, lifecycle, composition]
+      concerns: [key-custody, key-export, service-authority]
+      affected_surfaces: [key-store, key-export, service-authority]
+      change_kind: [behavior-change]
+
+  - id: dependency-version-covered
+    repository_regex: '^OpenVTC/verifiable-trust-infrastructure$'
+    title_regex: 'dtg-credentials.*[0-9]+\.[0-9]+.*[0-9]+\.[0-9]+'
+    semantics:
+      dimensions: [composition, release]
+      concerns: [dependency-version]
+      affected_surfaces: [dependency-interface, release-artifact]
+      change_kind: [dependency-change]
+
+  - id: defensive-did-resolution
+    repository_regex: '^OpenVTC/vta-browser-plugin$'
+    title_regex: '(refuse to resolve).*did:webvh.*(local-only|non-public address)'
+    semantics:
+      dimensions: [security]
+      concerns: [defensive-resolution, fail-closed]
+      affected_surfaces: [did-resolution, network-boundary]
+      change_kind: [security-hardening]
+
+
+  # Exact-snapshot routing coverage from controller #832 (2026-09-28).
+  - id: task-citation-convergence
+    repository_regex: '^(OpenVTC/dtg-credentials|trustoverip/dtgwg-cred-spec)$'
+    title_regex: '(taskDigestMultibase|Bind taskContext)'
+    semantics:
+      dimensions: [security, privacy, composition]
+      concerns: [task-citation, outcome-binding, correlation]
+      affected_surfaces: [credential-binder, trust-task-citation, retained-evidence]
+      change_kind: [behavior-change]
+
+  - id: privileged-operation-step-up
+    repository_regex: '^(OpenVTC/verifiable-trust-infrastructure|trustoverip/dtgwg-(trust-tasks-tf|vti-spec))$'
+    title_regex: '(admin promotion goes through acl/change-role|step-up bound to one operation|Close the admin-promotion entry)'
+    semantics:
+      dimensions: [authorization, security, lifecycle]
+      concerns: [operation-bound-step-up, admin-promotion]
+      affected_surfaces: [privileged-operation, acl-change-role, step-up]
+      change_kind: [behavior-change]
+
+  - id: persona-reach-timeline
+    repository_regex: '^OpenVTC/verifiable-trust-infrastructure$'
+    title_regex: '(where a face may be worn, where it is, and what it has done)'
+    semantics:
+      dimensions: [privacy, lifecycle, composition]
+      concerns: [persona-reach, timeline-disclosure, correlation]
+      affected_surfaces: [persona, context-usage, timeline]
+      change_kind: [behavior-change]
+
+  - id: vetter-status-lifecycle
+    repository_regex: '^trustoverip/dtgwg-trust-tasks-tf$'
+    title_regex: '(by-DID vetter status lookup)'
+    semantics:
+      dimensions: [authorization, governance, privacy, lifecycle]
+      concerns: [vetter-status, admission-authority, disclosure]
+      affected_surfaces: [vetter-registry, admission-flow]
+      change_kind: [behavior-change]
+
+  - id: proof-required-bearer-divergence
+    repository_regex: '^trustoverip/dtgwg-vti-spec$'
+    title_regex: '(proof.*bearer token|proof.*bearer-token|bearer-token entry|bearer token.*proof)'
+    semantics:
+      dimensions: [security, authorization, composition]
+      concerns: [proof-required, bearer-path, freshness]
+      affected_surfaces: [privileged-operation, transport-authentication, task-proof]
+      change_kind: [specification-change]
+
+  - id: trust-task-acceptance-window
+    repository_regex: '^(OpenVTC/verifiable-trust-infrastructure|trustoverip/dtgwg-vti-spec)$'
+    title_regex: '(acceptance window|acceptance-window)'
+    semantics:
+      dimensions: [security, lifecycle, composition]
+      concerns: [acceptance-window, delivery-freshness, transport-equivalence]
+      affected_surfaces: [trust-task-discovery, transport-delivery, retained-evidence]
+      change_kind: [behavior-change]
+
+  - id: trust-task-document-size-bound
+    repository_regex: '^trustoverip/dtgwg-trust-tasks-(tf|spec)$'
+    title_regex: '(document size bound|maximum document size)'
+    semantics:
+      dimensions: [security]
+      concerns: [resource-bound, fail-closed]
+      affected_surfaces: [trust-task-document, specification-metadata]
+      change_kind: [security-hardening]
+
+  # Judgment-derived semantic coverage from controller #818 (2026-09-28).
+  - id: acl-non-escalation-elevated-rights
+    repository_regex: '^(OpenVTC/(openvtc|verifiable-trust-infrastructure)|trustoverip/dtgwg-(trust-tasks-tf|vti-spec))$'
+    title_regex: '(self-grant|names the member who receives the right|widens its own entry|grant exceeds its granter|separation of duties|break-glass|Bound every access control entry)'
+    semantics:
+      dimensions: [authorization, security, governance]
+      concerns: [authority-non-escalation, grantor-coverage, separation-of-duties]
+      affected_surfaces: [acl, git-rights, administrative-authority]
+      change_kind: [behavior-change]
+
+  - id: key-custody-export-rotation
+    repository_regex: '^(OpenVTC/verifiable-trust-infrastructure|trustoverip/dtgwg-trust-tasks-tf)$'
+    title_regex: '(key-export and sign capability|key-material follow-ups|mnemonic-export|named key roles|per-role rotation)'
+    semantics:
+      dimensions: [security, authorization, lifecycle]
+      concerns: [key-custody, key-export, key-rotation]
+      affected_surfaces: [key-store, key-export, signing-authority, attestation]
+      change_kind: [behavior-change]
+
+  - id: proof-purpose-binding
+    repository_regex: '^(OpenVTC/verifiable-trust-infrastructure|trustoverip/dtgwg-trust-tasks-(tf|spec))$'
+    title_regex: '(proofPurpose|proof purpose|assertionMethod)'
+    semantics:
+      dimensions: [security, authorization, composition]
+      concerns: [proof-purpose, verification-relationship]
+      affected_surfaces: [document-proof, verification-method, approval-decision]
+      change_kind: [behavior-change]
+
+  - id: step-up-passkey-administration
+    repository_regex: '^(OpenVTC/verifiable-trust-infrastructure|trustoverip/dtgwg-trust-tasks-tf)$'
+    title_regex: '(passkey).*(admin.*invite|administrator lists|admin-list|enrol)'
+    semantics:
+      dimensions: [security, authorization, privacy]
+      concerns: [step-up, credential-enrolment, administrative-visibility]
+      affected_surfaces: [passkey-enrolment, admin-listing, authentication]
+      change_kind: [behavior-change]
+
+  - id: trust-tasks-service-backup-transport
+    repository_regex: '^(OpenVTC/verifiable-trust-infrastructure|trustoverip/dtgwg-trust-tasks-tf)$'
+    title_regex: '(backup travels only|end-to-end confidential channel|Trust Tasks only|REST-only health|wrapping-key routes|DID hosting service with Trust Tasks)'
+    semantics:
+      dimensions: [security, authorization, lifecycle, composition]
+      concerns: [transport-equivalence, confidentiality, service-authority]
+      affected_surfaces: [backup, service-management, did-hosting, transport]
+      change_kind: [behavior-change]
+
+  - id: forge-projection-provenance
+    repository_regex: '^(OpenVTC/(verifiable-git-infrastructure|verifiable-trust-infrastructure)|trustoverip/dtgwg-trust-tasks-tf)$'
+    title_regex: '(forge status|re-project git roles|bridge.*role map|namespace/reseat|namespace admin gets no forge role|git namespaces.*forge governance|did-log/install|community its own did:webvh log)'
+    semantics:
+      dimensions: [composition, authorization, lifecycle]
+      concerns: [projection-provenance, freshness, role-mapping]
+      affected_surfaces: [forge-bridge, role-projection, namespace]
+      change_kind: [behavior-change]
+
+  - id: task-outcome-executor-binding
+    repository_regex: '^OpenVTC/vta-browser-plugin$'
+    title_regex: '(task-consent outcome).*(executor)'
+    semantics:
+      dimensions: [security, composition]
+      concerns: [outcome-binding, executor-binding]
+      affected_surfaces: [trust-task-outcome, consent]
+      change_kind: [behavior-change]
+
+  - id: vsc-registry-routine-publication
+    repository_regex: '^trustoverip/dtgwg-vsc-registry$'
+    title_regex: '^(chore|docs)(\\([^)]*\\))?:.*(publish|publication|register|registry|editorial|README|readme|release)'
+    semantics:
+      dimensions: [release]
+      concerns: [registry-publication]
+      affected_surfaces: [credential-context-registry]
+      change_kind: [release-change]
+
+  - id: credential-registry-context-convergence
+    repository_regex: '^trustoverip/dtgwg-vsc-registry$'
+    title_regex: '(credential context|rules for contexts|DTG credential context)'
+    semantics:
+      dimensions: [composition, lifecycle]
+      concerns: [context-authority, registry-versioning]
+      affected_surfaces: [credential-context, registry]
+      change_kind: [specification-change]
+
+  - id: openvtc-security-combined
+    repository_regex: '^OpenVTC/'
+    title_regex: '(auth|keyId|internal key|signed|proof|personhood|conformance|invitation|lifecycle|cache)'
+    semantics:
+      dimensions: [security, lifecycle]
+      concerns: [authorization]
+      affected_surfaces: [protocol-envelope]
+      change_kind: [behavior-change]
+
+  - id: openvtc-routine-alignment
+    repository_regex: '^OpenVTC/'
+    title_regex: '(release|SDK|sdk|design note|removal notice|tell a member|drift reaches zero|(^|[- ])v[0-9]+\.[0-9]+\.[0-9]+$)'
+    semantics:
+      dimensions: [release]
+      concerns: [aggregation]
+      affected_surfaces: [release-artifact]
+      change_kind: [release-change]
+
+  - id: trust-tasks-framework-covered
+    repository_regex: '^trustoverip/dtgwg-trust-tasks-(tf|spec)$'
+    title_regex: '(framework|registry|generated types|typed signing|dispatch|application-state|refusal|removal|publish|registered acl/change-role task)'
+    semantics:
+      dimensions: [composition, lifecycle]
+      concerns: [framework-alignment]
+      affected_surfaces: [trust-task]
+      change_kind: [behavior-change]
