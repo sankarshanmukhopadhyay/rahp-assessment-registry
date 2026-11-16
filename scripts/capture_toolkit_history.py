@@ -13,7 +13,7 @@ from pathlib import Path
 
 REPOSITORY = "sankarshanmukhopadhyay/rahp-toolkit"
 API = "https://api.github.com/repos/" + REPOSITORY
-ISSUE_URL = re.compile(r"^https://api.github.com/repos/sankarshanmukhopadhyay/rahp-toolkit/issues/(\\d+)$")
+ISSUE_URL = re.compile(r"^https://api.github.com/repos/sankarshanmukhopadhyay/rahp-toolkit/issues/(\d+)$")
 
 
 class CaptureError(RuntimeError):
