@@ -7,7 +7,7 @@ import re
 from pathlib import Path
 
 SHA = re.compile(r"^[0-9a-f]{40}$")
-DAY = re.compile(r"^\\d{4}-\\d{2}-\\d{2}$")
+DAY = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 
 def validate_replay(findings, routed, combined, dpip, unresolved, *, toolkit_revision,
