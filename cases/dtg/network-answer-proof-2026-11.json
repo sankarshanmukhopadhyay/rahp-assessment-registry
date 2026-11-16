@@ -1,0 +1,67 @@
+{
+  "schema_version": "0.1.0",
+  "case_id": "RAHP-AR-DTG-0001",
+  "title": "Network-signed Trust Task response verification",
+  "subject": {
+    "system": "OpenVTC VTI / VTN network-response consumer",
+    "domain": "dtg",
+    "scope": "successful Trust Task answers and refusals read by network clients"
+  },
+  "proposition": "A consuming network client must not accept an unverified positive Trust Task answer as authoritative network output.",
+  "source": {
+    "repository": "OpenVTC/verifiable-trust-infrastructure",
+    "revision": "303174f8ca630ca14ddc2cbf5abcb0d10e205c38",
+    "pull_request": "https://github.com/OpenVTC/verifiable-trust-infrastructure/pull/2439",
+    "finding_id": "4cdb4f9a7399aea0a55a",
+    "snapshot": "https://raw.githubusercontent.com/sankarshanmukhopadhyay/dtg-portfolio-monitor/main/data/findings/2026/11/13.json",
+    "observed_on": "2026-11-13"
+  },
+  "owners": {
+    "registry": "sankarshanmukhopadhyay/rahp-assessment-registry",
+    "current_active_issue": "https://github.com/sankarshanmukhopadhyay/rahp-toolkit/issues/1203",
+    "handoff": "not_accepted",
+    "upstream": "OpenVTC/verifiable-trust-infrastructure",
+    "execution": "sankarshanmukhopadhyay/rahp-toolkit"
+  },
+  "lifecycle": {
+    "state": "proposed",
+    "updated_on": "2026-11-16",
+    "reason": "Shadow pilot; no transfer or closure of the original assessment issue."
+  },
+  "assessment": {
+    "change_classification": "strengthened",
+    "determination": "INDETERMINATE",
+    "basis": "Upstream PR describes verification and tests; independent RAHP consuming-path execution and follow-up network deployment are not established.",
+    "independent_review": false
+  },
+  "evidence": {
+    "state": "partially_verified",
+    "sources": [
+      {
+        "url": "https://github.com/OpenVTC/verifiable-trust-infrastructure/pull/2439",
+        "type": "upstream_pr",
+        "claim": "Upstream implementation and reported test evidence, not reproduced RAHP execution."
+      }
+    ],
+    "runtime_reproduced": false
+  },
+  "residuals": [
+    {
+      "id": "DTG-0001-R1",
+      "status": "open",
+      "owner": "https://github.com/sankarshanmukhopadhyay/rahp-toolkit/issues/1203",
+      "question": "Are forged, altered, wrong-purpose or unresolved positive network responses rejected along the actual consumer path without authoritative effects?"
+    },
+    {
+      "id": "DTG-0001-R2",
+      "status": "open",
+      "owner": "https://github.com/sankarshanmukhopadhyay/rahp-toolkit/issues/1203",
+      "question": "Are unsigned refusals handled as non-authorizing failures, and does downstream deployment preserve verification and version compatibility?"
+    }
+  ],
+  "reassessment": {
+    "trigger": "Source-pinned executable network-consumer evidence or a material revision affecting issuer/purpose verification and refusal semantics.",
+    "last_verified_on": "2026-11-16",
+    "not_before_evidence": true
+  }
+}
