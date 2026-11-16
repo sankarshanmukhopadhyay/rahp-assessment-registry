@@ -35,6 +35,38 @@ class IntakeTests(unittest.TestCase):
         self.assertEqual(result[0]["action"], "existing-owner")
         self.assertEqual(result[0]["number"], 4)
 
+    def test_key_with_letter_n_is_indexed(self):
+        key = "dtg:network:consumer"
+        owner = {"number": 11, "state": "open", "body": intake.marker(key)}
+        self.assertEqual(intake.index_issues([owner])[key]["number"], 11)
+
+    def test_migrated_pilot_does_not_create_duplicate(self):
+        ev = event(finding_id="4cdb4f9a7399aea0a55a")
+        owner = {"number": 4, "state": "open", "body": "<!-- rahp-registry-case:RAHP-AR-DTG-0001 -->"}
+        with patch.object(intake, "request") as req:
+            result = intake.execute([ev], "", issue_snapshot=[owner])
+        req.assert_not_called()
+        self.assertEqual(result[0]["action"], "existing-owner")
+        self.assertEqual(result[0]["number"], 4)
+
+    def test_migrated_pilot_owner_absent_or_closed_fails(self):
+        ev = event(finding_id="4cdb4f9a7399aea0a55a")
+        for state, body in (("closed", "<!-- rahp-registry-case:RAHP-AR-DTG-0001 -->"),
+                            ("open", "<!-- wrong-case -->")):
+            with self.subTest(state=state, body=body), self.assertRaisesRegex(
+                intake.IntakeError, "no verified open"
+            ):
+                intake.plan([ev], [{"number": 4, "state": state, "body": body}])
+
+    def test_migrated_pilot_conflicting_key_fails(self):
+        ev = event(finding_id="4cdb4f9a7399aea0a55a")
+        issues = [
+            {"number": 4, "state": "open", "body": "<!-- rahp-registry-case:RAHP-AR-DTG-0001 -->"},
+            {"number": 5, "state": "open", "body": intake.marker(ev["assessment_key"])},
+        ]
+        with self.assertRaisesRegex(intake.IntakeError, "conflicts"):
+            intake.plan([ev], issues)
+
     def test_closed_case_not_reopened(self):
         issue = {"number": 4, "state": "closed", "body": intake.marker(event()["assessment_key"])}
         with self.assertRaisesRegex(intake.IntakeError, "closed owner"):

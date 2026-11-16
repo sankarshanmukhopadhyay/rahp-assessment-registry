@@ -43,3 +43,7 @@ The example revision is synthetic and **not** usable as deployment evidence. Rea
 - A future live cutover requires an outbox, historical-key mapping (including #1203 → registry #4), proper least-privilege token, consumer-path integration tests, and disabling Toolkit-side external issue creation **only after** valid replacement and DPIP/Lab reconciliation are proven.
 
 [Registry issue #2](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/2) remains the acceptance gate for the full development-only Toolkit invariant.
+
+## Previously migrated finding identity
+
+A strictly reviewed finding-to-case entry maps monitor finding `4cdb4f9a7399aea0a55a` to existing open registry issue #4, with a required `RAHP-AR-DTG-0001` case marker. Replaying that finding cannot create a second owner merely because it lacks a newly introduced assessment-key marker. An absent, closed or contradictory mapped owner is **an error**, not permission to recreate or reopen an issue. This is a narrowly scoped migration bridge, not a general fuzzy similarity heuristic. New migrations must supply explicit source-backed mappings and regression tests.
