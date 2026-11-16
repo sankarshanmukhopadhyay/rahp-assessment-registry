@@ -10,7 +10,7 @@ A case must include stable `case_id`, `subject`, `proposition`, `source`, `owner
 
 - **Administrative lifecycle:** `proposed`, `active`, `waiting_external`, `superseded`, `closed`. These describe ownership and coordination.
 - **Evidence state:** `unverified`, `partially_verified`, `verified`, `unavailable`, `contradictory`. These describe attributable availability/adequacy, not truth of every claim.
-- **Assessment determination:** `not_assessed`, `PASS`, `FAIL`, `NOT_APPLICABLE`, `INDETERMINATE`. Except `not_assessed`, these are RAHP determinations imported with attributable source evidence; registry administration never invents one.
+- **Assessment determination:** `not_assessed`, `PASS`, `FAIL`, `NOT_APPLICABLE`, `INDETERMINATE`. Except `not_assessed`, these are RAHP determinations **imported from an attributable RAHP result** with a recorded assessment identity, source revision, matching determination and result URI; registry administration never invents one. An analytical source-level classification is not an RAHP determination. A structurally plausible URI is not independently verified as authentic by the validator.
 - **Source-level change classification:** `new`, `preserved`, `strengthened`, `weakened`, `uncertain`. This is analytical classification, not conformance.
 
 A case with unresolved residuals can be *administratively* closed only when every residual has a durable, explicitly accepted receiving owner and the closeout says that outstanding assurance has not passed. `closed` does not set `PASS`.

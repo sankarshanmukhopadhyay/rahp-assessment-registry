@@ -30,8 +30,8 @@
   },
   "assessment": {
     "change_classification": "strengthened",
-    "determination": "INDETERMINATE",
-    "basis": "Upstream PR describes verification and tests; independent RAHP consuming-path execution and follow-up network deployment are not established.",
+    "determination": "not_assessed",
+    "basis": "Upstream source indicates strengthened verification, but no attributable RAHP execution/result has been imported; registry assessment determination is not_assessed. Operational consuming-path evidence remains outstanding.",
     "independent_review": false
   },
   "evidence": {
@@ -40,7 +40,7 @@
       {
         "url": "https://github.com/OpenVTC/verifiable-trust-infrastructure/pull/2439",
         "type": "upstream_pr",
-        "claim": "Upstream implementation and reported test evidence, not reproduced RAHP execution."
+        "claim": "Upstream source-level PR and reported tests only; no RAHP execution or independent consumer-path qualification."
       }
     ],
     "runtime_reproduced": false
