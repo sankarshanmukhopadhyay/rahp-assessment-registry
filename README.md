@@ -22,6 +22,10 @@ A public, independently maintained case-management surface for source-pinned RAH
 
 A registry case is an indexed, attributed assessment record. It cannot assert PASS simply because upstream CI passed, a monitor ran, or a GitHub issue closed. The full original issue and authoritative evidence remain accessible through durable links. **No issue is automatically transferred or closed by adding a case record.**
 
+## Queue migration intake
+
+The [2026-11-16 provisional 58-issue inventory](docs/queue-triage-2026-11-16.md) separates Toolkit-owned work from external case and specialist obligations. It is advisory and does not create or accept any issue handoff.
+
 ## Pilot scope
 
 The initial pilot is a **shadow record** of the already open RAHP Toolkit issue [#1203](https://github.com/sankarshanmukhopadhyay/rahp-toolkit/issues/1203). This is intentionally not a second active remediation owner. After the case model and reviewer workflow are accepted, a separately governed migration may establish this registry as the sole active owner.

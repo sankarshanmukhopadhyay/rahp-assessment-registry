@@ -24,20 +24,33 @@ def validate(case):
         return errors
 
     require(isinstance(case["case_id"], str) and bool(case["case_id"].strip()), "empty case_id")
-    require(case["lifecycle"].get("state") in LIFECYCLES, "invalid lifecycle")
-    require(case["evidence"].get("state") in EVIDENCE, "invalid evidence state")
-    require(case["assessment"].get("determination") in DETERMINATIONS, "invalid determination")
-    require(case["assessment"].get("change_classification") in CHANGES, "invalid classification")
-    require(bool(case["source"].get("repository") and case["source"].get("revision")
+    require(isinstance(case["lifecycle"], dict) and case["lifecycle"].get("state") in LIFECYCLES, "invalid lifecycle")
+    require(isinstance(case["evidence"], dict) and case["evidence"].get("state") in EVIDENCE, "invalid evidence state")
+    require(isinstance(case["assessment"], dict) and case["assessment"].get("determination") in DETERMINATIONS, "invalid determination")
+    require(isinstance(case["assessment"], dict) and case["assessment"].get("change_classification") in CHANGES, "invalid classification")
+    require(isinstance(case["source"], dict) and bool(case["source"].get("repository") and case["source"].get("revision")
                  and case["source"].get("finding_id")), "missing source pin")
-    require(bool(case["owners"].get("registry") and case["owners"].get("upstream")),
+    require(isinstance(case["owners"], dict) and bool(case["owners"].get("registry") and case["owners"].get("upstream")),
             "missing authoritative ownership")
     require(isinstance(case["residuals"], list), "residuals must be an array")
+    if errors:
+        return errors
+
+    if case["assessment"].get("determination") != "not_assessed":
+        imported = case["assessment"].get("imported_result")
+        require(isinstance(imported, dict) and bool(imported.get("uri") and imported.get("assessment_id")
+                and imported.get("source_revision") and imported.get("determination") == case["assessment"].get("determination")),
+                "RAHP determination requires matching attributable imported result reference")
 
     if case["assessment"].get("determination") == "PASS":
         require(case["evidence"].get("state") == "verified", "PASS requires verified evidence")
         require(bool(case["assessment"].get("basis")), "PASS requires an attributable basis")
         require(bool(case["evidence"].get("sources")), "PASS requires cited evidence")
+    if case["lifecycle"].get("state") in ("closed", "superseded"):
+        require(case["owners"].get("handoff") == "accepted" or not case["residuals"],
+                "terminal case with residuals requires accepted handoff")
+        require(all(isinstance(r, dict) and r.get("status") == "transferred" and r.get("owner")
+                    for r in case["residuals"]), "terminal case cannot retain open residuals")
     if case["lifecycle"].get("state") == "closed":
         require(case["owners"].get("handoff") == "accepted" or not case["residuals"],
                 "closed case with residuals requires accepted handoff")
