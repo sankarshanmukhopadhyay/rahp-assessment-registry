@@ -1,0 +1,25 @@
+{
+  "schema": "rahp-toolkit-issue-metadata-archive/v1",
+  "captured_on": "2026-11-16",
+  "source_repository": "sankarshanmukhopadhyay/rahp-toolkit",
+  "source_api": "https://api.github.com/repos/sankarshanmukhopadhyay/rahp-toolkit/issues?state=all&per_page=100",
+  "total_issues": 769,
+  "state_counts": {
+    "open": 57,
+    "closed": 712
+  },
+  "source_pages": 12,
+  "last_page_raw_items": 99,
+  "partitions": [
+    {
+      "path": "archive/snapshots/toolkit-issues-2026-11-16-p1.json",
+      "expected_issues": 351
+    },
+    {
+      "path": "archive/snapshots/toolkit-issues-2026-11-16-p2.json",
+      "expected_issues": 418
+    }
+  ],
+  "full_content_mirror": false,
+  "note": "Exhaustive source-issue METADATA snapshot, not bodies/comments/timelines. Canonical history remains at source URLs; candidate routing is not ownership acceptance."
+}
