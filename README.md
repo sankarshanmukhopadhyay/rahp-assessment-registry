@@ -2,12 +2,12 @@
 
 A public, independently maintained case-management surface for source-pinned RAHP examinations and their unresolved assurance obligations across trust-system projects.
 
-**Status:** pilot / working draft. This repository does not certify systems, govern upstream specifications, or execute the RAHP engine.
+**Status:** pilot / working draft, with a manually accepted external-case owner and read-only operational routing shadows. This repository does not certify systems, govern upstream specifications or own the canonical RAHP engine. Registry Actions can invoke pinned Toolkit routing code; that is not a Registry-native RAHP assurance determination or a live controller cutover.
 
 ## Start here
 
 1. Read [governance and authority](GOVERNANCE.md) and the [case lifecycle](docs/case-lifecycle.md).
-2. Inspect the [network-response pilot case](cases/dtg/network-answer-proof-2026-11.json) and its [source owner](https://github.com/sankarshanmukhopadhyay/rahp-toolkit/issues/1203).
+2. Inspect the [network-response pilot case](cases/dtg/network-answer-proof-2026-11.json), its [active Registry owner (#4)](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/4) and the [closed historical Toolkit source (#1203)](https://github.com/sankarshanmukhopadhyay/rahp-toolkit/issues/1203).
 3. Validate tracked cases locally with `python3 scripts/validate_cases.py` and `python3 -m unittest discover -s tests -v`.
 4. Use the [assessment-case issue template](.github/ISSUE_TEMPLATE/assessment-case.md) only for a genuinely distinct proposition with an accountable owner.
 
@@ -42,11 +42,13 @@ A [pinned, non-publishing DTG routing replay](docs/pinned-dtg-replay.md) invokes
 
 The [opt-in fail-closed intake adapter](docs/external-intake.md) supports source-pinned external event classification and idempotent registry-issue planning. It is dry-run by default and **not yet wired into the Toolkit's live publisher or DPIP/Lab return paths**.
 
-## Pilot scope
+## Pilot scope and migration status
 
-The initial pilot is a **shadow record** of the already open RAHP Toolkit issue [#1203](https://github.com/sankarshanmukhopadhyay/rahp-toolkit/issues/1203). This is intentionally not a second active remediation owner. After the case model and reviewer workflow are accepted, a separately governed migration may establish this registry as the sole active owner.
+The initial pilot's **external evidence coordination ownership was manually transferred** from historical, now-closed [Toolkit #1203](https://github.com/sankarshanmukhopadhyay/rahp-toolkit/issues/1203) to active [Registry #4](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/4). The case remains `not_assessed`; its residual evidence obligations are open. This is not a transfer of source remediation or canonical Toolkit assessment authority.
 
-Current stage: one manually reviewed subject, no ingestion service, no new monitoring workflow, no automatic GitHub issue creation, no bulk migration, no release claim.
+Registry now runs read-only monitoring and pinned source-routing/parity workflows. An intake adapter exists, but automatic external case publication, Toolkit controller orchestration and DPIP/Lab return reconciliation have **not** cut over. The broader historical archive is subject to separate verification. No bulk migration or release claim is asserted.
+
+The [controller migration contract](docs/controller-migration-contract.md) records the observed legacy issue-number coupling and the executable acceptance conditions required before a publisher switch; [issue #11](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/11) tracks the operational migration.
 
 ## Contribution and licensing
 
