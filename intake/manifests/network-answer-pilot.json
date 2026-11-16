@@ -1,0 +1,13 @@
+[
+  {
+    "kind": "external_assessment",
+    "assessment_key": "dtg:network:trust-task-answer-verification",
+    "title": "Verify network-signed Trust Task response boundaries",
+    "proposition": "A consuming network client must not accept an unverified positive Trust Task answer as authoritative network output.",
+    "source_repository": "OpenVTC/verifiable-trust-infrastructure",
+    "source_revision": "303174f8ca630ca14ddc2cbf5abcb0d10e205c38",
+    "source_url": "https://github.com/OpenVTC/verifiable-trust-infrastructure/pull/2439",
+    "finding_id": "4cdb4f9a7399aea0a55a",
+    "responsible_owner": "OpenVTC/verifiable-trust-infrastructure"
+  }
+]
