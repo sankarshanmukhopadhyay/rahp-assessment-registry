@@ -4,7 +4,7 @@ import re
 import subprocess
 import sys
 
-TRAILER = re.compile(r"^Signed-off-by: ([^<>\\n]+) <([^<>\\n]+)>$", re.IGNORECASE)
+TRAILER = re.compile(r"^Signed-off-by: (.+) <([^<>]+)>$", re.IGNORECASE)
 
 
 def signoff_matches(author_name, author_email, message):
