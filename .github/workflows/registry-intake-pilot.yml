@@ -1,5 +1,11 @@
 name: Registry intake pilot (manual)
 on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/registry-intake-pilot.yml'
+      - 'scripts/registry_intake.py'
+      - 'intake/manifests/network-answer-pilot.json'
   workflow_dispatch:
     inputs:
       apply:
