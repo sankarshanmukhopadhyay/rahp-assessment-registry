@@ -1,5 +1,10 @@
 name: Capture historical Toolkit issue content (read-only)
 on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/capture-toolkit-history.yml'
+      - 'scripts/capture_toolkit_history.py'
   workflow_dispatch:
 permissions:
   contents: read
