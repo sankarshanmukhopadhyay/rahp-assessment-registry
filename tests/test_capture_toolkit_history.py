@@ -51,10 +51,20 @@ class HistoryCaptureTests(unittest.TestCase):
         a, b, c = h.assemble([self.issue(comments=0)], [self.comment(8)], [self.event(8)])
         self.assertEqual((len(a), len(b), len(c)), (1, 0, 0))
 
+    def test_issue_fetch_explicitly_includes_closed_history(self):
+        urls = []
+        def fake(url, token):
+            urls.append(url)
+            return []
+        h.fetch_pages("issues", "fake", requester=fake)
+        h.fetch_pages("issues/comments", "fake", requester=fake)
+        self.assertIn("&state=all", urls[0])
+        self.assertNotIn("state=all", urls[1])
+
     def test_pagination_until_short_page(self):
         seen = []
         def fake(url, token):
-            page = int(url.split("page=")[-1])
+            page = int(url.split("page=")[-1].split("&", 1)[0])
             seen.append(page)
             return [{}] * 100 if page == 1 else [{"number": 1}]
         records, pages = h.fetch_pages("issues", "not-a-real-token", requester=fake)

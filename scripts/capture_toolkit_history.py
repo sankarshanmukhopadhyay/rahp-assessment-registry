@@ -39,7 +39,9 @@ def request_json(url, token):
 def fetch_pages(endpoint, token, *, limit=200, requester=request_json):
     records = []
     for page in range(1, limit + 1):
-        uri = f"{API}/{endpoint}?per_page=100&page={page}"
+        # GitHub's issues endpoint defaults to OPEN: explicit all-state is mandatory.
+        state = "&state=all" if endpoint == "issues" else ""
+        uri = f"{API}/{endpoint}?per_page=100&page={page}{state}"
         items = requester(uri, token)
         if not isinstance(items, list):
             raise CaptureError(f"malformed source API collection: {endpoint}")
@@ -108,6 +110,9 @@ def main():
     comments, n2 = fetch_pages("issues/comments", token, limit=args.max_pages)
     events, n3 = fetch_pages("issues/events", token, limit=args.max_pages)
     issues, comments, events = assemble(source, comments, events)
+    if len(issues) < 769 or not any(item.get("number") == 1203 and item.get("state") == "closed"
+                                         for item in issues):
+        raise CaptureError("historical coverage below 769-issue baseline or missing closed pilot #1203")
     integrity = write_archive(args.output, {"issues": issues, "comments": comments, "events": events})
     manifest = {
         "schema": "rahp-source-issue-history-export/v1",

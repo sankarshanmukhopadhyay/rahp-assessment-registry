@@ -7,3 +7,7 @@ Use [the manual export workflow](../.github/workflows/capture-toolkit-history.ym
 **Scope limits:** repository-wide issue events do not necessarily include every issue-specific timeline-only event class, hidden/removed external attachments or source code/evidence behind links. Completeness and privacy require subsequent review and persistent, governed storage. A full archive must not be claimed until every case's complete source record, export integrity, participant privacy, live transfer and compatibility are verified. An export is not an authority migration and cannot convert unknown or incomplete assurance to PASS.
 
 No automatic issue creation, reassessment or source closure occurs during capture. This is intentionally an independent read-only job, not a source-monitor scheduled process. Report HTTP errors without echoing sensitive response bodies. Do not store GitHub tokens in artifacts.
+
+## Coverage correction (2026-11-16)
+
+Initial export [Actions run 43874479910](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/actions/runs/43874479910) contained only 57 source issue bodies because the GitHub Issues collection defaults to `state=open`. Its success **did not** qualify complete history. The exporter now explicitly requests `state=all` and refuses to complete below the independently observed 769-source-issue baseline or without closed pilot #1203. No earlier artifact should be labelled a complete archive. Additional regression tests prohibit silently reverting to the open-only query.
