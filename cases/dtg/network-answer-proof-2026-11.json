@@ -63,5 +63,6 @@
     "trigger": "Source-pinned executable network-consumer evidence or a material revision affecting issuer/purpose verification and refusal semantics.",
     "last_verified_on": "2026-11-16",
     "not_before_evidence": true
-  }
+  },
+  "referrals": []
 }

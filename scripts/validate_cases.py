@@ -36,6 +36,36 @@ def validate(case):
     if errors:
         return errors
 
+
+    referrals = case.get("referrals", [])
+    require(isinstance(referrals, list), "referrals must be an array")
+    if isinstance(referrals, list):
+        for idx, route in enumerate(referrals):
+            prefix = f"referrals[{idx}]"
+            if not isinstance(route, dict):
+                errors.append(f"{prefix}: must be an object")
+                continue
+            role = route.get("role")
+            allowed = {"specialist_assessor": "rahp-assessor-result/v1",
+                       "evidence_producer": "rahp-evidence-producer-result/v1"}
+            require(role in allowed, f"{prefix}: unknown role")
+            if role in allowed:
+                require(route.get("contract") == allowed[role], f"{prefix}: contract/role mismatch")
+            require(isinstance(route.get("repository"), str) and bool(route.get("repository")),
+                    f"{prefix}: missing producer repository")
+            require(isinstance(route.get("issue_url"), str)
+                    and route.get("issue_url", "").startswith("https://github.com/"),
+                    f"{prefix}: missing canonical source issue")
+            require(route.get("status") in {"requested", "accepted", "returned", "blocked"},
+                    f"{prefix}: invalid status")
+            if route.get("status") == "returned":
+                require(isinstance(route.get("result_url"), str)
+                        and route.get("result_url", "").startswith("https://"),
+                        f"{prefix}: returned result must cite source URI")
+                require(isinstance(route.get("result_revision"), str)
+                        and bool(route.get("result_revision")),
+                        f"{prefix}: returned result requires source revision")
+
     if case["assessment"].get("determination") != "not_assessed":
         imported = case["assessment"].get("imported_result")
         require(isinstance(imported, dict) and bool(imported.get("uri") and imported.get("assessment_id")
