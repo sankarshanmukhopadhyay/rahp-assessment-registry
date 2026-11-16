@@ -30,6 +30,10 @@ The [2026-11-16 provisional 58-issue inventory](docs/queue-triage-2026-11-16.md)
 
 See [DPIP and Interop Lab referrals](docs/specialist-routing.md) for the existing source-controlled return contracts, testing responsibility and case-referral admission rules.
 
+## Registry DTG live monitoring shadow
+
+The [read-only, scheduled live monitoring shadow](docs/live-shadow-monitoring.md) runs canonical Toolkit monitoring and routing logic inside Registry and retains source pins and event outputs. It does not publish cases or override DPIP/Lab/RAHP controller authority.
+
 ## Registry-executed historical source replay
 
 A [pinned, non-publishing DTG routing replay](docs/pinned-dtg-replay.md) invokes the canonical Toolkit implementation from a Registry workflow, without forking assurance semantics. It retains source and decision artifacts and makes no case writes.
