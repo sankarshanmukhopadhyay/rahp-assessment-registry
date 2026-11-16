@@ -1,0 +1,56 @@
+name: Stage a reviewable Toolkit source history package
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/stage-toolkit-history.yml'
+      - 'scripts/package_history_archive.py'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: stage-toolkit-source-history
+  cancel-in-progress: false
+jobs:
+  stage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: '3.12'
+      - name: Check archive package and capture controls
+        run: |
+          python3 -m unittest discover -s tests -p 'test_capture_toolkit_history.py' -v
+          python3 -m unittest discover -s tests -p 'test_package_history_archive.py' -v
+      - name: Retrieve complete Toolkit public issue history
+        env:
+          SOURCE_ARCHIVE_TOKEN: ${{ github.token }}
+        run: python3 scripts/capture_toolkit_history.py --output build/history
+      - name: Validate and stage deterministic compressed package
+        shell: bash
+        run: |
+          set -euo pipefail
+          date_utc="$(date -u +%F)"
+          mkdir -p "archive/content/$date_utc"
+          python3 scripts/package_history_archive.py \
+            --source build/history \
+            --target "archive/content/$date_utc"
+          echo "DATE_UTC=$date_utc" >> "$GITHUB_ENV"
+      - name: Commit only to a new review branch (never protected main)
+        shell: bash
+        run: |
+          set -euo pipefail
+          candidate="archive/toolkit-history-${GITHUB_RUN_ID}"
+          git switch -c "$candidate"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "archive/content/$DATE_UTC"
+          git diff --cached --check
+          git commit --signoff -m "archive(history): stage Toolkit issue content snapshot $DATE_UTC"
+          git push origin "HEAD:refs/heads/$candidate"
+          echo "Archive review branch: $candidate" >> "$GITHUB_STEP_SUMMARY"
+          echo "Do not merge without content, privacy, DCO and scope review." >> "$GITHUB_STEP_SUMMARY"
