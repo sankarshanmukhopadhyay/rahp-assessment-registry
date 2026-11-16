@@ -34,3 +34,7 @@ Case records are version-controlled snapshots. Use precise source pointers and r
 - Demonstrate that missing evidence cannot become assurance PASS or administrative terminalization.
 - Leave the original Toolkit issue active until a separate handoff is explicitly accepted.
 - Do not activate automation or bulk transfers before evaluating the pilot.
+
+## Pilot owner handoff boundary (2026-11-16)
+
+Case `RAHP-AR-DTG-0001` has [registry issue #4](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/4) as its durable **external evidence coordination owner**. The previous [RAHP Toolkit #1203](https://github.com/sankarshanmukhopadhyay/rahp-toolkit/issues/1203) remains a cited historical source, not a required controller execution ID: no DPIP or Lab return was initiated against #1203. A future specialist or producer request must originate from the compatible RAHP controller through its existing supported route; registry issue #4 cannot receive or reconcile RAHP results by itself. Keep `not_assessed` until a genuine RAHP result is imported. Do not extrapolate this manual pilot handoff to issue-driven controller records.
