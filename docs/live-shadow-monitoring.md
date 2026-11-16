@@ -1,0 +1,7 @@
+# Live DTG monitoring shadow: operational execution boundary
+
+The Registry owns the read-only [live monitoring shadow workflow](../.github/workflows/dtg-live-shadow.yml). On the same UTC cadence as the existing Toolkit monitoring workflow it uses Toolkit's **authoritative** two-day freshness fetch and semantic routing implementation, checked out at commit `70298566dc897669e22bf37759843d6b7c0597d2`. It also pins the current Portfolio Monitor checkout revision and refuses to use the fetched snapshot unless it matches that checkout's exact observed date and JSON content.
+
+The workflow retains source and provenance plus routed, combined, DPIP and unresolved event sets. Its negative tests reject race/mismatched content, future/stale source, missing source and unpinned engine. It has only `contents:read` GitHub permission, so no case writes or DPIP/Lab transport can occur. A failed freshness check is a real missing evidence condition, **not a successful empty monitor period**.
+
+This is a **shadow run** alongside the existing Toolkit consumer until the parity and cutover gates in [execution migration plan](execution-migration-plan.md) are met. It is not a second authoritative assessor, does not claim runtime conformance, and does not transfer old issue ownership. The Toolkit publisher still needs a verified registry-native replacement and non-issue controller/DPIP/Lab correlation before its issue-writing paths can be disabled.
