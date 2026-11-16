@@ -30,6 +30,10 @@ The [2026-11-16 provisional 58-issue inventory](docs/queue-triage-2026-11-16.md)
 
 See [DPIP and Interop Lab referrals](docs/specialist-routing.md) for the existing source-controlled return contracts, testing responsibility and case-referral admission rules.
 
+## External intake prototype
+
+The [opt-in fail-closed intake adapter](docs/external-intake.md) supports source-pinned external event classification and idempotent registry-issue planning. It is dry-run by default and **not yet wired into the Toolkit's live publisher or DPIP/Lab return paths**.
+
 ## Pilot scope
 
 The initial pilot is a **shadow record** of the already open RAHP Toolkit issue [#1203](https://github.com/sankarshanmukhopadhyay/rahp-toolkit/issues/1203). This is intentionally not a second active remediation owner. After the case model and reviewer workflow are accepted, a separately governed migration may establish this registry as the sole active owner.
