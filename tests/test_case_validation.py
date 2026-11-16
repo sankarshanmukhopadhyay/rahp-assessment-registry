@@ -87,6 +87,7 @@ class CaseValidationTest(unittest.TestCase):
 
     def test_unaccepted_handoff_cannot_be_superseded(self):
         case = deepcopy(self.pilot)
+        case["owners"]["handoff"] = "not_accepted"
         case["lifecycle"]["state"] = "superseded"
         self.assertIn("unaccepted handoff cannot be terminal", validate(case))
 
