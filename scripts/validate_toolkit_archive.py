@@ -49,7 +49,7 @@ def verify(manifest, parts):
             check(isinstance(item.get("title"), str) and bool(item["title"].strip()), f"missing title #{n}")
             check(type(item.get("comments")) is int and item["comments"] >= 0, f"invalid comment count #{n}")
             check(isinstance(item.get("labels"), list), f"invalid labels #{n}")
-            check(bool(re.fullmatch(r"\\d{4}-\\d{2}-\\d{2}T.+", str(item.get("created_at") or ""))), f"no created timestamp #{n}")
+            check(bool(re.fullmatch(r"\d{4}-\d{2}-\d{2}T.+", str(item.get("created_at") or ""))), f"no created timestamp #{n}")
             if item.get("state") == "open":
                 check(item.get("closed_at") is None, f"open issue has closure #{n}")
             else:
