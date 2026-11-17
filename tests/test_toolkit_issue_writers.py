@@ -52,9 +52,9 @@ class PublicationInventoryTests(unittest.TestCase):
         def exercise(path):
             target = path / "dtg-portfolio-materiality-handoff.yml"
             with target.open("a") as out:
-                out.write("          python3 " + audit.PUBLISHER + " " + chr(92) + "\\n")
-                out.write("            --check-transfers " + chr(92) + "\\n")
-                out.write("            out/combined.json out/dpip.json\\n")
+                out.write("          python3 " + audit.PUBLISHER + " " + chr(92) + "\n")
+                out.write("            --check-transfers " + chr(92) + "\n")
+                out.write("            out/combined.json out/dpip.json\n")
             errors, report = audit.audit(path, REVISION)
             self.assertEqual(errors, [])
             self.assertEqual(report["producer_call_count"], 10)
@@ -64,9 +64,9 @@ class PublicationInventoryTests(unittest.TestCase):
         def exercise(path):
             target = path / "dtg-portfolio-materiality-handoff.yml"
             with target.open("a") as out:
-                out.write("          python3 " + audit.PUBLISHER + " " + chr(92) + "\\n")
-                out.write("            --events out/combined.json\\n")
-                out.write("          echo --check-transfers\\n")
+                out.write("          python3 " + audit.PUBLISHER + " " + chr(92) + "\n")
+                out.write("            --events out/combined.json\n")
+                out.write("          echo --check-transfers\n")
             errors, _ = audit.audit(path, REVISION)
             self.assertTrue(any("publisher call-site drift" in e for e in errors))
         self.with_fixture(exercise)
