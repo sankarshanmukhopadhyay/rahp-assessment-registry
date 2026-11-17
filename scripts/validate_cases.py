@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Structural registry guardrail; no RAHP assurance determination is produced."""
 import json
+import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -9,6 +10,7 @@ LIFECYCLES = {"proposed", "active", "waiting_external", "superseded", "closed"}
 EVIDENCE = {"unverified", "partially_verified", "verified", "unavailable", "contradictory"}
 DETERMINATIONS = {"not_assessed", "PASS", "FAIL", "NOT_APPLICABLE", "INDETERMINATE"}
 CHANGES = {"new", "preserved", "strengthened", "weakened", "uncertain"}
+SHA40 = re.compile(r"^[0-9a-f]{40}$")
 
 
 def validate(case):
@@ -30,6 +32,10 @@ def validate(case):
     require(isinstance(case["assessment"], dict) and case["assessment"].get("change_classification") in CHANGES, "invalid classification")
     require(isinstance(case["source"], dict) and bool(case["source"].get("repository") and case["source"].get("revision")
                  and case["source"].get("finding_id")), "missing source pin")
+    if isinstance(case["source"], dict) and case["source"].get("revision"):
+        require(isinstance(case["source"]["revision"], str)
+                and SHA40.fullmatch(case["source"]["revision"]) is not None,
+                "source revision must be immutable 40-hex commit")
     require(isinstance(case["owners"], dict) and bool(case["owners"].get("registry") and case["owners"].get("upstream")),
             "missing authoritative ownership")
     require(isinstance(case["residuals"], list), "residuals must be an array")
@@ -65,12 +71,25 @@ def validate(case):
                 require(isinstance(route.get("result_revision"), str)
                         and bool(route.get("result_revision")),
                         f"{prefix}: returned result requires source revision")
+                if isinstance(route.get("result_revision"), str):
+                    require(SHA40.fullmatch(route["result_revision"]) is not None,
+                            f"{prefix}: returned result revision must be immutable 40-hex commit")
+            if isinstance(route.get("repository"), str) and isinstance(route.get("issue_url"), str):
+                repo = route["repository"]
+                require(re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", repo) is not None
+                        and re.fullmatch(r"https://github[.]com/" + re.escape(repo)
+                                             + r"/issues/[1-9][0-9]*", route["issue_url"]) is not None,
+                        f"{prefix}: source issue URL must match producer repository")
 
     if case["assessment"].get("determination") != "not_assessed":
         imported = case["assessment"].get("imported_result")
         require(isinstance(imported, dict) and bool(imported.get("uri") and imported.get("assessment_id")
                 and imported.get("source_revision") and imported.get("determination") == case["assessment"].get("determination")),
                 "RAHP determination requires matching attributable imported result reference")
+        if isinstance(imported, dict) and imported.get("source_revision"):
+            require(isinstance(case["source"], dict)
+                    and imported["source_revision"] == case["source"].get("revision"),
+                    "imported RAHP result source revision must match case source revision")
 
     if case["assessment"].get("determination") == "PASS":
         require(case["evidence"].get("state") == "verified", "PASS requires verified evidence")

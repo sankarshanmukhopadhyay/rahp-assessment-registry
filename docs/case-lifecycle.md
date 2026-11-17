@@ -4,7 +4,7 @@
 
 One case describes a materially distinct assurance proposition for a defined subject and source context. If a new observation affects the same proposition, append source provenance and assess applicability before opening another case. A change marker is not a defect.
 
-A case must include stable `case_id`, `subject`, `proposition`, `source`, `owners`, `lifecycle`, `evidence`, `assessment`, `residuals` and `reassessment` fields. The current validator checks structural and key cross-field invariants; it is not a normative RAHP schema or a substitute for a human assessment.
+A case must include stable `case_id`, `subject`, `proposition`, `source`, `owners`, `lifecycle`, `evidence`, `assessment`, `residuals` and `reassessment` fields. The current validator checks structural and key cross-field invariants, including immutable 40-character Git commit source revisions, returned referral revision syntax, producer issue-URL/repository alignment, and equality between an imported result's claimed source revision and the case revision. It does **not** establish that a commit exists, that the GitHub author is authoritative, or that the returned/imported result is authentic; those require evidence from the authoritative producer/controller. It is not a normative RAHP schema or a substitute for a human assessment.
 
 ## Separate dimensions
 
