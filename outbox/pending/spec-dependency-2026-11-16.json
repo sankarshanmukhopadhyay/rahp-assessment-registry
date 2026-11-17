@@ -1,0 +1,29 @@
+{
+  "schema": "rahp-registry-pending-monitored-group/v1",
+  "assessment_key": "dtg:portfolio:combined:spec-dependency-alignment",
+  "monitor_revision": "7e2813c8daf867a21e4064513cc83612726aeb44",
+  "snapshot_date": "2026-11-16",
+  "source_repository": "trustoverip/dtgwg-trust-tasks-tf",
+  "source_finding_ids": [
+    "0add1f4cc0f048ce6bfc",
+    "29e39a0329123d8839a6",
+    "a60eaffaf3cbc1394553",
+    "acc9772126b1a3820240"
+  ],
+  "source_group_sha256": "3fc843eeaf48f0023582951a2f67a15638bd6c21e929e92765b1394f83718d4c",
+  "source_evidence_sha256": "991804f57e6a10352e345ef24bc7fcea734f7c4397854b53859e8652094b442c",
+  "candidate_sha256": "49b2426d43ae554dc66ea2a76b71aff40f7acf682094faa73d1e8a94e5dd253f",
+  "maintainer_scope_sha256": "c60fec82a9671c8080738b5df6afa872dfba7cf08a9e801177322cafeada1c20",
+  "toolkit_current_issue_url": "https://github.com/sankarshanmukhopadhyay/rahp-toolkit/issues/272",
+  "toolkit_historical_issue_url": "https://github.com/sankarshanmukhopadhyay/rahp-toolkit/issues/615",
+  "protected_issue_urls": [
+    "https://github.com/sankarshanmukhopadhyay/rahp-toolkit/issues/282",
+    "https://github.com/sankarshanmukhopadhyay/rahp-toolkit/issues/826",
+    "https://github.com/sankarshanmukhopadhyay/rahp-toolkit/issues/837"
+  ],
+  "status": "pending_governance",
+  "registry_successor_issue_url": null,
+  "current_observation_acknowledged": false,
+  "toolkit_writer_suppression_authorized": false,
+  "assurance_determination": null
+}
