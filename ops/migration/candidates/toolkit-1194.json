@@ -1,0 +1,15 @@
+{
+  "schema": "rahp-toolkit-transfer-candidate/v1",
+  "toolkit_owner_issue": 1194,
+  "finding_ids": [
+    "ae6cee31b4c041af26cf",
+    "21e6ffbcbf558dff12b0",
+    "1f2a9dec92e54e576ee2",
+    "0fcc0b3242711fcfd8ed",
+    "8c68bb9b3ceb17919c57",
+    "dceef07e844ac4038deb",
+    "a23e414c6fc5c3e70494",
+    "0798c5e602a396c6df10",
+    "39d7c318a5177651575e"
+  ]
+}
