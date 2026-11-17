@@ -110,20 +110,34 @@ class IntakeTests(unittest.TestCase):
         with self.assertRaisesRegex(intake.IntakeError, "controller issue"):
             intake.validate_event(event(controller_issue_url="https://github.com/x/y/issues/2"))
 
-    def test_apply_writes_to_registry_only(self):
-        with patch.object(intake, "request", return_value={
-            "number": 7, "html_url": "https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/7"
-        }) as req:
-            result = intake.execute([event()], "test-token", dry_run=False, issue_snapshot=[])
-        self.assertEqual(result[0]["action"], "created")
-        self.assertEqual(req.call_args.args[1], intake.URL)
-        self.assertNotIn("rahp-toolkit", req.call_args.args[1])
-        self.assertIn("No PASS is asserted", req.call_args.args[3]["body"])
+    def test_direct_apply_cannot_create_a_new_case(self):
+        with patch.object(intake, "request") as req:
+            with self.assertRaisesRegex(intake.IntakeError, "controlled durable outbox"):
+                intake.execute([event()], "token", dry_run=False, issue_snapshot=[])
+        req.assert_not_called()
 
-    def test_error_preserves_no_false_receipt(self):
+    def test_direct_apply_mixed_batch_is_atomic_no_write(self):
+        present = event()
+        absent = event(assessment_key="dtg:case:another-002",
+                       finding_id="another-finding")
+        owner = {"number": 10, "state": "open", "body": intake.marker(present["assessment_key"])}
+        with patch.object(intake, "request") as req:
+            with self.assertRaisesRegex(intake.IntakeError, "controlled durable outbox"):
+                intake.execute([present, absent], "token", dry_run=False,
+                               issue_snapshot=[owner])
+        req.assert_not_called()
+
+    def test_direct_apply_existing_owner_only_is_read_only(self):
+        owner = {"number": 10, "state": "open", "body": intake.marker(event()["assessment_key"])}
+        with patch.object(intake, "request") as req:
+            results = intake.execute([event()], "token", dry_run=False, issue_snapshot=[owner])
+        req.assert_not_called()
+        self.assertEqual(results[0]["action"], "existing-owner")
+
+    def test_live_api_failure_does_not_forge_success(self):
         with patch.object(intake, "request", side_effect=intake.IntakeError("GitHub HTTP 403")):
             with self.assertRaises(intake.IntakeError):
-                intake.execute([event()], "token", dry_run=False, issue_snapshot=[])
+                intake.execute([event()], "token", dry_run=False)
 
     def test_pagination_covers_page_six(self):
         pages = []
