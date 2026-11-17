@@ -87,3 +87,28 @@ controller integration must test source-referral idempotence and enforce one
 qualified disposition for each exact source/examination epoch, including
 retries and conflicting returns. Existing historical duplicates must remain
 traceable rather than being deleted or treated as fresh obligations.
+
+## Canonical portable DPIP assessor payload and return chain
+
+The enhanced historical read-only replay for Toolkit #1116 and DPIP #305
+validates the **actual DPIP examiner's** `rahp-assessor-result/v1` payload
+against the pinned Toolkit's canonical schema validator, rather than trusting
+only a textual conclusion or result marker. It verifies producer and
+delivered assessor-result equality, exact DPIP assessment ID, source-pinned
+OpenVTC implementation revision, the referenced DPIP setup and execution
+provenance digests, the byte-exact source return's outbox digest and the
+source-specific acknowledgment in DPIP. The historical return is
+`INDETERMINATE / evidence-required`; schema validity is not a privacy PASS.
+
+False-success countercases include a tampered return payload, a forged/missing
+acknowledgment, duplicate or missing return, invalid portable schema, stale
+source pin, contradictory outcome, different producer/source result and missing
+execution provenance. The tests exercise the real pinned canonical consumer
+and GitHub issue histories on the read-only CI path.
+
+**This remains historical Toolkit-addressed interoperability, not a Registry
+specialist delivery.** The existing Registry case #4 has no admitted DPIP
+privacy proposition and is not an authorization to dispatch a specialist run.
+Future live Registry-addressed return qualification requires a source-pinned
+privacy case with an explicit accepted referral, credential scope, idempotent
+transport, durable reconciliation and retained negative-path receipts.
