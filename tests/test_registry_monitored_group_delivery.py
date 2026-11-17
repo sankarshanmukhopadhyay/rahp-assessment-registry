@@ -34,6 +34,7 @@ class DeliveryTests(unittest.TestCase):
             "snapshot_date": self.intent["snapshot_date"],
             "finding_ids": self.intent["source_finding_ids"],
             "group_sha256": self.intent["source_group_sha256"]}]}
+        self.intent["maintainer_scope_sha256"] = scope.scope(self.candidate)
         self.comments = [comment(self.candidate)]
         self.tk = [{"number": 272, "state": "open", "body": delivery.owners.MARKER}]
         self.registry = []
