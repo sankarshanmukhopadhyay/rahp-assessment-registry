@@ -1,6 +1,6 @@
 # Live DTG monitoring shadow: operational execution boundary
 
-The Registry owns the read-only [live monitoring shadow workflow](../.github/workflows/dtg-live-shadow.yml). On the same UTC cadence as the existing Toolkit monitoring workflow it uses Toolkit's **authoritative** two-day freshness fetch and semantic routing implementation, checked out at commit `70298566dc897669e22bf37759843d6b7c0597d2`. It also pins the current Portfolio Monitor checkout revision and refuses to use the fetched snapshot unless it matches that checkout's exact observed date and JSON content.
+The Registry owns the read-only [live monitoring shadow workflow](../.github/workflows/dtg-live-shadow.yml). On the same UTC cadence as the existing Toolkit monitoring workflow it uses Toolkit's **authoritative** two-day freshness fetch and semantic routing implementation, checked out at commit `18a421cb627535b14ae1dd0a468c64e38d1e8ac9`. It also pins the current Portfolio Monitor checkout revision and refuses to use the fetched snapshot unless it matches that checkout's exact observed date and JSON content.
 
 The workflow retains source and provenance plus routed, combined, DPIP and unresolved event sets. Its negative tests reject race/mismatched content, future/stale source, missing source and unpinned engine. It has only `contents:read` GitHub permission, so no case writes or DPIP/Lab transport can occur. A failed freshness check is a real missing evidence condition, **not a successful empty monitor period**.
 
@@ -52,3 +52,13 @@ The companion [Data Rooms successor #1208](../ops/migration/candidates/toolkit-1
 ## Supplemental annotated release-tag evidence
 
 The three release/tag observations in successor #1208 lack a direct commit link in the **original Monitor snapshot**. The live shadow separately checks the [reviewed annotated-tag evidence](../ops/migration/evidence/toolkit-1208-release-tags.json) against the exact source release URL, current GitHub tag reference, immutable annotated tag object and commit target. A moved/reforged tag fails closed. Verified tag-to-commit resolution **supplements**, but does not rewrite or retroactively strengthen, the original source record; two distinct tag observations may legitimately resolve to the same commit. Neither result imports assurance PASS nor authorizes case transfer.
+
+## Source-specific combined event provenance
+
+Both routers now emit structured per-finding commit-source evidence in grouped
+combined-review events while preserving their original route classification,
+assessment keys and human-readable bodies. Unpinned release/tag observations
+remain explicitly unanchored. See the exact input and output digests in the
+existing two-router parity receipt before using this metadata for admission.
+This does not independently qualify a group owner or activate any Toolkit
+publisher suppression or DPIP/Lab authority migration.

@@ -59,7 +59,7 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           repository: sankarshanmukhopadhyay/rahp-toolkit
-          ref: 70298566dc897669e22bf37759843d6b7c0597d2
+          ref: 18a421cb627535b14ae1dd0a468c64e38d1e8ac9
           path: toolkit
           persist-credentials: false
       - name: Checkout current Monitor source to pin consumed state
@@ -117,7 +117,7 @@ jobs:
             --dpip build/live/toolkit/dpip-events.json \
             --unresolved build/live/toolkit/unresolved.json \
             --source-date "$day" \
-            --toolkit-revision 70298566dc897669e22bf37759843d6b7c0597d2 \
+            --toolkit-revision 18a421cb627535b14ae1dd0a468c64e38d1e8ac9 \
             --monitor-revision "$monitor_revision" \
             --out build/live/provenance.json
           python3 - <<'PY'

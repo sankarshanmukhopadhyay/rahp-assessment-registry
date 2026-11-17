@@ -23,7 +23,7 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           repository: sankarshanmukhopadhyay/rahp-toolkit
-          ref: 70298566dc897669e22bf37759843d6b7c0597d2
+          ref: 18a421cb627535b14ae1dd0a468c64e38d1e8ac9
           path: toolkit
           persist-credentials: false
       - name: Checkout historical Monitor snapshot
@@ -82,7 +82,7 @@ jobs:
           Path("build/parity/snapshot-set.json").write_text(json.dumps({
               "schema": "rahp-registry-two-snapshot-routing-parity/v1",
               "monitor_revision": "7e2813c8daf867a21e4064513cc83612726aeb44",
-              "toolkit_revision": "70298566dc897669e22bf37759843d6b7c0597d2",
+              "toolkit_revision": "18a421cb627535b14ae1dd0a468c64e38d1e8ac9",
               "sources": evidence, "source_writes": 0, "case_writes": 0,
               "operational_cutover_qualified": False}, indent=2, sort_keys=True) + "\n")
           PY
