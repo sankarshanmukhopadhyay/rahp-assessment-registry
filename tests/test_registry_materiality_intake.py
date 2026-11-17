@@ -31,6 +31,36 @@ OWNER = {
 
 
 class MaterialityIntakeTests(unittest.TestCase):
+    def test_pending_group_is_accounted_separately_from_single_finding(self):
+        pending = json.loads((ROOT / "outbox/pending/spec-dependency-2026-11-16.json").read_text())
+        receipt = materiality.plan_many([FINDING], ROUTED, {
+            "network-answer-pilot.json": MANIFEST,
+            "spec-dependency-2026-11-16.json": pending,
+        }, [OWNER])
+        self.assertEqual(receipt["reviewed_intent_count"], 1)
+        self.assertEqual(receipt["pending_group_intent_count"], 1)
+        self.assertEqual(receipt["pending_group_intents"][0]["finding_count"], 4)
+        self.assertFalse(receipt["pending_group_intents"][0]["registry_owner_accepted"])
+        self.assertFalse(receipt["pending_group_intents"][0]["cutover_authorized"])
+        self.assertFalse(receipt["cutover_authorized"])
+
+    def test_group_pending_manifest_cannot_claim_delivery_or_assurance(self):
+        pending = json.loads((ROOT / "outbox/pending/spec-dependency-2026-11-16.json").read_text())
+        for change in ({"current_observation_acknowledged": True},
+                       {"registry_successor_issue_url": "https://example.test"},
+                       {"toolkit_writer_suppression_authorized": True},
+                       {"assurance_determination": "PASS"},
+                       {"status": "accepted"}):
+            with self.subTest(change=change):
+                with self.assertRaises(materiality.MaterialityError):
+                    materiality.plan_many([FINDING], ROUTED, {
+                        "spec-dependency-2026-11-16.json": {**pending, **change}
+                    }, [OWNER])
+        with self.assertRaisesRegex(materiality.MaterialityError, "path"):
+            materiality.plan_many([FINDING], ROUTED, {
+                "other-group.json": pending
+            }, [OWNER])
+
     def test_exact_reviewed_current_finding_reconciles_existing_case(self):
         receipt = materiality.plan([FINDING, OTHER], ROUTED, MANIFEST, [OWNER])
         self.assertEqual(receipt["state"], "existing_owner")

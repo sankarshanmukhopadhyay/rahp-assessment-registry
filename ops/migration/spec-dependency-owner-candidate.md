@@ -33,3 +33,7 @@ that Toolkit writers are fenced, or that controller/DPIP/Lab compatibility
 and rollback have been demonstrated. All these remain separate operational
 acceptance gates. The verifier is deliberately read-only and introduces
 no new schedule or issue creation.
+
+## Source-controlled four-finding pending intent
+
+The committed outbox/pending/spec-dependency-2026-11-16.json stores the four original source findings, canonical combined-event digest and the live-qualified source, owner and maintainer-scope digests. The existing parity workflow revalidates it against current source-qualified evidence. It explicitly remains pending: neither a Registry successor nor a Toolkit group reservation has been activated. The intent cannot assert assurance, delivery acknowledgment, or suppression. A live handoff must independently verify its committed revision, maintainer acceptance, the owner after publication, the observed delivery and the exclusive Toolkit publisher fence.

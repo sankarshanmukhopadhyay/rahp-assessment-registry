@@ -156,6 +156,38 @@ def plan(findings, routed, manifest, issues):
 
 
 
+def pending_group_shadow(filename, intent):
+    """Account for a separate grouped pending intent without admitting it as one finding.
+
+    Group source/member qualification belongs to the pinned canonical parity
+    workflow. A pending intent never counts as an accepted Registry owner.
+    """
+    if filename != "spec-dependency-2026-11-16.json":
+        raise MaterialityError("unreviewed grouped pending intent path")
+    if not isinstance(intent, dict) or intent.get("schema") != (
+            "rahp-registry-pending-monitored-group/v1"):
+        raise MaterialityError("unrecognized grouped pending intent")
+    if (intent.get("assessment_key") !=
+            "dtg:portfolio:combined:spec-dependency-alignment"
+            or intent.get("status") != "pending_governance"
+            or intent.get("registry_successor_issue_url") is not None
+            or intent.get("current_observation_acknowledged") is not False
+            or intent.get("toolkit_writer_suppression_authorized") is not False
+            or intent.get("assurance_determination") is not None):
+        raise MaterialityError("group intent asserts unsupported authority")
+    ids = intent.get("source_finding_ids")
+    if (not isinstance(ids, list) or len(ids) != 4
+            or ids != sorted(set(ids))):
+        raise MaterialityError("group intent is not the four-finding pending obligation")
+    return {"manifest": filename, "assessment_key": intent["assessment_key"],
+            "state": "group_pending_separate_qualification",
+            "finding_count": len(ids),
+            "source_group_sha256": intent.get("source_group_sha256"),
+            "registry_owner_accepted": False,
+            "current_observation_acknowledged": False,
+            "new_issue_created": False, "cutover_authorized": False}
+
+
 def plan_many(findings, routed, manifests, issues):
     """Reconcile a reviewed set against one observed source and owner snapshot."""
     if not isinstance(manifests, dict) or not manifests:
@@ -163,7 +195,12 @@ def plan_many(findings, routed, manifests, issues):
     checked_source(findings, routed)
     keys, findings_seen, owners, observations, confirmed = set(), set(), set(), set(), set()
     results = []
+    pending_groups = []
     for filename, manifest in sorted(manifests.items()):
+        if isinstance(manifest, dict) and manifest.get("schema") == (
+                "rahp-registry-pending-monitored-group/v1"):
+            pending_groups.append(pending_group_shadow(filename, manifest))
+            continue
         event = outbox.require_event(manifest)
         key, fid = event["assessment_key"], event["finding_id"]
         if key in keys or fid in findings_seen:
@@ -187,6 +224,8 @@ def plan_many(findings, routed, manifests, issues):
         "router_output_sha256": results[0]["decision"]["router_output_sha256"],
         "observed_routed_count": len(routed),
         "reviewed_intent_count": len(results),
+        "pending_group_intent_count": len(pending_groups),
+        "pending_group_intents": pending_groups,
         "reviewed_source_match_count": len(observations),
         "unreviewed_routed_count": len(routed) - len(observations),
         "without_confirmed_registry_owner_count": len(routed) - len(confirmed),
