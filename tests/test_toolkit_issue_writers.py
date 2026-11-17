@@ -60,6 +60,20 @@ class PublicationInventoryTests(unittest.TestCase):
             self.assertEqual(report["producer_call_count"], 10)
         self.with_fixture(exercise)
 
+    def test_yaml_folded_transfer_preflight_is_not_a_publisher(self):
+        def exercise(path):
+            target = path / "dtg-portfolio-materiality-handoff.yml"
+            with target.open("a") as out:
+                out.write("      - name: Transfer preflight\n")
+                out.write("        run: >-\n")
+                out.write("          python3 " + audit.PUBLISHER + "\n")
+                out.write("          --check-transfers\n")
+                out.write("          out/combined.json out/dpip.json\n")
+            errors, report = audit.audit(path, REVISION)
+            self.assertEqual(errors, [])
+            self.assertEqual(report["producer_call_count"], 10)
+        self.with_fixture(exercise)
+
     def test_readonly_flag_in_separate_command_does_not_hide_writer(self):
         def exercise(path):
             target = path / "dtg-portfolio-materiality-handoff.yml"

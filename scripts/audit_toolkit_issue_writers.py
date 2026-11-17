@@ -53,9 +53,21 @@ def count_effectful_invocations(body: str, script: str) -> int:
             continue
         command = line.strip()
         next_index = index
-        while command.rstrip().endswith(chr(92)) and next_index + 1 < len(lines):
+        # In a YAML folded block ('run: >-'), successive equally-indented
+        # lines are one shell command even without an explicit backslash.
+        previous = next((item.strip() for item in reversed(lines[:index])
+                         if item.strip()), "")
+        folded = previous in ("run: >-", "run: >", "run: >+")
+        indentation = len(line) - len(line.lstrip())
+        while next_index + 1 < len(lines):
+            continued = command.rstrip().endswith(chr(92))
+            following = lines[next_index + 1]
+            follow_indent = len(following) - len(following.lstrip())
+            if not continued and not (folded and following.strip()
+                                      and follow_indent >= indentation):
+                break
             next_index += 1
-            command = command.rstrip()[:-1] + " " + lines[next_index].strip()
+            command = command.rstrip().removesuffix(chr(92)) + " " + following.strip()
         if "--self-test" in command:
             continue
         if script == PUBLISHER and "--check-transfers" in command:
