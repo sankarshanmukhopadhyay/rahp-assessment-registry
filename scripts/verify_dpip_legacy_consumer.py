@@ -109,8 +109,10 @@ def verify_historical_links(source, source_comments, targets, target_comments, c
     }
 
 
-def verify_portable_historical_return(source_comments, target_comments, consumer, assessor_contract):
-    """Validate the real DPIP #305 portable result through canonical Toolkit schema.
+def verify_portable_return_chain(source_comments, target_comments, consumer, assessor_contract, *,
+                                 source_repo, source_issue, dpip_issue, expected_source_pin,
+                                 expected_outcome=None):
+    """Validate the real DPIP #{dpip_issue} portable result through canonical Toolkit schema.
 
     The source issue return payload must be byte-identical to the DPIP outbox
     payload digest and have an acknowledged receipt on DPIP's own issue.
@@ -120,10 +122,10 @@ def verify_portable_historical_return(source_comments, target_comments, consumer
     source_returns = [
         c for c in source_comments
         if (c.get("body") or "").startswith(
-            f"<!-- dpip-return:{DPIP_REPO}#305 -->")
+            f"<!-- dpip-return:{DPIP_REPO}#{dpip_issue} -->")
     ]
     if len(source_returns) != 1:
-        raise ConsumerError("missing or duplicate historical source DPIP #305 return")
+        raise ConsumerError("missing or duplicate source DPIP return")
     raw = source_returns[0]["body"]
     digest = hashlib.sha256(raw.encode("utf-8")).hexdigest()[:20]
     disp_blocks = [b["dpip_disposition"] for b in consumer.yaml_blocks(raw)
@@ -133,30 +135,30 @@ def verify_portable_historical_return(source_comments, target_comments, consumer
     disposition = disp_blocks[0]
 
     examinations = [
-        c for c in target_comments[305]
-        if (c.get("body") or "").startswith("<!-- dpip-examination:305:")
+        c for c in target_comments[dpip_issue]
+        if (c.get("body") or "").startswith("<!-- dpip-examination:{dpip_issue}:")
     ]
     if len(examinations) != 1:
-        raise ConsumerError("DPIP #305 has no unique terminal examination")
+        raise ConsumerError("DPIP #{dpip_issue} has no unique terminal examination")
     exam_blocks = [b["dpip_examination"] for b in consumer.yaml_blocks(examinations[0]["body"])
                    if isinstance(b.get("dpip_examination"), dict)]
     if len(exam_blocks) != 1:
-        raise ConsumerError("DPIP #305 examination does not expose one formal result")
+        raise ConsumerError("DPIP #{dpip_issue} examination does not expose one formal result")
     examination = exam_blocks[0]
     portable = examination.get("assessor_result")
     if not isinstance(portable, dict):
-        raise ConsumerError("DPIP #305 portable assessor result is absent")
+        raise ConsumerError("DPIP #{dpip_issue} portable assessor result is absent")
     issues = assessor_contract.validate_result(portable)
     if issues:
         raise ConsumerError("canonical portable assessor validation failed: " + "; ".join(issues))
-    if portable.get("assessment_id") != "dpip:305" or portable.get("outcome") != "INDETERMINATE":
+    if portable.get("assessment_id") != f"dpip:{dpip_issue}" or (expected_outcome is not None and portable.get("outcome") != expected_outcome):
         raise ConsumerError("portable result identity/outcome differs from the historical examination")
     if portable != disposition.get("assessor_result"):
         raise ConsumerError("DPIP producer's assessor result differs from source-delivered result")
     if disposition.get("conclusion") != portable["outcome"]:
         raise ConsumerError("DPIP disposition contradicts portable outcome")
     pins = portable.get("source_pins")
-    expected = ("OpenVTC/verifiable-trust-infrastructure", "324d325e7e75c33d658bc10104867d2eca0dc6d7")
+    expected = expected_source_pin
     if not isinstance(pins, list) or expected not in {
         (p.get("repository"), p.get("revision")) for p in pins if isinstance(p, dict)
     }:
@@ -165,23 +167,23 @@ def verify_portable_historical_return(source_comments, target_comments, consumer
     if not isinstance(provenance, dict):
         raise ConsumerError("portable specialist provenance missing")
     for key, prefix in (
-        ("execution_digest", "<!-- dpip-execution-evidence:305:"),
-        ("setup_digest", "<!-- dpip-examination-setup:305:"),
+        ("execution_digest", "<!-- dpip-execution-evidence:{dpip_issue}:"),
+        ("setup_digest", "<!-- dpip-examination-setup:{dpip_issue}:"),
     ):
         value = provenance.get(key)
         if not isinstance(value, str) or not value:
             raise ConsumerError("portable specialist " + key + " missing")
         target = prefix + value + " -->"
-        if sum(target in (c.get("body") or "") for c in target_comments[305]) != 1:
+        if sum(target in (c.get("body") or "") for c in target_comments[dpip_issue]) != 1:
             raise ConsumerError("portable specialist " + key + " not attributable to one source event")
 
-    outbox = f"<!-- rahp-return-outbox:v1:305:{digest} -->"
-    ack_prefix = f"<!-- rahp-return-ack:v2:305:{digest}:"
-    acknowledged = f"destination: {chr(96)}{SOURCE_REPO}#{SOURCE_ISSUE}{chr(96)}"
-    if sum(outbox in (c.get("body") or "") for c in target_comments[305]) != 1:
+    outbox = f"<!-- rahp-return-outbox:v1:{dpip_issue}:{digest} -->"
+    ack_prefix = f"<!-- rahp-return-ack:v2:{dpip_issue}:{digest}:"
+    acknowledged = f"destination: {chr(96)}{source_repo}#{source_issue}{chr(96)}"
+    if sum(outbox in (c.get("body") or "") for c in target_comments[dpip_issue]) != 1:
         raise ConsumerError("DPIP outbox does not match byte-exact returned payload digest")
     if sum(ack_prefix in (c.get("body") or "") and acknowledged in (c.get("body") or "")
-           for c in target_comments[305]) != 1:
+           for c in target_comments[dpip_issue]) != 1:
         raise ConsumerError("DPIP acknowledgment does not match returned payload digest/destination")
     return {
         "portable_schema": portable["schema"],
@@ -194,10 +196,23 @@ def verify_portable_historical_return(source_comments, target_comments, consumer
         "specialist_execution_provenance_observed": True,
         "dpip_outbox_digest_matches_source": True,
         "dpip_ack_matches_outbox": True,
-        "registry_destination_tested": False,
+        "source_destination": f"https://github.com/{source_repo}/issues/{source_issue}",
+        "registry_destination_tested": source_repo == "sankarshanmukhopadhyay/rahp-assessment-registry",
         "independent_specialist_authentication": False,
     }
 
+
+
+def verify_portable_historical_return(source_comments, target_comments, consumer, assessor_contract):
+    """Preserve the pinned historical Toolkit #1116 / DPIP #305 regression contract."""
+    return verify_portable_return_chain(
+        source_comments, target_comments, consumer, assessor_contract,
+        source_repo=SOURCE_REPO, source_issue=SOURCE_ISSUE, dpip_issue=305,
+        expected_source_pin=(
+            "OpenVTC/verifiable-trust-infrastructure",
+            "324d325e7e75c33d658bc10104867d2eca0dc6d7",
+        ), expected_outcome="INDETERMINATE"
+    )
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
