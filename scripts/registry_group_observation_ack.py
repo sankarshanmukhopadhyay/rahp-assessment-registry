@@ -102,6 +102,13 @@ def acknowledge(intent, event, candidate, token, *, apply=False, get=None, post=
     except Exception as exc:
         failure = exc
     actual = observed(comments(number, get), number, sha)
+    # A GitHub issue comment is not an atomic transfer with the Toolkit
+    # reservation. Revalidate owner and reservation after the observed write.
+    again = group.deliver(intent, event, candidate, token,
+                          apply=False, fetch=get,
+                          post=lambda _: (_ for _ in ()).throw(AckError("no issue writes")))
+    if again["state"] != "owner_observed" or again["owner_url"] != url:
+        raise AckError("source owner or Toolkit reservation changed during acknowledgment")
     if actual is None:
         raise AckError("POST did not yield a durable authenticated observation comment") from failure
     if response is not None and (
