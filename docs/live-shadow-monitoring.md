@@ -1,6 +1,6 @@
 # Live DTG monitoring shadow: operational execution boundary
 
-The Registry owns the read-only [live monitoring shadow workflow](../.github/workflows/dtg-live-shadow.yml). On the same UTC cadence as the existing Toolkit monitoring workflow it uses Toolkit's **authoritative** two-day freshness fetch and semantic routing implementation, checked out at commit `18a421cb627535b14ae1dd0a468c64e38d1e8ac9`. It also pins the current Portfolio Monitor checkout revision and refuses to use the fetched snapshot unless it matches that checkout's exact observed date and JSON content.
+The Registry owns the read-only [live monitoring shadow workflow](../.github/workflows/dtg-live-shadow.yml). On the same UTC cadence as the existing Toolkit monitoring workflow it uses Toolkit's **authoritative** two-day freshness fetch and semantic routing implementation, checked out at commit `7925a7edf87a74f222f163f879f73a7f38de4686`. It also pins the current Portfolio Monitor checkout revision and refuses to use the fetched snapshot unless it matches that checkout's exact observed date and JSON content.
 
 The workflow retains source and provenance plus routed, combined, DPIP and unresolved event sets. Its negative tests reject race/mismatched content, future/stale source, missing source and unpinned engine. It has only `contents:read` GitHub permission, so no case writes or DPIP/Lab transport can occur. A failed freshness check is a real missing evidence condition, **not a successful empty monitor period**.
 
