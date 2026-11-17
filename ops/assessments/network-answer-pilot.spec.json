@@ -42,7 +42,7 @@
     ],
     "actions": [
       {
-        "surface": "runtime-evidence",
+        "surface": "evidence-test",
         "action": "Obtain source-pinned native VTN consumer positive, negative, retry and refusal evidence for both residual requirements.",
         "acceptance_criterion": "Both DTG-0001-R1 and DTG-0001-R2 have independently inspectable provenance and failing countercases before a comparable assessment rerun."
       }
