@@ -6,6 +6,8 @@ on:
       - 'scripts/registry_monitored_group_delivery.py'
       - 'scripts/run_monitored_group_preflight.sh'
       - 'tests/test_registry_monitored_group_delivery.py'
+      - 'scripts/registry_group_observation_ack.py'
+      - 'tests/test_registry_group_observation_ack.py'
   workflow_dispatch:
     inputs:
       apply:
@@ -45,6 +47,8 @@ jobs:
       - run: python3 -m pip install -r toolkit/requirements.txt
       - name: Verify admission failures before enabling a write
         run: python3 -m unittest discover -s tests -p 'test_registry_monitored_group_delivery.py' -v
+      - name: Exercise durable observation acknowledgment and replay
+        run: python3 -m unittest discover -s tests -p 'test_registry_group_observation_ack.py' -v
       - name: Requalify pinned source, live owner, maintainer and reservation
         if: github.event_name == 'workflow_dispatch'
         env:
@@ -89,6 +93,16 @@ jobs:
         env:
           REGISTRY_INTAKE_TOKEN: ${{ github.token }}
         run: bash scripts/run_monitored_group_preflight.sh --apply
+      - name: Requalify created owner and durably acknowledge current source observation
+        env:
+          REGISTRY_INTAKE_TOKEN: ${{ github.token }}
+        run: >-
+          python3 scripts/registry_group_observation_ack.py
+          --manifest outbox/pending/spec-dependency-2026-11-16.json
+          --combined build/group/combined-events.json
+          --candidate build/group/owner-candidate.json
+          --receipt build/group/observation-ack.json
+          --apply
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
