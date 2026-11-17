@@ -4,9 +4,13 @@ on:
     paths:
       - '.github/workflows/dtg-routing-code-parity.yml'
       - 'ops/migration/nov16-annotated-tags.json'
+      - 'scripts/verify_maintainer_cutover_acceptance.py'
+      - 'tests/test_maintainer_cutover_acceptance.py'
       - 'ops/migration/spec-dependency-owner-candidate.json'
       - 'scripts/qualify_monitored_owner.py'
       - 'tests/test_monitored_owner.py'
+      - 'scripts/verify_maintainer_cutover_acceptance.py'
+      - 'tests/test_maintainer_cutover_acceptance.py'
       - 'scripts/verify_release_tag_pins.py'
       - 'tests/test_release_tag_pins.py'
       - 'ops/dtg/**'
@@ -123,6 +127,15 @@ jobs:
             --combined build/parity/2026-11-16/registry/combined-events.json \
             --evidence build/parity/2026-11-16/combined-source-qualification.json \
             --out build/parity/2026-11-16/owner-candidate.json
+      - name: Check exact maintainer scope disposition on live #11 (read-only)
+        env:
+          REGISTRY_INTAKE_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tests -p 'test_maintainer_cutover_acceptance.py' -v
+          python3 scripts/verify_maintainer_cutover_acceptance.py \
+            --candidate-receipt build/parity/2026-11-16/owner-candidate.json \
+            --out build/parity/2026-11-16/maintainer-scope-status.json
       - name: Retain exact output and parity receipt
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
