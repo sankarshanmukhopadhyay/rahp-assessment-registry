@@ -1,0 +1,55 @@
+{
+  "run": {
+    "lineage_prefix": "registry:RAHP-AR-ONDTF-0001:v1.0.0"
+  },
+  "target": {
+    "repository": "qbf-consulting/open-national-digital-trust-framework",
+    "revision": "201bcacdb9b0595f2693c73440598c4b0e89b10d"
+  },
+  "resources": {},
+  "subject": {
+    "type": "governance-framework",
+    "id": "RAHP-AR-ONDTF-0001",
+    "components": [
+      "ONDTF-GOV-006",
+      "jurisdictional-adoption"
+    ]
+  },
+  "assurance_contract": {
+    "material": true,
+    "specialist_required": false,
+    "scope": "Source-pinned pressure test of emergency mandate limitation, review, termination and remedy requirements; no observed jurisdictional deployment is implied.",
+    "non_scope": "No claims of national, implementation, legal, specialist or independent conformity without attributable operational evidence.",
+    "required_evidence": [
+      "ONDTF-0001-R1",
+      "ONDTF-0001-R2"
+    ],
+    "assurance_propositions": [
+      "Emergency authority is bounded by scope, duration and review with effective termination.",
+      "Affected-party recourse and accountable effects remain observable when an emergency mandate expires or is withdrawn."
+    ],
+    "personas": [
+      "authorized emergency operator",
+      "affected individual",
+      "independent reviewer"
+    ],
+    "scenarios": [
+      "valid short-lived emergency delegation",
+      "expired or revoked emergency authority replay",
+      "delayed effect after mandate termination",
+      "adverse redress and reviewer unavailability"
+    ],
+    "harms": [
+      "unauthorized persistent emergency powers",
+      "unreviewable consequential decisions",
+      "unavailable remedy"
+    ],
+    "actions": [
+      {
+        "surface": "evidence-test",
+        "action": "Obtain independently inspectable jurisdictional adoption evidence and negative traces for enforcement, expiry, revocation, review and remedy.",
+        "acceptance_criterion": "Both ONDTF-0001-R1 and ONDTF-0001-R2 cite attributable implementation-level positive and negative evidence before a new assurance determination."
+      }
+    ]
+  }
+}

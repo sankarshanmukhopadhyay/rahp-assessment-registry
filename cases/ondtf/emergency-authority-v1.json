@@ -1,0 +1,69 @@
+{
+  "schema_version": "0.1.0",
+  "case_id": "RAHP-AR-ONDTF-0001",
+  "title": "ONDTF v1.0.0: emergency authority lifecycle and remedy evidence boundary",
+  "subject": {
+    "system": "Open National Digital Trust Framework v1.0.0",
+    "domain": "ondtf",
+    "scope": "ONDTF-GOV-006 emergency mandate, review and termination in a declared jurisdictional adoption"
+  },
+  "proposition": "A jurisdictional ONDTF adoption invoking emergency authority must demonstrate enforceable purpose, scope, duration, independent review, termination and accountable remedy; the normative framework text alone cannot establish deployment conformance.",
+  "source": {
+    "repository": "qbf-consulting/open-national-digital-trust-framework",
+    "revision": "201bcacdb9b0595f2693c73440598c4b0e89b10d",
+    "commit_url": "https://github.com/qbf-consulting/open-national-digital-trust-framework/commit/201bcacdb9b0595f2693c73440598c4b0e89b10d",
+    "finding_id": "ondtf-gov-006-emergency-authority-lifecycle",
+    "release": "v1.0.0",
+    "observed_on": "2026-11-17"
+  },
+  "owners": {
+    "registry": "sankarshanmukhopadhyay/rahp-assessment-registry",
+    "current_active_issue": "https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/47",
+    "admission": "direct",
+    "handoff": "not_applicable",
+    "upstream": "qbf-consulting/open-national-digital-trust-framework",
+    "execution": "sankarshanmukhopadhyay/rahp-toolkit"
+  },
+  "lifecycle": {
+    "state": "active",
+    "updated_on": "2026-11-17",
+    "reason": "New source-qualified Registry-owned case accepted through controlled direct intake; no previous Toolkit assessment case is transferred."
+  },
+  "assessment": {
+    "change_classification": "uncertain",
+    "determination": "not_assessed",
+    "basis": "The v1.0.0 normative requirement establishes a review proposition, not deployment or independent-assurance evidence. Canonical Toolkit controller execution may report missing evidence without importing an assessment determination.",
+    "independent_review": false
+  },
+  "evidence": {
+    "state": "partially_verified",
+    "sources": [
+      {
+        "url": "https://github.com/qbf-consulting/open-national-digital-trust-framework/blob/201bcacdb9b0595f2693c73440598c4b0e89b10d/docs/core-specification/requirements-register.md#ondtf-gov-006",
+        "type": "normative_source",
+        "claim": "Pinned ONDTF-GOV-006 normative requirement and E1 framework-controlled evidence; no jurisdictional implementation observed."
+      }
+    ],
+    "runtime_reproduced": false
+  },
+  "residuals": [
+    {
+      "id": "ONDTF-0001-R1",
+      "status": "open",
+      "owner": "https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/47",
+      "question": "Does a concrete adoption enforce emergency-authority expiry, revocation/termination and decision-effect cessation under replay, delay and delegated action?"
+    },
+    {
+      "id": "ONDTF-0001-R2",
+      "status": "open",
+      "owner": "https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/47",
+      "question": "Are independent review, accountable remedy, evidence freshness and challenge paths observable for an actual affected-party context?"
+    }
+  ],
+  "reassessment": {
+    "trigger": "A source-pinned ONDTF adoption/profile with independently inspectable emergency-authorization effects, negative tests, review and remedy evidence.",
+    "last_verified_on": "2026-11-17",
+    "not_before_evidence": true
+  },
+  "referrals": []
+}

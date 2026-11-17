@@ -12,6 +12,10 @@ on:
       - 'ops/executions/**'
       - 'scripts/verify_persisted_execution.py'
       - 'tests/test_persisted_execution.py'
+      - 'cases/ondtf/**'
+      - 'ops/assessments/ondtf-**'
+      - 'scripts/bind_direct_execution.py'
+      - 'tests/test_direct_execution_binding.py'
   push:
     branches: [main]
     paths:
@@ -25,6 +29,10 @@ on:
       - 'ops/executions/**'
       - 'scripts/verify_persisted_execution.py'
       - 'tests/test_persisted_execution.py'
+      - 'cases/ondtf/**'
+      - 'ops/assessments/ondtf-**'
+      - 'scripts/bind_direct_execution.py'
+      - 'tests/test_direct_execution_binding.py'
   workflow_dispatch:
 permissions:
   contents: read
@@ -48,6 +56,7 @@ jobs:
         run: |
           python3 -m unittest discover -s tests -p 'test_registry_assessment_run.py' -v
           python3 -m unittest discover -s tests -p 'test_registry_execution_binding.py' -v
+          python3 -m unittest discover -s tests -p 'test_direct_execution_binding.py' -v
       - name: Execute actual canonical RAHP controller
         shell: bash
         run: |
@@ -82,6 +91,31 @@ jobs:
             --out build/registry-assessment/execution-binding.json --verify
           python3 scripts/verify_persisted_execution.py \
             --actual-result build/registry-assessment/result.json
+      - name: Execute ONDTF direct Registry case through actual canonical Toolkit controller
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected=70298566dc897669e22bf37759843d6b7c0597d2
+          [[ "$(git -C toolkit rev-parse HEAD)" = "$expected" ]]
+          python3 toolkit/tools/autonomous_assurance_controller.py \
+            --spec ops/assessments/ondtf-emergency-authority.spec.json \
+            --ledger ops/assessments/ondtf-emergency-authority.ledger.json \
+            --machine-output build/registry-assessment/ondtf-result.json \
+            --human-output build/registry-assessment/ondtf-result.md
+          python3 scripts/bind_direct_execution.py \
+            --case cases/ondtf/emergency-authority-v1.json \
+            --spec ops/assessments/ondtf-emergency-authority.spec.json \
+            --ledger ops/assessments/ondtf-emergency-authority.ledger.json \
+            --result build/registry-assessment/ondtf-result.json \
+            --toolkit-revision "$expected" \
+            --out build/registry-assessment/ondtf-binding.json
+          python3 scripts/bind_direct_execution.py \
+            --case cases/ondtf/emergency-authority-v1.json \
+            --spec ops/assessments/ondtf-emergency-authority.spec.json \
+            --ledger ops/assessments/ondtf-emergency-authority.ledger.json \
+            --result build/registry-assessment/ondtf-result.json \
+            --toolkit-revision "$expected" \
+            --out build/registry-assessment/ondtf-binding.json --verify
       - name: Retain source-pinned indeterminate run and receipt
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
