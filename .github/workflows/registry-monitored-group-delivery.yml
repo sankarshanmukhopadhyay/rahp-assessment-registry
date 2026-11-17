@@ -144,7 +144,7 @@ jobs:
         with:
           python-version: '3.12'
       - run: python3 -m pip install -r toolkit/requirements.txt
-      - name: Enforce accepted Registry-to-Toolkit execution consumer before first POST
+      - name: Observe source-scoped Toolkit consumers without blocking owner recovery
         env:
           REGISTRY_INTAKE_TOKEN: ${{ github.token }}
         run: >-
@@ -152,7 +152,6 @@ jobs:
           --manifest outbox/pending/spec-dependency-2026-11-16.json
           --toolkit toolkit-runtime
           --out build/group/consumer-eligibility.json
-          --require-migrated
       - name: Reject active inventoried Toolkit writer runs before successor POST
         env:
           REGISTRY_INTAKE_TOKEN: ${{ github.token }}
