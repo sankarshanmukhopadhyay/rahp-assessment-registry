@@ -36,3 +36,66 @@ partition and stable adapter, test with existing historical markers and the
 real monitored input, and run the authorized cutover only after independent
 review and rollback disposition. No new production source is admitted by this
 inventory.
+
+## Controlled #272 transaction rehearsal: mandatory stop conditions
+
+This is an **operator sequence**, not a live cutover command. Run it only
+against the original 2026-11-16 four-finding source pins and exact maintainer
+scope. The Toolkit transfer ledger must remain empty until the required
+exclusion and consumer evidence has been obtained. The two draft PRs
+([Toolkit #1218](https://github.com/sankarshanmukhopadhyay/rahp-toolkit/pull/1218),
+[Registry #67](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/pull/67))
+are preparatory safeguards, not authorization to activate.
+
+1. **Inventory and freeze.** Re-read both `main` commits and the six
+   workflow/nine effectful publisher inventory. Establish a documented means
+   of stopping *new* affected Toolkit issue writes, including schedules,
+   push/dispatch triggers and older workflow checkouts. Drain or cancel
+   in-flight writers, and confirm that no independent publisher can resume.
+   The Registry nonterminal-run inspection only observes a point in time;
+   it neither disables future runs nor establishes a distributed lock.
+   **Stop** if future writers cannot be excluded.
+2. **Qualify source and consumers.** Re-run exact Monitor commit, four
+   findings, group SHA-256 and maintainer scope acceptance. Re-read Toolkit
+   #272 (open), #615 (historical closed) and independent #282/#826/#837.
+   Identify the actual controller, reviewer, DPIP and Lab consumers of
+   Toolkit issue numbers. Do not substitute a Registry number for a Toolkit
+   execution/referral number. **Stop** if a first-party consumer cannot
+   resolve a stable source-to-case-to-execution mapping.
+3. **Rehearse before writing.** Use source-pinned original and journal-enriched
+   event fixtures to demonstrate that a `reserved_group` holds only the
+   selected group and publishes unrelated events, including when the next
+   snapshot has no matched group or an unqualified changed group. Prove
+   malicious/stale/malformed and owner-conflict cases fail closed. Confirm
+   protected source URLs survive replay.
+4. **Reservation and owner transaction (not yet authorized).** Only after
+   the preceding exclusions, commit the exact `reserved_group` record and
+   recheck that all active publishers will enforce it. The Registry's
+   serialized guarded successor/acknowledgment workflow must then requalify
+   current source, reservation, unique owner, authenticated maintainer
+   decision and writer quiescence before any issue POST. On timeout, re-read
+   the authoritative Registry issue/comment inventories and resume the same
+   operation; never invent a second owner or treat an ambiguous result as
+   success. Maintain the reservation while its outcome is uncertain.
+5. **Acceptance and original consumer preservation (blocked).** An
+   `accepted_group` transition must contain the actual unique Registry
+   successor URL and unchanged group/owner pins. Toolkit selection must
+   independently authenticate the current Registry observation acknowledgment
+   before excluding the accepted group. Existing #272 and protected residuals
+   remain separately resolvable; current controller and specialist contracts
+   must have an executed, version-pinned compatibility receipt. The present
+   candidate does **not** satisfy this condition.
+6. **Interruption and reverse-transfer review (blocked).** Recover every
+   crash point before and after Registry owner creation, acknowledgment and
+   accepted routing. An accepted or reserved ledger entry must not be removed
+   to resume Toolkit. A future reverse transfer requires positive evidence
+   that the Registry writer is fenced, all accepted source observations remain
+   durable and a new governed authority decision establishes Toolkit
+   reactivation. No such reverse-transfer implementation is currently
+   accepted.
+
+**Acceptance evidence:** record pinned Toolkit/Registry commits, source digest,
+active-run inventory and stop mechanism, unique owner and observation URLs,
+retained/held event counts, first-party consumer receipts, recovery trials and
+negative cases. A green CI result or a clean quiescence snapshot alone cannot
+close G3, G5 or G6. Missing evidence means stop, not rollback by deletion.
