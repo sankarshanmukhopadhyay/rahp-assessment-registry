@@ -20,6 +20,8 @@ jobs:
           python-version: '3.12'
       - name: Validate cases
         run: python3 scripts/validate_cases.py
+      - name: Verify Toolkit historical locator and accepted successions
+        run: python3 scripts/validate_history_locator.py
       - name: Validate source-controlled canonical execution records
         run: python3 scripts/verify_persisted_execution.py
       - name: Run negative tests
