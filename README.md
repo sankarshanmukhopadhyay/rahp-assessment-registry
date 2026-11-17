@@ -16,11 +16,11 @@ A public, independently maintained case-management surface for source-pinned RAH
 | Surface | Owns | Does not own |
 | --- | --- | --- |
 | [DTG Portfolio Monitor](https://github.com/sankarshanmukhopadhyay/dtg-portfolio-monitor) | Change observations, source consolidation, materiality and monitored-finding disposition | RAHP assessment outcomes |
-| [RAHP Toolkit](https://github.com/sankarshanmukhopadhyay/rahp-toolkit) | Portable RAHP method, engine, contracts, validators and release qualification | Authoritative upstream implementation state |
+| [RAHP Toolkit](https://github.com/sankarshanmukhopadhyay/rahp-toolkit) | Portable RAHP method, engine, execution contracts, validators, reconciliation semantics and release qualification | Externally owned case admission or authoritative upstream implementation state |
 | **This registry** | Case admission, review scope, evidence references, handoffs, residual ownership, reassessment triggers and administrative case lifecycle | RAHP runtime outcomes or external normative authority |
 | External source and specialist repositories | Their own specifications, implementations, remediation and specialist determinations | Other repositories' governance |
 
-A registry case is an indexed, attributed assessment record. It cannot assert PASS simply because upstream CI passed, a monitor ran, or a GitHub issue closed. The full original issue and authoritative evidence remain accessible through durable links. **No issue is automatically transferred or closed by adding a case record.**
+A registry case is an indexed, attributed assessment record. Registry coordinates case admission, ownership, evidence references, specialist referrals and reassessment; it consumes canonical Toolkit execution contracts without redefining assurance semantics. It cannot assert PASS simply because upstream CI passed, a monitor ran, or a GitHub issue closed. The full original issue and authoritative evidence remain accessible through durable links. **No issue is automatically transferred or closed by adding a case record.** For executing an assurance examination independently of Registry, start with the [Toolkit adoption guide](https://github.com/sankarshanmukhopadhyay/rahp-toolkit/blob/main/docs/adoption-guide.md).
 
 ## Queue migration intake
 
@@ -32,7 +32,7 @@ See [DPIP and Interop Lab referrals](docs/specialist-routing.md) for the existin
 
 ## Registry DTG live monitoring shadow
 
-The [read-only, scheduled live monitoring shadow](docs/live-shadow-monitoring.md) runs canonical Toolkit monitoring and routing logic inside Registry and retains source pins and event outputs. It does not publish cases or override DPIP/Lab/RAHP controller authority.
+The [read-only, scheduled live monitoring shadow](docs/live-shadow-monitoring.md) runs pinned Toolkit monitoring alongside Registry routing, checks source-matched output parity and retains source pins and event outputs. Its read-only materiality-to-case reconciliation identifies existing owners, reviewed pending creation and reassessment requirements without admitting cases or writing issues. It does not replace Toolkit's active publisher or override DPIP/Lab/RAHP controller authority.
 
 ## Registry-executed historical source replay
 
@@ -44,7 +44,7 @@ The [opt-in fail-closed intake adapter](docs/external-intake.md) supports source
 
 ## Source-controlled intake replay
 
-The [controlled Registry outbox replay](docs/durable-intake-replay.md) persists reviewed source-pinned intake intent in Git and requires an authoritative live issue re-read before acknowledging delivery. Its apply path is manually authorized and Registry-only; it is not yet connected to automatic materiality monitoring, controller execution or DPIP/Lab returns.
+The [controlled Registry outbox replay](docs/durable-intake-replay.md) persists reviewed source-pinned intake intent in Git and requires an authoritative live issue re-read before acknowledging delivery. Read-only materiality-to-case reconciliation now consumes observed, source-matched routing output and compares it with that reviewed intent. The separate manual main-only apply workflow can re-observe an accepted existing owner; **new-case publication remains blocked while Toolkit's external publisher is active**. There is no automatic materiality-to-outbox enqueue, Registry controller cutover or authenticated Registry-directed DPIP/Lab return.
 
 ## Canonical source-pinned pilot assessment
 
@@ -54,7 +54,7 @@ The [Registry-executed RAHP pilot](docs/canonical-registry-assessment.md) invoke
 
 The initial pilot's **external evidence coordination ownership was manually transferred** from historical, now-closed [Toolkit #1203](https://github.com/sankarshanmukhopadhyay/rahp-toolkit/issues/1203) to active [Registry #4](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/4). The case remains `not_assessed`; its residual evidence obligations are open. This is not a transfer of source remediation or canonical Toolkit assessment authority.
 
-Registry now runs read-only monitoring and pinned source-routing/parity workflows. An intake adapter exists, but automatic external case publication, Toolkit controller orchestration and DPIP/Lab return reconciliation have **not** cut over. The broader historical archive is subject to separate verification. No bulk migration or release claim is asserted.
+Registry now runs read-only monitoring, pinned source-routing/parity and source-matched materiality-to-case reconciliation. Its source-controlled outbox has a manually gated, Registry-only replay path, but **new-case publication remains deliberately disabled pending coordinated Toolkit publisher suppression and migration acceptance**. Toolkit's operational case publisher and specialist-return paths remain active; Registry controller orchestration and authenticated Registry-directed DPIP/Lab delivery and return reconciliation have **not** cut over. The broader historical archive is subject to separate verification. No bulk migration or release claim is asserted.
 
 The [controller migration contract](docs/controller-migration-contract.md) records the observed legacy issue-number coupling and the executable acceptance conditions required before a publisher switch; [issue #11](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/11) tracks the operational migration.
 
