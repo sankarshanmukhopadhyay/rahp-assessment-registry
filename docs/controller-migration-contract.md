@@ -58,3 +58,32 @@ A release is **not warranted** until the Registry has a consumable, verified ope
 The read-only [controller identity preflight](../scripts/verify_controller_legacy_contract.py) executes the actual canonical Toolkit handoff and return-identity helpers at pinned Toolkit commit `70298566dc897669e22bf37759843d6b7c0597d2`. It verifies that repeat legacy referrals remain stable, semantic examination identity is distinct from numbered referral identity, issue #4 cannot be substituted for legacy Toolkit #1203, and the accepted Registry pilot has no active execution or imported result. CI retains a narrow JSON receipt. Negative tests reject changed source pins, fabricated PASS, arbitrary imported results and an invented active controller anchor.
 
 This preflight does **not** authenticate specialist returns, invoke the DPIP/Lab consumer, initiate an assessment, exercise a retry outbox, or qualify the controller cutover. It freezes legacy identity behavior as executable regression evidence before developing the actual cross-repository adapter.
+
+## Real historical DPIP return evidence (2026-11-17)
+
+A read-only [canonical Toolkit consumer replay](../scripts/verify_dpip_legacy_consumer.py)
+uses the public issue histories of Toolkit
+[#1116](https://github.com/sankarshanmukhopadhyay/rahp-toolkit/issues/1116)
+and DPIP [#304](https://github.com/sankarshanmukhopadhyay/dtg-privacy-implementation-profile/issues/304)
+and [#305](https://github.com/sankarshanmukhopadhyay/dtg-privacy-implementation-profile/issues/305).
+DPIP #305 explicitly records that its examination epoch duplicated #304 during
+concurrent handoff execution. Both produced distinct return receipts against the
+same historical source issue, which reconciled to a shared semantic residual
+[Toolkit #1117](https://github.com/sankarshanmukhopadhyay/rahp-toolkit/issues/1117).
+
+The historical test checks source and target identity, the exact DPIP
+examination key, the canonical Toolkit `dpip_return_reconcile` parser and
+normalized evidence-gap disposition, source-specific reconciliation marker and
+DPIP return acknowledgement. Negative fixtures reject mismatched provenance,
+missing receipts, altered targets, incorrect examination identity and fabricated
+PASS. A passing replay establishes historical **consumer compatibility
+evidence**, including a real duplicate-examination hazard. It does not certify
+the original returns, verify runtime privacy, or demonstrate a Registry issue
+as the controller destination.
+
+**Cutover guard:** distinct issue numbers must not split a semantically identical
+examination epoch into independent authoritative outcomes. The Registry
+controller integration must test source-referral idempotence and enforce one
+qualified disposition for each exact source/examination epoch, including
+retries and conflicting returns. Existing historical duplicates must remain
+traceable rather than being deleted or treated as fresh obligations.
