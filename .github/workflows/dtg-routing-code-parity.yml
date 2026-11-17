@@ -1,5 +1,12 @@
 name: DTG operational routing code parity
 on:
+  pull_request:
+    paths:
+      - '.github/workflows/dtg-routing-code-parity.yml'
+      - 'ops/migration/nov16-annotated-tags.json'
+      - 'scripts/verify_release_tag_pins.py'
+      - 'tests/test_release_tag_pins.py'
+      - 'ops/dtg/**'
   push:
     branches: [main]
     paths:
