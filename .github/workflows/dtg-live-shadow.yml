@@ -10,6 +10,9 @@ on:
       - 'scripts/registry_materiality_intake.py'
       - 'scripts/audit_toolkit_transfer_lineage.py'
       - 'tests/test_toolkit_transfer_lineage.py'
+      - 'scripts/verify_release_tag_pins.py'
+      - 'tests/test_release_tag_pins.py'
+      - 'ops/migration/evidence/**'
       - 'ops/migration/candidates/**'
       - 'scripts/registry_intake.py'
       - 'scripts/registry_outbox.py'
@@ -29,6 +32,9 @@ on:
       - 'scripts/registry_materiality_intake.py'
       - 'scripts/audit_toolkit_transfer_lineage.py'
       - 'tests/test_toolkit_transfer_lineage.py'
+      - 'scripts/verify_release_tag_pins.py'
+      - 'tests/test_release_tag_pins.py'
+      - 'ops/migration/evidence/**'
       - 'ops/migration/candidates/**'
       - 'scripts/registry_intake.py'
       - 'scripts/registry_outbox.py'
@@ -227,6 +233,25 @@ jobs:
           (base / 'candidate-overlap.json').write_text(json.dumps(report, indent=2, sort_keys=True) + '\n')
           assert a['cutover_authorized'] is False and b['cutover_authorized'] is False
           print('Read-only overlap candidates:', report['overlapping_finding_count'])
+          PY
+      - name: Qualify authoritative annotated release tag targets (read-only)
+        env:
+          REGISTRY_INTAKE_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s registry/tests -p 'test_release_tag_pins.py' -v
+          python3 registry/scripts/verify_release_tag_pins.py \
+            --evidence registry/ops/migration/evidence/toolkit-1208-release-tags.json \
+            --findings build/live/findings.json \
+            --out build/live/toolkit-1208-supplemental-tag-pins.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          r = json.loads(Path('build/live/toolkit-1208-supplemental-tag-pins.json').read_text())
+          assert r['qualified_count'] == 3
+          assert r['ownership_transfer_accepted'] is False
+          assert r['source_findings_modified'] is False
+          assert r['cutover_authorized'] is False
           PY
       - name: Retain Registry shadow evidence
         if: always()
