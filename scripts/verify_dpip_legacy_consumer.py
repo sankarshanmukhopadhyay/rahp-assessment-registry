@@ -162,7 +162,7 @@ def verify_portable_return_chain(source_comments, target_comments, consumer, ass
     if not isinstance(pins, list) or expected not in {
         (p.get("repository"), p.get("revision")) for p in pins if isinstance(p, dict)
     }:
-        raise ConsumerError("expected immutable source pin missing from DPIP return")
+        raise ConsumerError("source-pinned expected immutable artifact missing from DPIP return")
     provenance = portable.get("provenance")
     if not isinstance(provenance, dict):
         raise ConsumerError("portable specialist provenance missing")
