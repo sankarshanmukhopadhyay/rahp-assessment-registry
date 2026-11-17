@@ -5,3 +5,36 @@ The Registry owns the read-only [live monitoring shadow workflow](../.github/wor
 The workflow retains source and provenance plus routed, combined, DPIP and unresolved event sets. Its negative tests reject race/mismatched content, future/stale source, missing source and unpinned engine. It has only `contents:read` GitHub permission, so no case writes or DPIP/Lab transport can occur. A failed freshness check is a real missing evidence condition, **not a successful empty monitor period**.
 
 This is a **shadow run** alongside the existing Toolkit consumer until the parity and cutover gates in [execution migration plan](execution-migration-plan.md) are met. It is not a second authoritative assessor, does not claim runtime conformance, and does not transfer old issue ownership. The Toolkit publisher still needs a verified registry-native replacement and non-issue controller/DPIP/Lab correlation before its issue-writing paths can be disabled.
+
+## Live dual-router parity (same fresh source)
+
+The same scheduled, read-only shadow workflow now also executes the **Registry
+DTG routing implementation** with its Registry-owned policy and normalization
+configuration, on precisely the same fetched snapshot and date as the canonical
+Toolkit router. Both output sets are preserved under `build/live/toolkit/`
+and `build/live/registry/` alongside the original source, and
+[`compare_dtg_routing_outputs.py`](../scripts/compare_dtg_routing_outputs.py)
+fails on any byte-level difference in `routing.json`, `combined-events.json`,
+`dpip-events.json`, `unresolved.json`, or `compositions.txt`. A missing
+output or an empty routed result is not accepted as proof of parity.
+
+The workflow first requires Toolkit's existing **two-day UTC source freshness**
+contract; the source must also match the checked-out Monitor repository on the
+claimed snapshot date. Its `dual-router-parity.json` receipt records both
+routers' output digests, the source snapshot SHA-256, Toolkit/Registry/Monitor
+commit revisions, routing and normalization policy digests, and a no-write
+scope. If the Monitor is stale or absent, the run **fails** rather than reporting
+a successful empty observation period. The workflow is also invoked on
+relevant pull requests to make live compatibility falsifiable before merge.
+
+### What this establishes
+
+A passing live run supports **exact route-output parity for its observed
+source snapshot** and pinned engine and configuration revisions. It advances
+the monitored-source comparison gate in [Registry #11](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/11),
+but it does not itself qualify materiality-journal side effects, end-to-end
+case coalescence/reassessment, specialist result delivery, or a sustained
+multi-snapshot history under changed source revisions. Historical frozen parity
+CI remains separately available for deterministic reproduction. Neither
+workflow opens issues or delegates execution authority, and neither replaces
+the existing Toolkit materiality publisher.
