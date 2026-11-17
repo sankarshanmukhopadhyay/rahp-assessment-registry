@@ -7,6 +7,7 @@ epoch), Toolkit residual #1117. No Registry cutover or assurance PASS.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -108,6 +109,96 @@ def verify_historical_links(source, source_comments, targets, target_comments, c
     }
 
 
+def verify_portable_historical_return(source_comments, target_comments, consumer, assessor_contract):
+    """Validate the real DPIP #305 portable result through canonical Toolkit schema.
+
+    The source issue return payload must be byte-identical to the DPIP outbox
+    payload digest and have an acknowledged receipt on DPIP's own issue.
+    This is read-only historical contract interoperability, not authentication
+    of future arbitrary GitHub comments or Registry return cutover.
+    """
+    source_returns = [
+        c for c in source_comments
+        if (c.get("body") or "").startswith(
+            f"<!-- dpip-return:{DPIP_REPO}#305 -->")
+    ]
+    if len(source_returns) != 1:
+        raise ConsumerError("missing or duplicate historical source DPIP #305 return")
+    raw = source_returns[0]["body"]
+    digest = hashlib.sha256(raw.encode("utf-8")).hexdigest()[:20]
+    disp_blocks = [b["dpip_disposition"] for b in consumer.yaml_blocks(raw)
+                   if isinstance(b.get("dpip_disposition"), dict)]
+    if len(disp_blocks) != 1:
+        raise ConsumerError("source return missing unique formal DPIP disposition")
+    disposition = disp_blocks[0]
+
+    examinations = [
+        c for c in target_comments[305]
+        if (c.get("body") or "").startswith("<!-- dpip-examination:305:")
+    ]
+    if len(examinations) != 1:
+        raise ConsumerError("DPIP #305 has no unique terminal examination")
+    exam_blocks = [b["dpip_examination"] for b in consumer.yaml_blocks(examinations[0]["body"])
+                   if isinstance(b.get("dpip_examination"), dict)]
+    if len(exam_blocks) != 1:
+        raise ConsumerError("DPIP #305 examination does not expose one formal result")
+    examination = exam_blocks[0]
+    portable = examination.get("assessor_result")
+    if not isinstance(portable, dict):
+        raise ConsumerError("DPIP #305 portable assessor result is absent")
+    issues = assessor_contract.validate_result(portable)
+    if issues:
+        raise ConsumerError("canonical portable assessor validation failed: " + "; ".join(issues))
+    if portable.get("assessment_id") != "dpip:305" or portable.get("outcome") != "INDETERMINATE":
+        raise ConsumerError("portable result identity/outcome differs from the historical examination")
+    if portable != disposition.get("assessor_result"):
+        raise ConsumerError("DPIP producer's assessor result differs from source-delivered result")
+    if disposition.get("conclusion") != portable["outcome"]:
+        raise ConsumerError("DPIP disposition contradicts portable outcome")
+    pins = portable.get("source_pins")
+    expected = ("OpenVTC/verifiable-trust-infrastructure", "324d325e7e75c33d658bc10104867d2eca0dc6d7")
+    if not isinstance(pins, list) or expected not in {
+        (p.get("repository"), p.get("revision")) for p in pins if isinstance(p, dict)
+    }:
+        raise ConsumerError("source-pinned OpenVTC implementation missing from DPIP return")
+    provenance = portable.get("provenance")
+    if not isinstance(provenance, dict):
+        raise ConsumerError("portable specialist provenance missing")
+    for key, prefix in (
+        ("execution_digest", "<!-- dpip-execution-evidence:305:"),
+        ("setup_digest", "<!-- dpip-examination-setup:305:"),
+    ):
+        value = provenance.get(key)
+        if not isinstance(value, str) or not value:
+            raise ConsumerError("portable specialist " + key + " missing")
+        target = prefix + value + " -->"
+        if sum(target in (c.get("body") or "") for c in target_comments[305]) != 1:
+            raise ConsumerError("portable specialist " + key + " not attributable to one source event")
+
+    outbox = f"<!-- rahp-return-outbox:v1:305:{digest} -->"
+    ack_prefix = f"<!-- rahp-return-ack:v2:305:{digest}:"
+    acknowledged = f"destination: {chr(96)}{SOURCE_REPO}#{SOURCE_ISSUE}{chr(96)}"
+    if sum(outbox in (c.get("body") or "") for c in target_comments[305]) != 1:
+        raise ConsumerError("DPIP outbox does not match byte-exact returned payload digest")
+    if sum(ack_prefix in (c.get("body") or "") and acknowledged in (c.get("body") or "")
+           for c in target_comments[305]) != 1:
+        raise ConsumerError("DPIP acknowledgment does not match returned payload digest/destination")
+    return {
+        "portable_schema": portable["schema"],
+        "portable_assessment_id": portable["assessment_id"],
+        "portable_outcome": portable["outcome"],
+        "portable_reason_code": portable["reason_code"],
+        "source_delivery_digest": digest,
+        "source_return_matches_specialist": True,
+        "canonical_assessor_schema_validated": True,
+        "specialist_execution_provenance_observed": True,
+        "dpip_outbox_digest_matches_source": True,
+        "dpip_ack_matches_outbox": True,
+        "registry_destination_tested": False,
+        "independent_specialist_authentication": False,
+    }
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--toolkit", type=Path, required=True)
@@ -121,11 +212,14 @@ def main():
             raise ConsumerError("canonical Toolkit source pin mismatch")
         sys.path.insert(0, str(toolkit / "tools"))
         import dpip_return_reconcile as consumer
+        import assessor_contract
         source = api(SOURCE_REPO, f"issues/{SOURCE_ISSUE}")
         source_comments = comments(SOURCE_REPO, SOURCE_ISSUE)
         targets = {n: api(DPIP_REPO, f"issues/{n}") for n in TARGET_ISSUES}
         target_comments = {n: comments(DPIP_REPO, n) for n in TARGET_ISSUES}
         result = verify_historical_links(source, source_comments, targets, target_comments, consumer)
+        result["portable_result"] = verify_portable_historical_return(
+            source_comments, target_comments, consumer, assessor_contract)
         result["toolkit_revision"] = rev
     except (OSError, ValueError, ImportError, subprocess.CalledProcessError) as exc:
         print(f"INVALID historical DPIP consumer replay: {exc}", file=sys.stderr)
