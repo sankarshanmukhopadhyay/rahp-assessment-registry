@@ -92,10 +92,115 @@ def qualify(manifest, findings, fetch):
     }
 
 
+def qualify_combined_groups(report, findings, combined):
+    """Bind all grouped observations to exact observed commits or live tag evidence.
+
+    A complete source chain is NOT acceptance of an assessment owner, current
+    observation delivery, execution, or publisher cutover.
+    """
+    if (not isinstance(report, dict) or
+            report.get("schema") != "rahp-registry-release-tag-source-qualification/v1" or
+            report.get("verification") != "live-annotated-tag-reference-and-object" or
+            report.get("cutover_authorized") is not False):
+        raise TagPinError("invalid verified tag qualification receipt")
+    if not isinstance(findings, list) or not isinstance(combined, list) or not combined:
+        raise TagPinError("observed findings and combined groups required")
+    source = {}
+    for finding in findings:
+        if not isinstance(finding, dict) or not isinstance(finding.get("finding_id"), str):
+            raise TagPinError("invalid monitored finding")
+        fid = finding["finding_id"]
+        if fid in source:
+            raise TagPinError("duplicated source finding")
+        source[fid] = finding
+    tagged = {}
+    for entry in report.get("supplemental_verified", []):
+        fid = entry.get("finding_id") if isinstance(entry, dict) else None
+        if fid in tagged or not fid or entry.get("verified") is not True:
+            raise TagPinError("duplicate or unverified supplemental tag")
+        tagged[fid] = entry
+    covered, grouped, groups = set(), set(), []
+    url_pattern = re.compile(r"^https://github[.]com/([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)/commit/([0-9a-f]{40})$")
+    for event in combined:
+        if not isinstance(event, dict) or not isinstance(event.get("source_observations"), list):
+            raise TagPinError("combined event lacks structured source observations")
+        key = event.get("assessment_key")
+        if not isinstance(key, str) or key in grouped:
+            raise TagPinError("duplicate or invalid combined group key")
+        grouped.add(key)
+        direct_pins, direct_count, supplemental_count = set(), 0, 0
+        expected_unanchored = []
+        seen = set()
+        for observed in event["source_observations"]:
+            fid = observed.get("finding_id") if isinstance(observed, dict) else None
+            if not fid or fid in seen or fid in covered or fid not in source:
+                raise TagPinError("missing or duplicated grouped finding identity")
+            seen.add(fid)
+            covered.add(fid)
+            finding = source[fid]
+            repo = finding.get("repository")
+            if observed.get("repository") != repo:
+                raise TagPinError("combined observation differs from source repository")
+            revisions = set()
+            evidence = finding.get("evidence_urls") or []
+            if not isinstance(evidence, list):
+                raise TagPinError("malformed source evidence URLs")
+            for url in evidence:
+                if not isinstance(url, str):
+                    raise TagPinError("malformed source evidence URL")
+                match = url_pattern.fullmatch(url)
+                if match and match.group(1) == repo:
+                    revisions.add(match.group(2))
+                    direct_pins.add((repo, match.group(2)))
+            if observed.get("revisions") != sorted(revisions) or observed.get(
+                    "source_pin_status") != ("commit-evidence" if revisions else "unresolved"):
+                raise TagPinError("combined machine evidence differs from observed source")
+            if revisions:
+                direct_count += 1
+                if fid in tagged:
+                    raise TagPinError("supplemental tag illegally replaced direct commit")
+            else:
+                expected_unanchored.append(fid)
+                claim = tagged.get(fid)
+                if (not claim or claim.get("repository") != repo or
+                        claim.get("source_tag_url") not in evidence or
+                        claim.get("source_observed_commit_url") is not False or
+                        not SHA.fullmatch(str(claim.get("supplemental_verified_target_commit", "")))):
+                    raise TagPinError("group has unresolved source finding: " + fid)
+                supplemental_count += 1
+        if (event.get("unanchored_finding_ids") != sorted(expected_unanchored) or
+                event.get("source_pins") != [
+                    {"repository": repo, "revision": rev} for repo, rev in sorted(direct_pins)]):
+            raise TagPinError("combined group source pin/coverage list has drifted")
+        groups.append({"assessment_key": key, "finding_count": len(seen),
+                       "observed_commit_findings": direct_count,
+                       "supplemental_annotated_tag_findings": supplemental_count,
+                       "source_provenance_qualified": True,
+                       "case_owner_accepted": False})
+    if set(tagged) != set(event_id for group in combined
+                           for event_id in group["unanchored_finding_ids"]):
+        raise TagPinError("supplemental evidence does not correspond exactly to grouped gaps")
+    return {"schema": "rahp-registry-combined-group-source-evidence/v1",
+            "groups": sorted(groups, key=lambda item: item["assessment_key"]),
+            "finding_count": len(covered),
+            "observed_commit_findings": sum(x["observed_commit_findings"] for x in groups),
+            "supplemental_tag_findings": sum(x["supplemental_annotated_tag_findings"] for x in groups),
+            "source_provenance_qualified": True,
+            "snapshot_updated": False,
+            "new_case_created": False,
+            "current_observation_delivered": False,
+            "toolkit_publication_suppressed": False,
+            "controller_consumer_migrated": False,
+            "independent_review_accepted": False,
+            "cutover_authorized": False}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--evidence", type=Path, required=True)
     parser.add_argument("--findings", type=Path, required=True)
+    parser.add_argument("--combined-events", type=Path,
+                        help="also require complete grouped source provenance from canonical router")
     parser.add_argument("--out", type=Path, required=True)
     args = parser.parse_args()
     try:
@@ -106,6 +211,10 @@ def main():
         findings = json.loads(args.findings.read_text(encoding="utf-8"))
         report = qualify(evidence, findings,
                          lambda url: registry_intake.request("GET", url, token))
+        if args.combined_events is not None:
+            combined = json.loads(args.combined_events.read_text(encoding="utf-8"))
+            report["group_source_qualification"] = qualify_combined_groups(
+                report, findings, combined)
     except (OSError, ValueError, TypeError, KeyError, registry_intake.IntakeError) as exc:
         print("INVALID release tag qualification:", exc, file=sys.stderr)
         return 1
