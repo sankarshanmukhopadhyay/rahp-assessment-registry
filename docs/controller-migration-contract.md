@@ -149,3 +149,12 @@ an exact payload digest or schema-valid GitHub comment. Before live use,
 an appropriately admitted source-bound referral, credential authorization,
 authentic receiver and actual Toolkit-controller reconciliation are required.
 The current Toolkit/DPIP production handoffs remain unchanged.
+
+## Persistent Registry case epoch observations (bounded)
+
+[The examination-epoch observation journal](registry-epoch-journal.md) compares each
+new canonical DPIP qualification against prior authoritative Registry issue
+comments for the same case and semantic epoch. It rejects cross-delivery
+conflicts before acknowledgment and requires the shared case-publication
+serialization lock. It does not yet provide a real authenticated specialist
+round trip, a cross-repository atomic lock or controller outcome import.
