@@ -89,7 +89,7 @@ def verify_historical_links(source, source_comments, targets, target_comments, c
         raise ConsumerError("source controller has no matching reconciliation receipt")
     ack = [c for c in target_comments[305]
            if "<!-- rahp-return-ack:v2:305:" in (c.get("body") or "")
-           and f"destination: \`{SOURCE_REPO}#{SOURCE_ISSUE}\`" in (c.get("body") or "")]
+           and f"destination: {chr(96)}{SOURCE_REPO}#{SOURCE_ISSUE}{chr(96)}" in (c.get("body") or "")]
     if len(ack) != 1:
         raise ConsumerError("DPIP target has no unique source-specific return acknowledgement")
     return {
