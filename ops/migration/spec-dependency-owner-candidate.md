@@ -1,0 +1,3 @@
+# Monitored specification-dependency owner candidate
+
+The source-controlled candidate binds the exact November 16 monitored four-finding group to Toolkit issue #272, the closed #615 wrapper, and independent #282/#826/#837 residual owners. The existing parity workflow checks source evidence, live Toolkit owner states and exact findings, and rejects a competing Registry key owner. The receipt is a read-only as-of observation, not independent acceptance, Registry publication, an exclusive publisher fence, controller/DPIP migration or a rollback qualification. It must not be used to suppress any Toolkit writer. In particular, successful candidate qualification does not grant authority to create a Registry issue.
