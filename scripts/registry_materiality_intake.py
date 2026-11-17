@@ -9,6 +9,7 @@ authority is inferred from a routed finding.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -54,8 +55,9 @@ def checked_source(findings, routed):
             raise MaterialityError("routed finding does not match exact monitored source")
         if (observed.get("state") != "open"
                 or observed.get("review_status") not in (None, "unreviewed")
-                or observed.get("materiality") not in ("medium", "high", "critical")
-                or entry.get("outcome") not in ALLOWED_OUTCOMES | {"UNMAPPED"}):
+                or observed.get("materiality") not in ("high", "critical")
+                or observed.get("assurance_impact") not in ("potentially-breaking", "breaking")
+                or entry.get("outcome") not in ALLOWED_OUTCOMES):
             raise MaterialityError("routed finding has unsupported materiality/route state")
     return source
 
@@ -122,8 +124,15 @@ def plan(findings, routed, manifest, issues):
     # Every other routed item remains unadmitted; treating a routed candidate
     # as authority to create an issue would duplicate live Toolkit ownership.
     unmatched = len(routed) - len(matches)
+    def digest(value):
+        raw = json.dumps(value, ensure_ascii=False, sort_keys=True,
+                         separators=(",", ":")).encode("utf-8")
+        return hashlib.sha256(raw).hexdigest()
     return {
         "schema": "rahp-registry-materiality-intake-shadow/v1",
+        "monitored_source_sha256": digest(findings),
+        "router_output_sha256": digest(routed),
+        "approved_manifest_sha256": digest(manifest),
         "approved_assessment_key": event["assessment_key"],
         "approved_finding_id": event["finding_id"],
         "state": status,
