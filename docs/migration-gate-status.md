@@ -28,7 +28,7 @@
 | --- | --- |
 | Evidence | [PR #53](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/pull/53), [Actions run #44106684291](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/actions/runs/44106684291): both authoritative routers completed byte-identical output parity against **two pinned snapshots**, 2026-11-13 and 2026-11-16, retaining each source digest and receipt. Earlier same-fresh-source live parity passed in run 43993512587. No publisher effects were exercised. |
 | Unproven | Operational publication coalescence, live unmapped/stale-source countercase reconciliation, and sustained cross-snapshot source freshness. Historical pinning does not explain Toolkit failed run 43871548910. |
-| Next executable step | Independently review the two retained snapshot receipts, then exercise a scoped monitored source transition through the actual producer/consumer path. Do not treat a historical replay as a live publisher switch. |
+| Next executable step | Verify the six exact November 16 annotated release-tag objects against live GitHub and bind all 13 grouped findings to either directly observed commits or supplemental verified tag targets. Then qualify the group owner, current observation delivery, issue-number consumers, and independent approval before any authority switch. |
 
 ## Gate 3. Operational workflow migration with bounded CI cost
 

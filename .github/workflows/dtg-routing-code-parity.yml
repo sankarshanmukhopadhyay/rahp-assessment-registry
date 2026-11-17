@@ -6,6 +6,9 @@ on:
       - '.github/workflows/dtg-routing-code-parity.yml'
       - 'ops/dtg/**'
       - 'scripts/compare_dtg_routing_outputs.py'
+      - 'scripts/verify_release_tag_pins.py'
+      - 'tests/test_release_tag_pins.py'
+      - 'ops/migration/nov16-annotated-tags.json'
   workflow_dispatch:
 permissions:
   contents: read
@@ -88,6 +91,17 @@ jobs:
               "sources": evidence, "source_writes": 0, "case_writes": 0,
               "operational_cutover_qualified": False}, indent=2, sort_keys=True) + "\n")
           PY
+      - name: Verify all November 16 combined groups against live annotated tags
+        env:
+          REGISTRY_INTAKE_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tests -p 'test_release_tag_pins.py' -v
+          python3 scripts/verify_release_tag_pins.py \
+            --evidence ops/migration/nov16-annotated-tags.json \
+            --findings monitor/data/findings/2026/11/16.json \
+            --combined-events build/parity/2026-11-16/registry/combined-events.json \
+            --out build/parity/2026-11-16/combined-source-qualification.json
       - name: Retain exact output and parity receipt
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2

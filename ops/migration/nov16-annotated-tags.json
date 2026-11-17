@@ -1,0 +1,47 @@
+{
+  "schema": "rahp-registry-annotated-tag-evidence/v1",
+  "items": [
+    {
+      "finding_id": "87588c29ff62d92fbcbd",
+      "repository": "OpenVTC/verifiable-trust-infrastructure",
+      "tag_name": "vti-rooms-v0.36.0",
+      "tag_object_sha": "643f3acbe9eb802cc880ded097b9dcba07dae968",
+      "target_commit_sha": "2e516f84dc12c3b149b97c1a526c76a69c49eead"
+    },
+    {
+      "finding_id": "c98483a5d3273a4e29e4",
+      "repository": "OpenVTC/verifiable-trust-infrastructure",
+      "tag_name": "vti-rooms-v0.34.0",
+      "tag_object_sha": "9308658bd7c6b011c893bbeef3899ce925edfd81",
+      "target_commit_sha": "71f64ab1b9023b0ddbbf85bd1344dddf352e943d"
+    },
+    {
+      "finding_id": "cb1a56453cc6ae92ca67",
+      "repository": "OpenVTC/verifiable-trust-infrastructure",
+      "tag_name": "vti-specs-rooms-v0.7.1",
+      "tag_object_sha": "dc30cb903cc250273a2dc5db2d314fda7e4c326d",
+      "target_commit_sha": "71f64ab1b9023b0ddbbf85bd1344dddf352e943d"
+    },
+    {
+      "finding_id": "0add1f4cc0f048ce6bfc",
+      "repository": "trustoverip/dtgwg-trust-tasks-tf",
+      "tag_name": "trust-tasks-rs-v0.37.13",
+      "tag_object_sha": "4ec7c86d1d0d0495ba605e0ae67e6774628199b9",
+      "target_commit_sha": "2f81a7330dcbdc02fcd60109cf1ce5242f13fb26"
+    },
+    {
+      "finding_id": "a60eaffaf3cbc1394553",
+      "repository": "trustoverip/dtgwg-trust-tasks-tf",
+      "tag_name": "trust-tasks-rs-v0.37.14",
+      "tag_object_sha": "9d7efdc789b752eabe6a92f8030c89d599384566",
+      "target_commit_sha": "2a66a035104700fb5ddb1623ba5062b565f3b080"
+    },
+    {
+      "finding_id": "acc9772126b1a3820240",
+      "repository": "trustoverip/dtgwg-trust-tasks-tf",
+      "tag_name": "trust-tasks-rs-v0.40.0",
+      "tag_object_sha": "0d9d522a6025423ac77836ca6b40ce2893056d66",
+      "target_commit_sha": "69814c5ef60b5fa2d75fe2687efad1d12d34283f"
+    }
+  ]
+}

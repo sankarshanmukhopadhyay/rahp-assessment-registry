@@ -31,6 +31,41 @@ class ReleaseEvidenceTests(unittest.TestCase):
         self.assertFalse(r["supplemental_verified"][0]["source_observed_commit_url"])
         self.assertFalse(r["ownership_transfer_accepted"])
 
+    def test_complete_group_requires_exact_observed_and_supplemental_pin(self):
+        manifest, source, fetch = fixture()
+        source.append({"finding_id": "b"*20, "repository": source[0]["repository"],
+                       "evidence_urls": [
+                         "https://github.com/" + source[0]["repository"] + "/commit/" + "d"*40]})
+        group = {
+            "assessment_key": "dtg:portfolio:combined:bounded",
+            "source_observations": [
+                {"finding_id": "a"*20, "repository": source[0]["repository"],
+                 "revisions": [], "source_pin_status": "unresolved"},
+                {"finding_id": "b"*20, "repository": source[0]["repository"],
+                 "revisions": ["d"*40], "source_pin_status": "commit-evidence"}],
+            "source_pins": [{"repository": source[0]["repository"], "revision": "d"*40}],
+            "unanchored_finding_ids": ["a"*20],
+        }
+        checked = tags.qualify_combined_groups(tags.qualify(manifest, source, fetch), source, [group])
+        self.assertEqual((checked["finding_count"], checked["supplemental_tag_findings"]), (2, 1))
+        self.assertFalse(checked["cutover_authorized"])
+        corrupted = copy.deepcopy(group)
+        corrupted["source_observations"][1]["revisions"] = ["f"*40]
+        with self.assertRaisesRegex(tags.TagPinError, "differs"):
+            tags.qualify_combined_groups(tags.qualify(manifest, source, fetch), source, [corrupted])
+        corrupted = copy.deepcopy(group)
+        corrupted["unanchored_finding_ids"] = []
+        with self.assertRaisesRegex(tags.TagPinError, "coverage"):
+            tags.qualify_combined_groups(tags.qualify(manifest, source, fetch), source, [corrupted])
+        missing = tags.qualify(manifest, source, fetch)
+        missing["supplemental_verified"] = []
+        with self.assertRaisesRegex(tags.TagPinError, "unresolved"):
+            tags.qualify_combined_groups(missing, source, [group])
+        changed_source = copy.deepcopy(source)
+        changed_source[0]["evidence_urls"] = ["https://github.com/different/repo/commit/"+"e"*40]
+        with self.assertRaisesRegex(tags.TagPinError, "unresolved"):
+            tags.qualify_combined_groups(tags.qualify(manifest, source, fetch), changed_source, [group])
+
     def test_retargeted_tag_fails(self):
         manifest, source, fetch = fixture()
         def changed(url):
