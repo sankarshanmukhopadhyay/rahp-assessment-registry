@@ -7,6 +7,8 @@ on:
       - 'scripts/registry_outbox.py'
       - 'scripts/registry_intake.py'
       - 'outbox/pending/**'
+      - 'scripts/registry_direct_intake.py'
+      - 'tests/test_registry_direct_intake.py'
   workflow_dispatch:
 permissions:
   contents: read
@@ -42,10 +44,31 @@ jobs:
           assert receipt['assurance_determination'] is None
           print('Verified live Registry #4 owner; no publication or assurance inferred')
           PY
+      - name: Verify first real direct-case owner through canonical outbox (no writes)
+        env:
+          REGISTRY_INTAKE_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python3 scripts/registry_outbox.py \
+            --manifest outbox/pending/ondtf-emergency-authority-v1.json \
+            --receipt build/outbox-shadow/ondtf-direct.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          receipt = json.loads(Path('build/outbox-shadow/ondtf-direct.json').read_text())
+          assert receipt['mode'] == 'dry_run'
+          assert receipt['state'] == 'owner_observed'
+          assert receipt['owner_number'] == 47
+          assert receipt['assessment_key'] == 'external:direct:ondtf:emergency-authority-lifecycle'
+          assert receipt['source_revision'] == '201bcacdb9b0595f2693c73440598c4b0e89b10d'
+          assert receipt['assurance_determination'] is None
+          assert receipt['controller_execution'] is None
+          print('Verified live Registry #47 via durable outbox: no writes, no assurance PASS')
+          PY
       - name: Retain read-only live receipt
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: registry-pending-intake-live-shadow
-          path: build/outbox-shadow/receipt.json
+          path: build/outbox-shadow/
           if-no-files-found: warn

@@ -2,7 +2,7 @@
 
 A public, independently maintained case-management surface for source-pinned RAHP examinations and their unresolved assurance obligations across trust-system projects.
 
-**Status:** pilot / working draft, with a manually accepted external-case owner and read-only operational routing shadows. This repository does not certify systems, govern upstream specifications or own the canonical RAHP engine. Registry Actions can invoke pinned Toolkit routing code; that is not a Registry-native RAHP assurance determination or a live controller cutover.
+**Status:** pilot / working draft. Historical external-case succession is demonstrated by Registry #4; the first source-qualified **direct** Registry case is [#47](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/47). Direct-case publication and canonical Toolkit execution have been observed, but full DTG/CAWG producer transfer and authenticated DPIP/Lab return cutover remain unqualified. This repository does not certify systems, govern upstream specifications or own the canonical RAHP engine. Registry Actions can invoke pinned Toolkit routing code; that is not a Registry-native RAHP assurance determination or a live controller cutover.
 
 ## Start here
 
@@ -44,17 +44,25 @@ The [opt-in fail-closed intake adapter](docs/external-intake.md) supports source
 
 ## Source-controlled intake replay
 
-The [controlled Registry outbox replay](docs/durable-intake-replay.md) persists reviewed source-pinned intake intent in Git and requires an authoritative live issue re-read before acknowledging delivery. Read-only materiality-to-case reconciliation now consumes observed, source-matched routing output and compares it with that reviewed intent. The separate manual main-only apply workflow can re-observe an accepted existing owner; **new-case publication remains blocked while Toolkit's external publisher is active**. There is no automatic materiality-to-outbox enqueue, Registry controller cutover or authenticated Registry-directed DPIP/Lab return.
+The [controlled Registry outbox replay](docs/durable-intake-replay.md) persists reviewed source-pinned intake intent in Git and requires an authoritative live issue re-read before acknowledging delivery. Read-only materiality-to-case reconciliation now consumes observed, source-matched routing output and compares it with that reviewed intent. The separate manually dispatched, main-only apply workflow preserves existing-owner replay and additionally permits **only exact, source-qualified direct-first-intake cases** with a committed approval and no historical Toolkit issue; it does not authorize an arbitrary DTG/CAWG publisher transfer. Registry #47 was created through an operator-mediated invocation of that reviewed intake intent and authoritatively re-read; the automated direct-write dispatch is implemented but not yet proven by a real write. There is no automatic materiality-to-outbox enqueue, Registry controller cutover or authenticated Registry-directed DPIP/Lab return.
 
 ## Canonical source-pinned pilot assessment
 
 The [Registry-executed RAHP pilot](docs/canonical-registry-assessment.md) invokes the immutable Toolkit controller with the existing source-pinned case and an explicitly empty native-evidence ledger. Its expected result is `INDETERMINATE` / `evidence-required`, not a Registry case PASS or operational cutover.
 
+## First Registry-originated direct assessment
+
+The [ONDTF-GOV-006 case](cases/ondtf/emergency-authority-v1.json) is source-pinned to the v1.0.0 release. Its administrative owner is [Registry #47](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/47); [the canonical controller workflow](.github/workflows/registry-canonical-assessment.yml) executes the source-pinned assessment with no implementation-native evidence and returns **INDETERMINATE / evidence-required**, retaining an exact case/execution binding. No DPIP or Lab result is claimed. The existing [outbox shadow](.github/workflows/outbox-live-shadow.yml) verifies the live #47 owner without writing issues.
+
+## Historical preservation and operator references
+
+[History locator and inventory](archive/README.md) · [Case succession](docs/case-succession.md) · [Execution migration](docs/execution-migration-plan.md) · [History capture](docs/history-capture.md) · [Full-content staging review](docs/persistent-history-staging.md) · [Execution journal](docs/registry-execution-journal.md) · [Registry native intake](docs/registry-native-intake.md).
+
 ## Pilot scope and migration status
 
 The initial pilot's **external evidence coordination ownership was manually transferred** from historical, now-closed [Toolkit #1203](https://github.com/sankarshanmukhopadhyay/rahp-toolkit/issues/1203) to active [Registry #4](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/4). The case remains `not_assessed`; its residual evidence obligations are open. This is not a transfer of source remediation or canonical Toolkit assessment authority.
 
-Registry now runs read-only monitoring, pinned source-routing/parity and source-matched materiality-to-case reconciliation. Its source-controlled outbox has a manually gated, Registry-only replay path, but **new-case publication remains deliberately disabled pending coordinated Toolkit publisher suppression and migration acceptance**. Toolkit's operational case publisher and specialist-return paths remain active; Registry controller orchestration and authenticated Registry-directed DPIP/Lab delivery and return reconciliation have **not** cut over. The broader historical archive is subject to separate verification. No bulk migration or release claim is asserted.
+Registry now runs read-only monitoring, pinned source-routing/parity and source-matched materiality-to-case reconciliation. It has also **admitted a single direct-source ONDTF case** [#47](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/47), bound its evidence-required result to a canonical Toolkit execution and preserved the intake record. **Automated DTG/CAWG publication cutover remains blocked** pending coordinated source partition, producer fencing and first-party consumer migration. Toolkit's operational case publisher and specialist-return paths remain active; Registry controller orchestration and authenticated Registry-directed DPIP/Lab delivery and return reconciliation have **not** cut over. The broader historical archive is subject to separate verification. No bulk migration or release claim is asserted.
 
 The [controller migration contract](docs/controller-migration-contract.md) records the observed legacy issue-number coupling and the executable acceptance conditions required before a publisher switch; [issue #11](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/11) tracks the operational migration.
 
