@@ -33,3 +33,31 @@
 ## Decision
 
 **No blind code copy, bulk issue transfer, hard-coded repository rewrite or premature switch.** First make the archival baseline trustworthy and exercise a pinned source replay; then migrate the operations runner and preserve RAHP portable engine authority. Keep legacy workflow operational until parity and rollback criteria are met. No release warranted yet.
+
+## First new-case ordering: reservation qualification
+
+Before creating a Registry successor issue, Toolkit must have a source-controlled
+`reserved` ledger entry that prevents the Toolkit issue publisher from modifying
+the exact proposition. The reservation contains the historical Toolkit issue,
+the exact Registry `outbox/pending/*.json` path, source revision and finding ID.
+
+Registry now provides a **read-only** check on that prerequisite:
+
+```sh
+REGISTRY_INTAKE_TOKEN=<authorized read token> python3 scripts/registry_outbox.py \
+  --manifest outbox/pending/qualified-case.json \
+  --receipt build/outbox/reservation.json --qualify-reservation
+```
+
+This re-reads live Toolkit `main` at a pinned commit, validates the committed
+transfer ledger, exact case/finding/source pins and historical Toolkit issue,
+and rejects a branch-head change during verification. It does **not** create
+a Registry issue and must not be treated as operational publication
+authorization or an assurance conclusion. The existing `--apply` route
+remains blocked for new cases.
+
+**Remaining live transaction dependency:** the Toolkit and Registry workflow
+coordinator must demonstrate exclusive publication across *all* relevant
+Toolkit writers (including in-flight runs) and preserve first-party controller,
+DPIP and reviewer correlation before Registry production issue POST is enabled.
+A successful read-only reservation check alone does not establish those facts.

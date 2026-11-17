@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 import argparse
+import base64
+import binascii
 import json
 import os
+import re
 import sys
 from pathlib import Path
 import registry_intake as intake
@@ -35,6 +38,61 @@ def owner_for(event, issues):
         if event["source_revision"] not in body or event["finding_id"] not in body:
             raise DeliveryError("existing owner does not acknowledge this exact source revision/finding; reassessment required")
     return decision
+
+
+TOOLKIT = "sankarshanmukhopadhyay/rahp-toolkit"
+TOOLKIT_API = "https://api.github.com/repos/" + TOOLKIT
+TRANSFER_PATH = "instances/dtg/registry-transfers.json"
+PENDING_PATH = re.compile(r"^outbox/pending/[a-z0-9][a-z0-9-]*\\.json$")
+COMMIT_SHA = re.compile(r"^[0-9a-f]{40}$")
+
+
+def verify_live_reservation(manifest, manifest_path, token, *, fetch=None):
+    """Read-only proof of a matching Toolkit main reservation, not assurance PASS.
+
+    The branch head is checked twice; this cannot atomically fence concurrent
+    workflows. A separate operator cutover gate must exclude in-flight publishers.
+    """
+    event = require_event(manifest)
+    if not isinstance(manifest_path, str) or not PENDING_PATH.fullmatch(manifest_path):
+        raise DeliveryError("reservation requires a committed canonical pending-intake path")
+    if fetch is None:
+        fetch = lambda url: intake.request("GET", url, token)
+    ref = fetch(TOOLKIT_API + "/branches/main")
+    head = ((ref or {}).get("commit") or {}).get("sha")
+    if not isinstance(head, str) or not COMMIT_SHA.fullmatch(head):
+        raise DeliveryError("Toolkit main branch revision unavailable")
+    contents = fetch(TOOLKIT_API + "/contents/" + TRANSFER_PATH + "?ref=" + head)
+    if not isinstance(contents, dict) or contents.get("encoding") != "base64":
+        raise DeliveryError("Toolkit transfer ledger content unavailable")
+    try:
+        ledger = json.loads(base64.b64decode(contents["content"], validate=False).decode("utf-8"))
+    except (KeyError, ValueError, UnicodeError, binascii.Error) as exc:
+        raise DeliveryError("invalid Toolkit transfer ledger encoding") from exc
+    if not isinstance(ledger, dict) or set(ledger) != {"schema", "transfers"} or ledger.get("schema") != "rahp-registry-transfers/v1" or not isinstance(ledger.get("transfers"), list):
+        raise DeliveryError("unsupported Toolkit transfer ledger")
+    entry = [e for e in ledger["transfers"] if isinstance(e, dict) and e.get("assessment_key") == event["assessment_key"]]
+    if len(entry) != 1:
+        raise DeliveryError("missing or ambiguous exact Toolkit reservation")
+    reservation = entry[0]
+    required = {"assessment_key", "toolkit_issue_url", "registry_intent_path", "source_revision", "finding_id", "state"}
+    if set(reservation) != required or reservation["state"] != "reserved" or reservation["registry_intent_path"] != manifest_path or reservation["source_revision"] != event["source_revision"] or reservation["finding_id"] != event["finding_id"]:
+        raise DeliveryError("Toolkit reservation does not match committed pending intake")
+    url = reservation["toolkit_issue_url"]
+    match = re.fullmatch(r"https://github\\.com/sankarshanmukhopadhyay/rahp-toolkit/issues/([1-9][0-9]*)", str(url))
+    if not match:
+        raise DeliveryError("invalid historical Toolkit issue identity")
+    issue = fetch(TOOLKIT_API + "/issues/" + match.group(1))
+    if not isinstance(issue, dict) or issue.get("html_url") != url or issue.get("state") not in ("open", "closed"):
+        raise DeliveryError("historical Toolkit issue does not resolve")
+    body = issue.get("body") or ""
+    if ("<!-- rahp-assessment-key:" + event["assessment_key"] + " -->") not in body or event["finding_id"] not in body:
+        raise DeliveryError("historical Toolkit issue does not identify the reserved proposition and finding")
+    new_ref = fetch(TOOLKIT_API + "/branches/main")
+    if ((new_ref or {}).get("commit") or {}).get("sha") != head:
+        raise DeliveryError("Toolkit main changed during reservation qualification")
+    return {"toolkit_main_sha": head, "toolkit_issue_url": url,
+            "registry_intent_path": manifest_path, "assessment_key": event["assessment_key"]}
 
 
 def deliver(manifest, token, *, apply=False, allow_new_case=False, load_issues=None, post=None):
@@ -98,6 +156,8 @@ def main() -> int:
     parser.add_argument("--manifest", type=Path, required=True)
     parser.add_argument("--receipt", type=Path, required=True)
     parser.add_argument("--apply", action="store_true")
+    parser.add_argument("--qualify-reservation", action="store_true",
+                        help="read-only live Toolkit main reservation qualification; never enables POST")
     args = parser.parse_args()
     receipt = {"schema": "rahp-registry-intake-receipt/v1", "state": "indeterminate",
                "mode": "apply" if args.apply else "dry_run", "assurance_determination": None}
@@ -109,7 +169,14 @@ def main() -> int:
         token = os.environ.get("REGISTRY_INTAKE_TOKEN", "")
         if not token:
             raise DeliveryError("REGISTRY_INTAKE_TOKEN required to verify live owners")
-        receipt = deliver(data, token, apply=args.apply)
+        if args.qualify_reservation:
+            if args.apply:
+                raise DeliveryError("read-only reservation qualification cannot be combined with --apply")
+            proof = verify_live_reservation(data, args.manifest.as_posix(), token)
+            receipt.update(state="reservation_qualified", **proof,
+                           controller_execution=None)
+        else:
+            receipt = deliver(data, token, apply=args.apply)
     except (OSError, ValueError, intake.IntakeError) as exc:
         receipt["error_type"] = type(exc).__name__
         receipt["error"] = str(exc)

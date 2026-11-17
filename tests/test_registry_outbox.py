@@ -1,4 +1,6 @@
 import copy
+import base64
+import json
 import sys
 import unittest
 from pathlib import Path
@@ -34,6 +36,69 @@ def issue(ev, number=18):
 
 
 class OutboxTests(unittest.TestCase):
+    def test_live_reservation_binds_main_ledger_intent_and_historical_source(self):
+        ev = event()
+        key = ev["assessment_key"]
+        path = "outbox/pending/test-case.json"
+        issue_url = "https://github.com/sankarshanmukhopadhyay/rahp-toolkit/issues/1234"
+        reservation = {
+            "assessment_key": key, "toolkit_issue_url": issue_url,
+            "registry_intent_path": path, "source_revision": ev["source_revision"],
+            "finding_id": ev["finding_id"], "state": "reserved",
+        }
+        ledger = {"schema": "rahp-registry-transfers/v1", "transfers": [reservation]}
+        sha = "b" * 40
+        head = {"commit": {"sha": sha}}
+        issue = {"html_url": issue_url, "state": "open",
+                 "body": "<!-- rahp-assessment-key:" + key + " --> " + ev["finding_id"]}
+        contents = {"encoding": "base64", "content": base64.b64encode(json.dumps(ledger).encode()).decode()}
+        urls = []
+        def fetch(url):
+            urls.append(url)
+            if "/branches/main" in url:
+                return head
+            if "/contents/" in url:
+                return contents
+            if "/issues/1234" in url:
+                return issue
+            self.fail("unrecognized Toolkit read " + url)
+        proof = outbox.verify_live_reservation(manifest(), path, "", fetch=fetch)
+        self.assertEqual(proof["toolkit_main_sha"], sha)
+        self.assertEqual(len(urls), 4)
+
+        for changes in (
+            {"state": "accepted"},
+            {"source_revision": "c" * 40},
+            {"finding_id": "different"},
+            {"registry_intent_path": "outbox/pending/other.json"},
+            {"registry_issue_url": "https://github.com/example/repo/issues/2"},
+        ):
+            with self.subTest(changes=changes):
+                changed = {**reservation, **changes}
+                contents["content"] = base64.b64encode(json.dumps({
+                    "schema": "rahp-registry-transfers/v1", "transfers": [changed]
+                }).encode()).decode()
+                with self.assertRaises(outbox.DeliveryError):
+                    outbox.verify_live_reservation(manifest(), path, "", fetch=fetch)
+        contents["content"] = base64.b64encode(json.dumps(ledger).encode()).decode()
+        issue["body"] = "no matching source"
+        with self.assertRaisesRegex(outbox.DeliveryError, "does not identify"):
+            outbox.verify_live_reservation(manifest(), path, "", fetch=fetch)
+        issue["body"] = "<!-- rahp-assessment-key:" + key + " --> " + ev["finding_id"]
+        next_head = iter([head, {"commit": {"sha": "c" * 40}}])
+        def drifting(url):
+            if "/branches/main" in url:
+                return next(next_head)
+            return fetch(url)
+        with self.assertRaisesRegex(outbox.DeliveryError, "changed"):
+            outbox.verify_live_reservation(manifest(), path, "", fetch=drifting)
+
+    def test_reservation_rejects_uncommitted_or_traversal_paths(self):
+        for path in ("../outbox/pending/test.json", "/tmp/test.json",
+                     "outbox/pending/test.txt", "outbox/pending/UPPER.json"):
+            with self.subTest(path=path), self.assertRaises(outbox.DeliveryError):
+                outbox.verify_live_reservation(manifest(), path, "", fetch=lambda _: self.fail("network not needed"))
+
     def test_workflow_grants_write_only_to_explicit_main_branch_publish(self):
         path = Path(__file__).resolve().parents[1] / ".github/workflows/registry-outbox-replay.yml"
         text = path.read_text(encoding="utf-8")
