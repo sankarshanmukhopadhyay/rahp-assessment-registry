@@ -6,6 +6,8 @@ on:
       - 'ops/assessments/**'
       - 'scripts/verify_registry_assessment_run.py'
       - 'tests/test_registry_assessment_run.py'
+      - 'scripts/bind_registry_execution.py'
+      - 'tests/test_registry_execution_binding.py'
       - 'cases/dtg/network-answer-proof-2026-11.json'
   push:
     branches: [main]
@@ -14,6 +16,8 @@ on:
       - 'ops/assessments/**'
       - 'scripts/verify_registry_assessment_run.py'
       - 'tests/test_registry_assessment_run.py'
+      - 'scripts/bind_registry_execution.py'
+      - 'tests/test_registry_execution_binding.py'
       - 'cases/dtg/network-answer-proof-2026-11.json'
   workflow_dispatch:
 permissions:
@@ -35,7 +39,9 @@ jobs:
           python-version: '3.12'
       - run: python3 -m pip install -r toolkit/requirements.txt
       - name: Reject fabricated and mismatched run evidence
-        run: python3 -m unittest discover -s tests -p 'test_registry_assessment_run.py' -v
+        run: |
+          python3 -m unittest discover -s tests -p 'test_registry_assessment_run.py' -v
+          python3 -m unittest discover -s tests -p 'test_registry_execution_binding.py' -v
       - name: Execute actual canonical RAHP controller
         shell: bash
         run: |
@@ -54,6 +60,20 @@ jobs:
             --ledger ops/assessments/network-answer-pilot.ledger.json \
             --result build/registry-assessment/result.json \
             --out build/registry-assessment/receipt.json
+          python3 scripts/bind_registry_execution.py \
+            --case cases/dtg/network-answer-proof-2026-11.json \
+            --spec ops/assessments/network-answer-pilot.spec.json \
+            --ledger ops/assessments/network-answer-pilot.ledger.json \
+            --result build/registry-assessment/result.json \
+            --toolkit-revision "$expected" \
+            --out build/registry-assessment/execution-binding.json
+          python3 scripts/bind_registry_execution.py \
+            --case cases/dtg/network-answer-proof-2026-11.json \
+            --spec ops/assessments/network-answer-pilot.spec.json \
+            --ledger ops/assessments/network-answer-pilot.ledger.json \
+            --result build/registry-assessment/result.json \
+            --toolkit-revision "$expected" \
+            --out build/registry-assessment/execution-binding.json --verify
       - name: Retain source-pinned indeterminate run and receipt
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
