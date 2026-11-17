@@ -96,14 +96,14 @@ def source_claims(case, case_issue, dpip_issue, dpip_comments, consumer):
         l.get("name") for l in dpip_issue.get("labels", []) if isinstance(l, dict)
     }):
         raise SpecialistAdmissionError("DPIP examination is not a terminal source-qualified result")
-    return number, pin
+    return number, pin, identities
 
 
 def qualify(case, case_issue, case_comments, dpip_issue, dpip_comments,
             consumer, assessor_contract):
     """Read-only qualified chain; never apply specialist result to case status."""
     admitted_referral(case, dpip_issue)
-    number, pin = source_claims(case, case_issue, dpip_issue, dpip_comments, consumer)
+    number, pin, identities = source_claims(case, case_issue, dpip_issue, dpip_comments, consumer)
     issue_number = dpip_issue["number"]
     try:
         chain = verify_portable_return_chain(
@@ -121,6 +121,8 @@ def qualify(case, case_issue, case_comments, dpip_issue, dpip_comments,
         "case_url": case["owners"]["current_active_issue"],
         "dpip_issue_url": f"https://github.com/{DPIP_REPO}/issues/{issue_number}",
         "source_pin": {"repository": pin[0], "revision": pin[1]},
+        "examination_key": str(identities["examination_key"]).strip(),
+        "source_referral_id": identities["referral_id"],
         "dpip_assessment_id": chain["portable_assessment_id"],
         "dpip_outcome_observed": chain["portable_outcome"],
         "dpip_return_digest": chain["source_delivery_digest"],
@@ -131,3 +133,39 @@ def qualify(case, case_issue, case_comments, dpip_issue, dpip_comments,
         "controller_reconciliation_executed": False,
         "operational_cutover_qualified": False,
     }
+
+
+def qualify_epoch(case, case_issue, case_comments, runs, consumer, assessor_contract):
+    """Qualify every DPIP run offered for a case and enforce one disposition per epoch.
+
+    ``runs`` is an iterable of ``(dpip_issue, dpip_comments)``. Numbered DPIP
+    issues are not semantic identities: the same source pin and examination key
+    returned through two issues (the historical Toolkit #1116 / DPIP #304 and
+    #305 hazard) must not become two independent authoritative outcomes. Such a
+    set is rejected and the offending issue URLs are named so the duplicates stay
+    traceable; nothing is deleted or reinterpreted. Any single failing run
+    rejects the whole set, and an identical retry of one issue is idempotent.
+    """
+    runs = list(runs)
+    if not runs:
+        raise SpecialistAdmissionError("no specialist runs offered for qualification")
+    by_issue = {}
+    for dpip_issue, dpip_comments in runs:
+        receipt = qualify(case, case_issue, case_comments, dpip_issue,
+                          dpip_comments, consumer, assessor_contract)
+        previous = by_issue.get(receipt["dpip_issue_url"])
+        if previous is not None and previous != receipt:
+            raise SpecialistAdmissionError("conflicting qualified returns for one DPIP issue")
+        by_issue[receipt["dpip_issue_url"]] = receipt
+    epochs = {}
+    for receipt in by_issue.values():
+        pin = receipt["source_pin"]
+        epochs.setdefault(
+            (pin["repository"], pin["revision"], receipt["examination_key"]), []
+        ).append(receipt["dpip_issue_url"])
+    duplicated = {key: sorted(urls) for key, urls in epochs.items() if len(urls) > 1}
+    if duplicated:
+        detail = "; ".join(f"{key[2]} -> {', '.join(urls)}" for key, urls in sorted(duplicated.items()))
+        raise SpecialistAdmissionError(
+            "duplicate examination epoch has no single qualified disposition: " + detail)
+    return list(by_issue.values())
