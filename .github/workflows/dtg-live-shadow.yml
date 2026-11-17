@@ -11,7 +11,7 @@ on:
       - 'scripts/registry_intake.py'
       - 'scripts/registry_outbox.py'
       - 'tests/test_registry_materiality_intake.py'
-      - 'outbox/pending/network-answer-pilot.json'
+      - 'outbox/pending/**'
   schedule:
     - cron: '7 1,13 * * *'
   workflow_dispatch:
@@ -27,7 +27,7 @@ on:
       - 'scripts/registry_intake.py'
       - 'scripts/registry_outbox.py'
       - 'tests/test_registry_materiality_intake.py'
-      - 'outbox/pending/network-answer-pilot.json'
+      - 'outbox/pending/**'
 permissions:
   contents: read
   issues: read
@@ -141,7 +141,7 @@ jobs:
           python3 registry/scripts/registry_materiality_intake.py \
             --findings build/live/findings.json \
             --routing build/live/registry/routing.json \
-            --approved registry/outbox/pending/network-answer-pilot.json \
+            --approved-dir registry/outbox/pending \
             --receipt build/live/registry-materiality-intake.json
           python3 - <<'PY'
           import json
@@ -149,13 +149,16 @@ jobs:
           base = Path('build/live')
           receipt = json.loads((base / 'registry-materiality-intake.json').read_text())
           actual = json.loads((base / 'registry/routing.json').read_text())
+          assert receipt['schema'] == 'rahp-registry-materiality-batch-shadow/v1'
+          assert receipt['state'] == 'read_only_reconciliation'
           assert receipt['observed_routed_count'] == len(actual)
-          assert receipt['unadmitted_routed_count'] + int(receipt['approved_source_observed']) == len(actual)
-          assert receipt['state'] in {
-              'outside_observed_materiality', 'existing_owner',
-              'reassessment_required', 'pending_reviewed_creation',
-              'no_new_case_for_covered_route',
-          }
+          assert receipt['reviewed_intent_count'] == len(receipt['intents'])
+          observed = sum(int(x['decision']['approved_source_observed']) for x in receipt['intents'])
+          owners = sum(x['decision']['state'] == 'existing_owner' and x['decision']['approved_source_observed'] for x in receipt['intents'])
+          assert receipt['unreviewed_routed_count'] + observed == len(actual)
+          assert receipt['without_confirmed_registry_owner_count'] + owners == len(actual)
+          assert receipt['cutover_authorized'] is False
+          assert all(x['decision']['new_issue_created'] is False for x in receipt['intents'])
           assert receipt['new_issue_created'] is False
           assert receipt['existing_issue_mutated'] is False
           assert receipt['source_reassessment_applied'] is False

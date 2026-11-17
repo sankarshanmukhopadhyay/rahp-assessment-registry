@@ -140,6 +140,62 @@ class MaterialityIntakeTests(unittest.TestCase):
             )
         self.assertEqual(posts, [])
 
+
+    def test_reviewed_batch_does_not_count_pending_creation_as_owner(self):
+        second = copy.deepcopy(MANIFEST)
+        second["event"]["assessment_key"] = "dtg:case:second-proposition"
+        second["event"]["finding_id"] = OTHER["finding_id"]
+        result = materiality.plan_many(
+            [FINDING, OTHER], [{"finding": FINDING, "outcome": "covered"},
+                              {"finding": OTHER, "outcome": "combined"}],
+            {"first.json": MANIFEST, "second.json": second}, [OWNER])
+        self.assertEqual(result["reviewed_intent_count"], 2)
+        self.assertEqual(result["unreviewed_routed_count"], 0)
+        self.assertEqual(result["without_confirmed_registry_owner_count"], 1)
+        self.assertEqual([x["decision"]["state"] for x in result["intents"]],
+                         ["existing_owner", "pending_reviewed_creation"])
+        self.assertFalse(result["cutover_authorized"])
+
+    def test_batch_outside_snapshot_does_not_infer_admission(self):
+        result = materiality.plan_many(
+            [OTHER], [{"finding": OTHER, "outcome": "combined"}],
+            {"pilot.json": MANIFEST}, [OWNER])
+        self.assertEqual(result["unreviewed_routed_count"], 1)
+        self.assertEqual(result["without_confirmed_registry_owner_count"], 1)
+        self.assertEqual(result["intents"][0]["decision"]["state"],
+                         "outside_observed_materiality")
+
+    def test_batch_duplicate_key_or_finding_fails(self):
+        for field, value in (("assessment_key", "dtg:case:other"),
+                             ("finding_id", OTHER["finding_id"])):
+            second = copy.deepcopy(MANIFEST)
+            second["event"][field] = value
+            with self.subTest(field=field), self.assertRaisesRegex(
+                    materiality.MaterialityError, "duplicate reviewed"):
+                materiality.plan_many(
+                    [FINDING, OTHER], ROUTED,
+                    {"a.json": MANIFEST, "b.json": second}, [OWNER])
+
+    def test_batch_empty_or_malformed_intent_fails(self):
+        with self.assertRaisesRegex(materiality.MaterialityError, "at least one"):
+            materiality.plan_many([FINDING], ROUTED, {}, [OWNER])
+        with self.assertRaises(outbox.DeliveryError):
+            materiality.plan_many([FINDING], ROUTED,
+                                  {"bad.json": {"schema": "unknown"}}, [OWNER])
+
+    def test_batch_reused_owner_across_keys_fails(self):
+        other = copy.deepcopy(MANIFEST)
+        other["event"]["assessment_key"] = "dtg:case:other"
+        other["event"]["finding_id"] = OTHER["finding_id"]
+        modified_owner = copy.deepcopy(OWNER)
+        modified_owner["body"] += "\n" + intake.marker(other["event"]["assessment_key"]) + "\n" + OTHER["finding_id"]
+        with self.assertRaisesRegex(materiality.MaterialityError, "ambiguous Registry owner"):
+            materiality.plan_many(
+                [FINDING, OTHER],
+                [{"finding": FINDING, "outcome": "covered"},
+                 {"finding": OTHER, "outcome": "combined"}],
+                {"a.json": MANIFEST, "b.json": other}, [modified_owner])
+
     def test_duplicate_source_findings_rejected(self):
         with self.assertRaisesRegex(materiality.MaterialityError, "duplicate monitored"):
             materiality.plan([FINDING, FINDING], ROUTED, MANIFEST, [OWNER])
