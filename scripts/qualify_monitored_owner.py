@@ -24,7 +24,7 @@ def digest(obj):
     return hashlib.sha256(json.dumps(obj, sort_keys=True, ensure_ascii=False,
         separators=(",", ":"), allow_nan=False).encode("utf-8")).hexdigest()
 
-def qualify(spec, events, evidence, owner, historical, protected, registry_issues):
+def qualify(spec, events, evidence, owner, historical, protected, registry_issues, open_toolkit_issues):
     required = {"schema", "key", "monitor_revision", "snapshot_date",
                 "repository", "finding_ids", "active_toolkit_issue",
                 "historical_toolkit_issue", "protected_toolkit_issues",
@@ -93,6 +93,21 @@ def qualify(spec, events, evidence, owner, historical, protected, registry_issue
                 x.get("state") not in ("open", "closed") or "pull_request" in x
                 for x, number in zip(protected, (282, 826, 837)))):
         raise CandidateError("protected independent residual issue unavailable")
+    if not isinstance(open_toolkit_issues, list):
+        raise CandidateError("complete live Toolkit open-issue inventory required")
+    active = []
+    for entry in open_toolkit_issues:
+        if not isinstance(entry, dict):
+            raise CandidateError("malformed Toolkit issue inventory")
+        if "pull_request" in entry:
+            continue
+        if entry.get("state") != "open" or not isinstance(entry.get("number"), int):
+            raise CandidateError("Toolkit active issue inventory is not open-only")
+        if MARKER in (entry.get("body") or ""):
+            active.append(entry)
+    if (len(active) != 1 or active[0].get("number") != 272 or
+            active[0].get("html_url") != owner["html_url"]):
+        raise CandidateError("multiple, missing or changed open Toolkit assessment-key owners")
     if not isinstance(registry_issues, list):
         raise CandidateError("complete Registry owner snapshot required")
     index = intake.index_issues(registry_issues)
@@ -118,6 +133,22 @@ def qualify(spec, events, evidence, owner, historical, protected, registry_issue
         "cutover_authorized": False,
     }
 
+def all_open_toolkit_issues(token, *, fetch=None):
+    """Read all open issues; pagination absence or API failure cannot prove uniqueness."""
+    fetch = fetch or (lambda url: intake.request("GET", url, token))
+    collected = []
+    for page in range(1, 101):
+        url = ("https://api.github.com/repos/" + TOOLKIT +
+               "/issues?state=open&per_page=100&page=" + str(page))
+        rows = fetch(url)
+        if not isinstance(rows, list):
+            raise CandidateError("Toolkit open-owner inventory unavailable")
+        collected.extend(rows)
+        if len(rows) < 100:
+            return collected
+    raise CandidateError("Toolkit open-owner inventory exceeds bounded pagination")
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--candidate", required=True, type=Path)
@@ -136,7 +167,8 @@ def main():
             return intake.request("GET", "https://api.github.com/repos/" +
                                   TOOLKIT + "/issues/" + str(num), token)
         output = qualify(spec, events, evidence, read(272), read(615),
-                         [read(n) for n in (282, 826, 837)], intake.read_all(token))
+                         [read(n) for n in (282, 826, 837)], intake.read_all(token),
+                         all_open_toolkit_issues(token))
     except (OSError, ValueError, KeyError, TypeError, intake.IntakeError) as exc:
         print("UNQUALIFIED monitored owner:", exc, file=sys.stderr)
         return 1
