@@ -11,6 +11,8 @@ on:
       - 'scripts/verify_toolkit_writer_quiescence.py'
       - 'tests/test_toolkit_writer_quiescence.py'
       - 'tests/test_coordinated_group_transaction.py'
+      - 'scripts/verify_group_reference_continuity.py'
+      - 'tests/test_group_reference_continuity.py'
   workflow_dispatch:
     inputs:
       apply:
@@ -54,6 +56,8 @@ jobs:
         run: python3 -m unittest discover -s tests -p 'test_registry_group_observation_ack.py' -v
       - name: Rehearse interruption-safe owner and observation recovery
         run: python3 -m unittest discover -s tests -p 'test_coordinated_group_transaction.py' -v
+      - name: Reject missing or substituted post-acknowledgment references
+        run: python3 -m unittest discover -s tests -p 'test_group_reference_continuity.py' -v
       - name: Requalify pinned source, live owner, maintainer and reservation
         if: github.event_name == 'workflow_dispatch'
         env:
@@ -115,6 +119,15 @@ jobs:
           --candidate build/group/owner-candidate.json
           --receipt build/group/observation-ack.json
           --apply
+      - name: Re-read original Toolkit and protected consumer locators after acknowledgment
+        env:
+          REGISTRY_INTAKE_TOKEN: ${{ github.token }}
+        run: >-
+          python3 scripts/verify_group_reference_continuity.py
+          --manifest outbox/pending/spec-dependency-2026-11-16.json
+          --owner-receipt build/group/owner-delivery.json
+          --observation-receipt build/group/observation-ack.json
+          --out build/group/reference-continuity.json
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:

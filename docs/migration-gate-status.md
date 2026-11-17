@@ -44,6 +44,8 @@
 | Decisions needed | (a) Exit criterion for the twice-daily `dtg-live-shadow` schedule: proposed *retire the cron after the gate-6 shadow cycle completes or after N consecutive clean cycles, whichever is first; keep dispatch*. (b) Whether the weekly writer-inventory schedule is kept or replaced by dispatch plus path triggers, since #11 asks to avoid schedules for one-time checks. |
 | Next executable step | The named maintainer has accepted the exact scope. First exercise nonempty-ledger rehearsal using the real original and journal-enriched November group and demonstrate safe interruption/rollback and fencing across all active Toolkit writers and issue-number consumers. Only then activate the bounded Toolkit group reservation, execute Registry [#64/#65](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/pull/65) under its serialized main-only workflow, and establish the actual Registry owner and authenticated current-observation comment before accepted-group source-specific publication. A schema-valid ledger record alone is never an acknowledgment. |
 
+**Pending bounded locator increment:** The guarded Registry successor workflow is proposed to re-read the authenticated observation and the live original Toolkit #272, historical #615, and protected #282/#826/#837 issue URLs **after** owner acknowledgment. It rejects lost or substituted references before reporting the transaction's locator result. This establishes only reference continuity on the tested path, not actual Toolkit controller, reviewer, DPIP or Lab issue-number consumer execution. A successful locator receipt must keep all migration/assurance flags false; G3/G4/G6 acceptance remains open.
+
 ## Gate 4. DPIP/Lab delivery and result compatibility
 
 | | |
