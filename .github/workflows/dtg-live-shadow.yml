@@ -194,6 +194,40 @@ jobs:
           assert r['publisher_suppression_active'] is False
           assert r['issue_writes'] == 0
           PY
+      - name: Audit exact Data Rooms successor and candidate overlap (read-only)
+        env:
+          REGISTRY_INTAKE_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python3 registry/scripts/audit_toolkit_transfer_lineage.py \
+            --candidate registry/ops/migration/candidates/toolkit-1208.json \
+            --findings build/live/findings.json \
+            --routing build/live/toolkit/routing.json \
+            --combined build/live/toolkit/combined-events.json \
+            --dpip build/live/toolkit/dpip-events.json \
+            --out build/live/toolkit-1208-transfer-lineage.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          base = Path('build/live')
+          a = json.loads((base / 'toolkit-1194-transfer-lineage.json').read_text())
+          b = json.loads((base / 'toolkit-1208-transfer-lineage.json').read_text())
+          a_ids = {x['finding_id'] for x in a['findings']}
+          b_ids = {x['finding_id'] for x in b['findings']}
+          report = {
+              'schema': 'rahp-registry-candidate-overlap-shadow/v1',
+              'candidate_toolkit_issues': [a['candidate_owner_issue'], b['candidate_owner_issue']],
+              'overlapping_finding_ids': sorted(a_ids & b_ids),
+              'overlapping_finding_count': len(a_ids & b_ids),
+              'candidate_acceptance_verified': False,
+              'toolkit_publisher_suppressed': False,
+              'registry_case_written': False,
+              'cutover_authorized': False,
+          }
+          (base / 'candidate-overlap.json').write_text(json.dumps(report, indent=2, sort_keys=True) + '\n')
+          assert a['cutover_authorized'] is False and b['cutover_authorized'] is False
+          print('Read-only overlap candidates:', report['overlapping_finding_count'])
+          PY
       - name: Retain Registry shadow evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
