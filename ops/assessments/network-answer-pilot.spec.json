@@ -1,0 +1,51 @@
+{
+  "run": {
+    "lineage_prefix": "registry:RAHP-AR-DTG-0001:2026-11-13"
+  },
+  "target": {
+    "repository": "OpenVTC/verifiable-trust-infrastructure",
+    "revision": "303174f8ca630ca14ddc2cbf5abcb0d10e205c38"
+  },
+  "resources": {},
+  "subject": {
+    "type": "network-response-consumer",
+    "id": "RAHP-AR-DTG-0001",
+    "components": [
+      "VTI",
+      "VTN"
+    ]
+  },
+  "assurance_contract": {
+    "material": true,
+    "specialist_required": false,
+    "scope": "Consuming-path verification of positive Trust Task responses and refusal handling at the pinned OpenVTC VTI/VTN boundary.",
+    "non_scope": "No claim about other deployments, trust graphs, unobserved clients or external upstream acceptance.",
+    "required_evidence": [
+      "DTG-0001-R1",
+      "DTG-0001-R2"
+    ],
+    "assurance_propositions": [
+      "Unverified positive responses cannot cause authoritative network effects.",
+      "Refusals and unavailable verification cannot become positive network authorization."
+    ],
+    "personas": [
+      "network client",
+      "relying operator"
+    ],
+    "scenarios": [
+      "signed success path",
+      "wrong-purpose or forged positive response",
+      "unsigned refusal or unavailable resolver"
+    ],
+    "harms": [
+      "unauthorized positive network decisions"
+    ],
+    "actions": [
+      {
+        "surface": "runtime-evidence",
+        "action": "Obtain source-pinned native VTN consumer positive, negative, retry and refusal evidence for both residual requirements.",
+        "acceptance_criterion": "Both DTG-0001-R1 and DTG-0001-R2 have independently inspectable provenance and failing countercases before a comparable assessment rerun."
+      }
+    ]
+  }
+}
