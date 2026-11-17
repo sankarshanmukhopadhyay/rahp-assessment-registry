@@ -42,6 +42,10 @@ A [pinned, non-publishing DTG routing replay](docs/pinned-dtg-replay.md) invokes
 
 The [opt-in fail-closed intake adapter](docs/external-intake.md) supports source-pinned external event classification and idempotent registry-issue planning. It is dry-run by default and **not yet wired into the Toolkit's live publisher or DPIP/Lab return paths**.
 
+## Source-controlled intake replay
+
+The [controlled Registry outbox replay](docs/durable-intake-replay.md) persists reviewed source-pinned intake intent in Git and requires an authoritative live issue re-read before acknowledging delivery. Its apply path is manually authorized and Registry-only; it is not yet connected to automatic materiality monitoring, controller execution or DPIP/Lab returns.
+
 ## Pilot scope and migration status
 
 The initial pilot's **external evidence coordination ownership was manually transferred** from historical, now-closed [Toolkit #1203](https://github.com/sankarshanmukhopadhyay/rahp-toolkit/issues/1203) to active [Registry #4](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/4). The case remains `not_assessed`; its residual evidence obligations are open. This is not a transfer of source remediation or canonical Toolkit assessment authority.
