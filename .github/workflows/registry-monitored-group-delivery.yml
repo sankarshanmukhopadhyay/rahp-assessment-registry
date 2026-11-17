@@ -13,6 +13,8 @@ on:
       - 'tests/test_coordinated_group_transaction.py'
       - 'scripts/verify_group_reference_continuity.py'
       - 'tests/test_group_reference_continuity.py'
+      - 'scripts/verify_group_consumer_eligibility.py'
+      - 'tests/test_group_consumer_eligibility.py'
   workflow_dispatch:
     inputs:
       apply:
@@ -42,6 +44,12 @@ jobs:
           persist-credentials: false
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
+          repository: sankarshanmukhopadhyay/rahp-toolkit
+          ref: 35035303c830c68e7cb759195fb223b0ff9e4255
+          path: toolkit-runtime
+          persist-credentials: false
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
           repository: sankarshanmukhopadhyay/dtg-portfolio-monitor
           ref: 7e2813c8daf867a21e4064513cc83612726aeb44
           path: monitor
@@ -58,11 +66,43 @@ jobs:
         run: python3 -m unittest discover -s tests -p 'test_coordinated_group_transaction.py' -v
       - name: Reject missing or substituted post-acknowledgment references
         run: python3 -m unittest discover -s tests -p 'test_group_reference_continuity.py' -v
+      - name: Verify legacy Toolkit consumer eligibility semantics
+        run: |
+          python3 -m unittest discover -s tests -p 'test_group_consumer_eligibility.py' -v
+          python3 - <<'PY'
+          import sys
+          from pathlib import Path
+          sys.path.insert(0, str(Path('scripts').resolve()))
+          import verify_group_consumer_eligibility as gate
+          combined, dpip = gate.canonical_consumers(Path('toolkit-runtime').resolve())
+          from json import loads
+          from pathlib import Path
+          intent = loads(Path('outbox/pending/spec-dependency-2026-11-16.json').read_text())
+          issue = {'number':272, 'html_url':gate.PREFIX+'272', 'state':'open',
+                   'body':gate.MARKER + '\\n' + '\\n'.join(intent['source_finding_ids']),
+                   'labels':[{'name':'dtg-instance'},{'name':'assessment-evidence-complete'}]}
+          assert not combined.is_combined(issue)
+          assert not dpip.issue_has_label(issue, dpip.REQUESTED)
+          issue['labels'].append({'name':'judgment-required'})
+          assert combined.is_combined(issue)
+          issue['labels'].append({'name':dpip.REQUESTED})
+          assert dpip.issue_has_label(issue, dpip.REQUESTED)
+          print('Canonical pinned Toolkit selectors exercised; no worker dispatch')
+          PY
       - name: Requalify pinned source, live owner, maintainer and reservation
         if: github.event_name == 'workflow_dispatch'
         env:
           REGISTRY_INTAKE_TOKEN: ${{ github.token }}
         run: bash scripts/run_monitored_group_preflight.sh
+      - name: Observe live #272 consumer dispatch eligibility (read-only)
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          REGISTRY_INTAKE_TOKEN: ${{ github.token }}
+        run: >-
+          python3 scripts/verify_group_consumer_eligibility.py
+          --manifest outbox/pending/spec-dependency-2026-11-16.json
+          --toolkit toolkit-runtime
+          --out build/group/consumer-eligibility.json
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
@@ -90,6 +130,12 @@ jobs:
           persist-credentials: false
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
+          repository: sankarshanmukhopadhyay/rahp-toolkit
+          ref: 35035303c830c68e7cb759195fb223b0ff9e4255
+          path: toolkit-runtime
+          persist-credentials: false
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
           repository: sankarshanmukhopadhyay/dtg-portfolio-monitor
           ref: 7e2813c8daf867a21e4064513cc83612726aeb44
           path: monitor
@@ -98,6 +144,15 @@ jobs:
         with:
           python-version: '3.12'
       - run: python3 -m pip install -r toolkit/requirements.txt
+      - name: Enforce accepted Registry-to-Toolkit execution consumer before first POST
+        env:
+          REGISTRY_INTAKE_TOKEN: ${{ github.token }}
+        run: >-
+          python3 scripts/verify_group_consumer_eligibility.py
+          --manifest outbox/pending/spec-dependency-2026-11-16.json
+          --toolkit toolkit-runtime
+          --out build/group/consumer-eligibility.json
+          --require-migrated
       - name: Reject active inventoried Toolkit writer runs before successor POST
         env:
           REGISTRY_INTAKE_TOKEN: ${{ github.token }}
