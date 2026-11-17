@@ -1,3 +1,4 @@
+import base64
 import copy
 import json
 import os
@@ -91,6 +92,81 @@ class DeliveryTests(unittest.TestCase):
                             ("GITHUB_EVENT_NAME", "pull_request")):
             with self.assertRaises(delivery.DeliveryError):
                 delivery.require_write_context({**proper, name: value})
+    def transport(self):
+        reg_sha, tk_sha = "a"*40, "b"*40
+        def get(url):
+            if url == delivery.API + delivery.REG + "/branches/main":
+                return {"commit": {"sha": reg_sha}}
+            if url == delivery.API + delivery.TK + "/branches/main":
+                return {"commit": {"sha": tk_sha}}
+            if url == delivery.API + delivery.REG + "/contents/" + delivery.INTENT_PATH + "?ref=" + reg_sha:
+                data = self.intent
+            elif url == delivery.API + delivery.TK + "/contents/" + delivery.LEDGER + "?ref=" + tk_sha:
+                data = self.ledger
+            elif url.startswith(delivery.API + delivery.REG + "/issues/11/comments?"):
+                return self.comments
+            elif url.startswith(delivery.API + delivery.REG + "/issues?state=all&"):
+                return self.registry
+            elif url.startswith(delivery.API + delivery.TK + "/issues?state=open&"):
+                return self.tk
+            else:
+                raise AssertionError("unreviewed fetch: " + url)
+            return {"encoding": "base64", "content": base64.b64encode(
+                    json.dumps(data).encode()).decode()}
+        return get
+
+    def test_actual_readonly_entrypoint_does_not_post(self):
+        def fail(_):
+            self.fail("unexpected publication")
+        receipt = delivery.deliver(
+            self.intent, self.group, self.candidate, "token",
+            fetch=self.transport(), post=fail)
+        self.assertEqual(receipt["state"], "ready_for_delivery")
+        self.assertFalse(receipt["current_observation_acknowledged"])
+        self.assertFalse(receipt["cutover_authorized"])
+
+    def test_apply_post_timeout_after_commit_and_idempotent_replay(self):
+        proper = {"GITHUB_ACTIONS": "true", "GITHUB_REF": "refs/heads/main",
+                  "GITHUB_REPOSITORY": delivery.REG,
+                  "GITHUB_EVENT_NAME": "workflow_dispatch"}
+        calls = []
+        def post(payload):
+            calls.append(payload)
+            self.registry.append({
+                "number": 42, "state": "open",
+                "html_url": "https://github.com/" + delivery.REG + "/issues/42",
+                **payload,
+            })
+            raise TimeoutError("response dropped after durable issue write")
+        with patch.dict(os.environ, proper, clear=True):
+            receipt = delivery.deliver(self.intent, self.group, self.candidate, "token",
+                                       apply=True, fetch=self.transport(), post=post)
+            self.assertEqual(receipt["state"], "owner_observed")
+            self.assertTrue(receipt["recovered_after_ambiguous_post"])
+            receipt = delivery.deliver(self.intent, self.group, self.candidate, "token",
+                                       apply=True, fetch=self.transport(),
+                                       post=lambda _: self.fail("duplicate issue created"))
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(receipt["owner_url"], self.registry[0]["html_url"])
+        self.assertFalse(receipt["cutover_authorized"])
+
+    def test_apply_fails_without_reservation_or_without_owner_ack(self):
+        proper = {"GITHUB_ACTIONS": "true", "GITHUB_REF": "refs/heads/main",
+                  "GITHUB_REPOSITORY": delivery.REG,
+                  "GITHUB_EVENT_NAME": "workflow_dispatch"}
+        self.ledger["transfers"] = []
+        with patch.dict(os.environ, proper, clear=True):
+            with self.assertRaisesRegex(delivery.DeliveryError, "reserved_group"):
+                delivery.deliver(self.intent, self.group, self.candidate, "token",
+                                 apply=True, fetch=self.transport(),
+                                 post=lambda _: self.fail("no fence, no POST"))
+        self.setUp()
+        with patch.dict(os.environ, proper, clear=True):
+            with self.assertRaisesRegex(delivery.DeliveryError, "not acknowledged"):
+                delivery.deliver(self.intent, self.group, self.candidate, "token",
+                                 apply=True, fetch=self.transport(),
+                                 post=lambda _: (_ for _ in ()).throw(TimeoutError("lost")))
+
     def test_group_has_no_single_finding_compatibility_shortcut(self):
         text = delivery.body(self.intent)
         for finding_id in self.intent["source_finding_ids"]:
