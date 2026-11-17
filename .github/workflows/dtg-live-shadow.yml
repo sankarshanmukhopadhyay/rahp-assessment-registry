@@ -8,6 +8,9 @@ on:
     paths:
       - '.github/workflows/dtg-live-shadow.yml'
       - 'scripts/verify_live_shadow.py'
+      - 'scripts/compare_dtg_routing_outputs.py'
+      - 'tests/test_dtg_routing_parity.py'
+      - 'ops/dtg/**'
 permissions:
   contents: read
 concurrency:
@@ -42,6 +45,8 @@ jobs:
         run: python3 -m pip install -r toolkit/requirements.txt
       - name: Validate shadow false-success boundaries
         run: python3 -m unittest discover -s registry/tests -p 'test_verify_live_shadow.py' -v
+      - name: Fail closed on material routing mismatches
+        run: python3 -m unittest discover -s registry/tests -p 'test_dtg_routing_parity.py' -v
       - name: Fetch newest valid source through Toolkit's canonical freshness contract
         id: snapshot
         run: >-
@@ -56,7 +61,17 @@ jobs:
             --policy toolkit/instances/dtg/assurance-routing.yaml \
             --normalization-policy toolkit/instances/dtg/finding-normalization.yaml \
             --snapshot-date '${{ steps.snapshot.outputs.date }}' \
-            --out-dir build/live
+            --out-dir build/live/toolkit
+          python3 registry/ops/dtg/dtg_portfolio_routing.py \
+            --findings build/live/findings.json \
+            --policy registry/ops/dtg/config/assurance-routing.yaml \
+            --normalization-policy registry/ops/dtg/config/finding-normalization.yaml \
+            --snapshot-date '${{ steps.snapshot.outputs.date }}' \
+            --out-dir build/live/registry
+          python3 registry/scripts/compare_dtg_routing_outputs.py \
+            --toolkit build/live/toolkit \
+            --registry build/live/registry \
+            --out build/live/dual-router-parity.json
           day='${{ steps.snapshot.outputs.date }}'
           file="monitor/data/findings/${day:0:4}/${day:5:2}/${day:8:2}.json"
           test -s "$file" || { echo 'Pinned Monitor snapshot missing'; exit 1; }
@@ -64,14 +79,40 @@ jobs:
           python3 registry/scripts/verify_live_shadow.py \
             --source "$file" \
             --fetched build/live/findings.json \
-            --routing build/live/routing.json \
-            --combined build/live/combined-events.json \
-            --dpip build/live/dpip-events.json \
-            --unresolved build/live/unresolved.json \
+            --routing build/live/toolkit/routing.json \
+            --combined build/live/toolkit/combined-events.json \
+            --dpip build/live/toolkit/dpip-events.json \
+            --unresolved build/live/toolkit/unresolved.json \
             --source-date "$day" \
             --toolkit-revision 70298566dc897669e22bf37759843d6b7c0597d2 \
             --monitor-revision "$monitor_revision" \
             --out build/live/provenance.json
+          python3 - <<'PY'
+          import hashlib, json, os, subprocess
+          from pathlib import Path
+          root = Path('build/live')
+          def sha(p): return hashlib.sha256(Path(p).read_bytes()).hexdigest()
+          receipt = json.loads((root / 'dual-router-parity.json').read_text())
+          shadow = json.loads((root / 'provenance.json').read_text())
+          assert not receipt['unexplained_differences']
+          assert shadow['effects']['fresh_monitor_coverage'] is True
+          assert shadow['effects']['issues_created'] == 0
+          receipt['source'] = {
+              'snapshot_sha256': sha(root / 'findings.json'),
+              'toolkit_revision': subprocess.check_output(['git', '-C', 'toolkit', 'rev-parse', 'HEAD'], text=True).strip(),
+              'registry_revision': subprocess.check_output(['git', '-C', 'registry', 'rev-parse', 'HEAD'], text=True).strip(),
+              'monitor_revision': subprocess.check_output(['git', '-C', 'monitor', 'rev-parse', 'HEAD'], text=True).strip(),
+              'toolkit_policy_sha256': sha('toolkit/instances/dtg/assurance-routing.yaml'),
+              'toolkit_normalization_sha256': sha('toolkit/instances/dtg/finding-normalization.yaml'),
+              'registry_policy_sha256': sha('registry/ops/dtg/config/assurance-routing.yaml'),
+              'registry_normalization_sha256': sha('registry/ops/dtg/config/finding-normalization.yaml'),
+              'source_verified_by': 'live-shadow-provenance.json',
+          }
+          receipt['source']['source_date'] = shadow['source']['snapshot_date']
+          receipt['effects'] = {'new_issues': 0, 'external_referrals': 0, 'source_writes': 0}
+          (root / 'dual-router-parity.json').write_text(json.dumps(receipt, indent=2, sort_keys=True) + '\\n')
+          print('PASS live dual-router output equality with independently qualified source freshness; no publication')
+          PY
       - name: Retain Registry shadow evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
