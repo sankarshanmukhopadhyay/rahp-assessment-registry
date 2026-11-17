@@ -83,6 +83,9 @@ jobs:
                    'labels':[{'name':'dtg-instance'},{'name':'assessment-evidence-complete'}]}
           assert not combined.is_combined(issue)
           assert not dpip.issue_has_label(issue, dpip.REQUESTED)
+          probe = gate.probe_actual_noeffect_entrypoints(issue, combined, dpip)
+          assert probe['only_exact_toolkit_issue_read']
+          assert not probe['external_issue_write_attempted']
           issue['labels'].append({'name':'judgment-required'})
           assert combined.is_combined(issue)
           issue['labels'].append({'name':dpip.REQUESTED})
