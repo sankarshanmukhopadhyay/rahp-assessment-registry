@@ -112,7 +112,7 @@ def verify_historical_links(source, source_comments, targets, target_comments, c
 def verify_portable_return_chain(source_comments, target_comments, consumer, assessor_contract, *,
                                  source_repo, source_issue, dpip_issue, expected_source_pin,
                                  expected_outcome=None):
-    """Validate the real DPIP #{dpip_issue} portable result through canonical Toolkit schema.
+    """Validate one DPIP portable result through canonical Toolkit schema.
 
     The source issue return payload must be byte-identical to the DPIP outbox
     payload digest and have an acknowledged receipt on DPIP's own issue.
@@ -136,7 +136,7 @@ def verify_portable_return_chain(source_comments, target_comments, consumer, ass
 
     examinations = [
         c for c in target_comments[dpip_issue]
-        if (c.get("body") or "").startswith("<!-- dpip-examination:{dpip_issue}:")
+        if (c.get("body") or "").startswith(f"<!-- dpip-examination:{dpip_issue}:")
     ]
     if len(examinations) != 1:
         raise ConsumerError("DPIP #{dpip_issue} has no unique terminal examination")
@@ -152,7 +152,7 @@ def verify_portable_return_chain(source_comments, target_comments, consumer, ass
     if issues:
         raise ConsumerError("canonical portable assessor validation failed: " + "; ".join(issues))
     if portable.get("assessment_id") != f"dpip:{dpip_issue}" or (expected_outcome is not None and portable.get("outcome") != expected_outcome):
-        raise ConsumerError("portable result identity/outcome differs from the historical examination")
+        raise ConsumerError("portable result identity/outcome differs from the expected examination")
     if portable != disposition.get("assessor_result"):
         raise ConsumerError("DPIP producer's assessor result differs from source-delivered result")
     if disposition.get("conclusion") != portable["outcome"]:
@@ -162,13 +162,13 @@ def verify_portable_return_chain(source_comments, target_comments, consumer, ass
     if not isinstance(pins, list) or expected not in {
         (p.get("repository"), p.get("revision")) for p in pins if isinstance(p, dict)
     }:
-        raise ConsumerError("source-pinned OpenVTC implementation missing from DPIP return")
+        raise ConsumerError("expected immutable source pin missing from DPIP return")
     provenance = portable.get("provenance")
     if not isinstance(provenance, dict):
         raise ConsumerError("portable specialist provenance missing")
     for key, prefix in (
-        ("execution_digest", "<!-- dpip-execution-evidence:{dpip_issue}:"),
-        ("setup_digest", "<!-- dpip-examination-setup:{dpip_issue}:"),
+        ("execution_digest", f"<!-- dpip-execution-evidence:{dpip_issue}:"),
+        ("setup_digest", f"<!-- dpip-examination-setup:{dpip_issue}:"),
     ):
         value = provenance.get(key)
         if not isinstance(value, str) or not value:
