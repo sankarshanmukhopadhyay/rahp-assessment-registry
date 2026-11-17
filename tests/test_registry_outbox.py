@@ -82,9 +82,22 @@ class OutboxTests(unittest.TestCase):
             outbox.deliver(manifest(finding_id="different-finding"), "",
                            load_issues=lambda: [issue(event())])
 
+    def test_direct_apply_cannot_create_during_toolkit_publication(self):
+        calls = []
+        with self.assertRaisesRegex(outbox.DeliveryError, "publisher cutover authority"):
+            outbox.deliver(manifest(), "", apply=True,
+                           load_issues=lambda: [], post=lambda p: calls.append(p))
+        self.assertEqual(calls, [])
+
+    def test_existing_owner_is_still_observable_with_create_blocked(self):
+        result = outbox.deliver(manifest(), "", apply=True,
+                                load_issues=lambda: [issue(event())],
+                                post=lambda p: self.fail("no issue POST expected"))
+        self.assertEqual(result["state"], "owner_observed")
+
     def test_success_requires_authoritative_owner_reread(self):
         before = [[], [issue(event())]]
-        receipt = outbox.deliver(manifest(), "", apply=True,
+        receipt = outbox.deliver(manifest(), "", apply=True, allow_new_case=True,
                                  load_issues=lambda: before.pop(0),
                                  post=lambda p: {"number": 18,
                                                  "html_url": issue(event())["html_url"]})
@@ -93,7 +106,7 @@ class OutboxTests(unittest.TestCase):
     def test_post_200_without_visible_owner_is_indeterminate(self):
         before = [[], []]
         with self.assertRaisesRegex(outbox.DeliveryError, "unacknowledged|no authoritative"):
-            outbox.deliver(manifest(), "", apply=True,
+            outbox.deliver(manifest(), "", apply=True, allow_new_case=True,
                            load_issues=lambda: before.pop(0),
                            post=lambda p: {"number": 18, "html_url": issue(event())["html_url"]})
 
@@ -101,7 +114,7 @@ class OutboxTests(unittest.TestCase):
         before = [[], [issue(event())]]
         def lost_ack(payload):
             raise intake.IntakeError("GitHub HTTP 502")
-        receipt = outbox.deliver(manifest(), "", apply=True,
+        receipt = outbox.deliver(manifest(), "", apply=True, allow_new_case=True,
                                  load_issues=lambda: before.pop(0), post=lost_ack)
         self.assertTrue(receipt["recovered_after_ambiguous_post"])
         self.assertEqual(receipt["state"], "owner_observed")
@@ -109,14 +122,14 @@ class OutboxTests(unittest.TestCase):
     def test_http_failure_without_commit_stays_pending(self):
         before = [[], []]
         with self.assertRaisesRegex(outbox.DeliveryError, "no authoritative"):
-            outbox.deliver(manifest(), "", apply=True,
+            outbox.deliver(manifest(), "", apply=True, allow_new_case=True,
                            load_issues=lambda: before.pop(0),
                            post=lambda p: (_ for _ in ()).throw(intake.IntakeError("HTTP 502")))
 
     def test_forged_post_response_rejected(self):
         before = [[], [issue(event())]]
         with self.assertRaisesRegex(outbox.DeliveryError, "disagrees"):
-            outbox.deliver(manifest(), "", apply=True,
+            outbox.deliver(manifest(), "", apply=True, allow_new_case=True,
                            load_issues=lambda: before.pop(0),
                            post=lambda p: {"number": 19, "html_url": issue(event(), 19)["html_url"]})
 

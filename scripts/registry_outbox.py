@@ -37,7 +37,7 @@ def owner_for(event, issues):
     return decision
 
 
-def deliver(manifest, token, *, apply=False, load_issues=None, post=None):
+def deliver(manifest, token, *, apply=False, allow_new_case=False, load_issues=None, post=None):
     """Only a live issue re-read acknowledges a delivery, not an HTTP POST.
 
     Publication workers must be serialized; GitHub has no atomic unique issue key.
@@ -64,6 +64,13 @@ def deliver(manifest, token, *, apply=False, load_issues=None, post=None):
     if not apply:
         receipt.update(state="pending", owner_url=None, owner_number=None)
         return receipt
+    # The production entry point never grants new-case authority while Toolkit
+    # remains an active publisher. A test-injected override exercises transport
+    # recovery without asserting operational authorization or cutover.
+    if not allow_new_case:
+        raise DeliveryError(
+            "new Registry issue creation blocked: publisher cutover authority not established"
+        )
 
     failure = None
     response = None

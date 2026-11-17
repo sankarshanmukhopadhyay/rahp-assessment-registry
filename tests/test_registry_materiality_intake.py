@@ -104,7 +104,7 @@ class MaterialityIntakeTests(unittest.TestCase):
         remote = [[], [issue]]
         posts = []
         receipt = outbox.deliver(
-            manifest, "test-token", apply=True,
+            manifest, "test-token", apply=True, allow_new_case=True,
             load_issues=lambda: remote.pop(0),
             post=lambda payload: (
                 posts.append(payload),
