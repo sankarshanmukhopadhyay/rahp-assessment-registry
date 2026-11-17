@@ -1,0 +1,5 @@
+# Durable Registry observation acknowledgment
+
+After the exact #272 successor is created under the live Toolkit reserved_group fence, the controlled Registry workflow writes one authenticated source-event comment to that same owner. The comment binds the original pre-journal combined-event SHA-256 (not its enriched publication serialization) to the unique Registry case. An ambiguous HTTP result is reconciled against the complete live issue comment history, never against the POST response alone. Replays do not create a second comment.
+
+The authenticated acknowledgment is not an RAHP result, independent assurance or a release. It is a necessary positive input to Toolkit's guarded retained-event selector. The currently empty Toolkit ledger blocks owner creation and therefore this acknowledgment; no current observation has been posted. The Toolkit source publisher remains active until an accepted_group ledger record, first-party controller/DPIP compatibility and mutually exclusive writer/rollback evidence are established.
