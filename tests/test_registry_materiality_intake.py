@@ -36,6 +36,9 @@ class MaterialityIntakeTests(unittest.TestCase):
         self.assertEqual(receipt["owner_number"], 4)
         self.assertEqual(receipt["unadmitted_routed_count"], 0)
         self.assertFalse(receipt["existing_issue_mutated"])
+        self.assertEqual(len(receipt["monitored_source_sha256"]), 64)
+        self.assertEqual(len(receipt["router_output_sha256"]), 64)
+        self.assertEqual(len(receipt["approved_manifest_sha256"]), 64)
 
     def test_unapproved_current_route_is_not_created(self):
         receipt = materiality.plan([OTHER], [{"finding": OTHER, "outcome": "combined"}],
@@ -136,6 +139,8 @@ class MaterialityIntakeTests(unittest.TestCase):
 
     def test_nonmaterial_or_closed_route_rejected(self):
         for changed in (dict(FINDING, materiality="low"),
+                        dict(FINDING, materiality="medium"),
+                        dict(FINDING, assurance_impact="none"),
                         dict(FINDING, state="closed"),
                         dict(FINDING, review_status="accepted")):
             with self.subTest(changed=changed):
