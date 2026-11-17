@@ -8,6 +8,8 @@ on:
       - 'tests/test_dpip_portable_return.py'
       - 'scripts/registry_specialist_return.py'
       - 'tests/test_registry_specialist_return.py'
+      - 'scripts/registry_dpip_live_reconcile.py'
+      - 'tests/test_registry_dpip_live_reconcile.py'
   push:
     branches: [main]
     paths:
@@ -68,6 +70,8 @@ jobs:
               raise SystemExit('FAIL: pilot without DPIP referral incorrectly accepted')
           print('PASS canonical DPIP schema on admitted synthetic route; actual pilot unadmitted')
           PY
+      - name: Exercise source-controlled Registry DPIP live adapter with qualified and rejected fixtures
+        run: python3 -m unittest discover -s tests -p 'test_registry_dpip_live_reconcile.py' -v
       - name: Read live Toolkit and DPIP historical issues and exercise actual consumer
         env:
           GITHUB_TOKEN: ${{ github.token }}
