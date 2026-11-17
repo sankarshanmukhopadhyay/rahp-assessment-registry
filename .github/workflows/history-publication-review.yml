@@ -1,0 +1,38 @@
+name: Review staged Toolkit history archive bytes (read-only)
+on:
+  pull_request:
+    paths:
+      - 'scripts/check_history_publication.py'
+      - 'tests/test_history_publication.py'
+      - '.github/workflows/history-publication-review.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout verifier
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          path: registry
+      - name: Checkout raw archive proposal as evidence
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: refs/pull/17/head
+          path: archive-pr
+          persist-credentials: false
+      - name: Test fail-closed screening
+        run: python3 -m unittest discover -s registry/tests -p 'test_history_publication.py' -v
+      - name: Verify original compressed source history
+        run: |
+          python3 registry/scripts/check_history_publication.py \
+            --archive archive-pr/archive/content/2026-11-16 \
+            --out build/history-publication-review.json
+      - name: Retain aggregate-only review evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: history-publication-review
+          path: build/history-publication-review.json
+          if-no-files-found: warn
