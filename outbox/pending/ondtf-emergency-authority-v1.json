@@ -1,0 +1,14 @@
+{
+  "schema": "rahp-registry-pending-intake/v1",
+  "event": {
+    "kind": "external_assessment",
+    "assessment_key": "external:direct:ondtf:emergency-authority-lifecycle",
+    "title": "RAHP examination: ONDTF-GOV-006 emergency authority lifecycle and remedy",
+    "proposition": "At ONDTF v1.0.0, examine whether a jurisdictional adoption invoking emergency authority can substantiate purpose, scope, duration, independent review, termination/revocation effects and redress under adverse and delayed conditions. Requirement ONDTF-GOV-006 is an accountable normative obligation, not evidence that any real implementation meets it. Assess negative countercases and evidence requirements; do not infer implementation conformance from the specification release.",
+    "source_repository": "qbf-consulting/open-national-digital-trust-framework",
+    "source_revision": "201bcacdb9b0595f2693c73440598c4b0e89b10d",
+    "source_url": "https://github.com/qbf-consulting/open-national-digital-trust-framework/commit/201bcacdb9b0595f2693c73440598c4b0e89b10d",
+    "finding_id": "ondtf-gov-006-emergency-authority-lifecycle",
+    "responsible_owner": "qbf-consulting/open-national-digital-trust-framework"
+  }
+}

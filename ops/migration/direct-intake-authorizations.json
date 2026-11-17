@@ -1,0 +1,13 @@
+{
+  "schema": "rahp-registry-direct-intake-authority/v1",
+  "admissions": [
+    {
+      "assessment_key": "external:direct:ondtf:emergency-authority-lifecycle",
+      "manifest_path": "outbox/pending/ondtf-emergency-authority-v1.json",
+      "source_repository": "qbf-consulting/open-national-digital-trust-framework",
+      "source_revision": "201bcacdb9b0595f2693c73440598c4b0e89b10d",
+      "finding_id": "ondtf-gov-006-emergency-authority-lifecycle",
+      "status": "approved"
+    }
+  ]
+}
