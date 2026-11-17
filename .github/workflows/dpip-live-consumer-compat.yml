@@ -5,6 +5,7 @@ on:
       - '.github/workflows/dpip-live-consumer-compat.yml'
       - 'scripts/verify_dpip_legacy_consumer.py'
       - 'tests/test_dpip_legacy_consumer.py'
+      - 'tests/test_dpip_portable_return.py'
   push:
     branches: [main]
     paths:
@@ -33,6 +34,8 @@ jobs:
       - run: python3 -m pip install -r toolkit/requirements.txt
       - name: Negative consumer-path tests
         run: python3 -m unittest discover -s tests -p 'test_dpip_legacy_consumer.py' -v
+      - name: Validate portable return tampering and counterfeit examples
+        run: python3 -m unittest discover -s tests -p 'test_dpip_portable_return.py' -v
       - name: Read live Toolkit and DPIP historical issues and exercise actual consumer
         env:
           GITHUB_TOKEN: ${{ github.token }}
