@@ -45,7 +45,7 @@
 | | |
 | --- | --- |
 | Evidence | Real historical return replay for Toolkit #1116 with DPIP #304/#305, including the duplicate-epoch hazard; canonical portable-result validation; read-only Registry-addressed admission evaluator (PR #30); **within a single offered run set**, `qualify_epoch` rejects duplicate source/examination epochs across DPIP issue numbers and permits idempotent replay of the same issue (`tests/test_registry_epoch_disposition.py`); it does **not** enforce persistent cross-dispatch uniqueness. |
-| Unproven | A live Registry-addressed DPIP return; authenticated return transport; a persisted per-epoch uniqueness ledger across separate invocations and concurrent workers; a Lab `rahp-evidence-producer-result/v1` path; controller reconciliation of a Registry-addressed return. |
+| Unproven | A live Registry-addressed DPIP return; authenticated return transport; integration of the persistent case-comment epoch journal with an actual, serialized Registry-directed specialist return; independent concurrent writers not sharing the lock; a Lab `rahp-evidence-producer-result/v1` path; controller reconciliation of a Registry-addressed return. |
 | Next executable step | Admit one source-bound DPIP referral on a Registry case with an accepted credential scope, deliver it once, retain negative-path receipts (duplicate, delayed, stale, wrong-target) through the actual consumer. |
 
 ## Gate 5. Registry-native issue writes with recoverable delivery
