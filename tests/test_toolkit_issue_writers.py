@@ -48,6 +48,29 @@ class PublicationInventoryTests(unittest.TestCase):
             self.assertEqual(report["incident_call_count"], 1)
         self.with_fixture(exercise)
 
+    def test_multiline_transfer_preflight_is_not_a_publisher(self):
+        def exercise(path):
+            target = path / "dtg-portfolio-materiality-handoff.yml"
+            with target.open("a") as out:
+                out.write("          python3 " + audit.PUBLISHER + " " + chr(92) + "\\n")
+                out.write("            --check-transfers " + chr(92) + "\\n")
+                out.write("            out/combined.json out/dpip.json\\n")
+            errors, report = audit.audit(path, REVISION)
+            self.assertEqual(errors, [])
+            self.assertEqual(report["producer_call_count"], 10)
+        self.with_fixture(exercise)
+
+    def test_readonly_flag_in_separate_command_does_not_hide_writer(self):
+        def exercise(path):
+            target = path / "dtg-portfolio-materiality-handoff.yml"
+            with target.open("a") as out:
+                out.write("          python3 " + audit.PUBLISHER + " " + chr(92) + "\\n")
+                out.write("            --events out/combined.json\\n")
+                out.write("          echo --check-transfers\\n")
+            errors, _ = audit.audit(path, REVISION)
+            self.assertTrue(any("publisher call-site drift" in e for e in errors))
+        self.with_fixture(exercise)
+
     def test_unexpected_writer_fails_closed(self):
         def exercise(path):
             (path / "surprise.yml").write_text("permissions:\n  issues: write\n")

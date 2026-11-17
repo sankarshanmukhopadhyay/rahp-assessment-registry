@@ -40,6 +40,30 @@ UNCONTROLLED = re.compile(
 )
 
 
+def count_effectful_invocations(body: str, script: str) -> int:
+    """Count entrypoint commands; multi-line preflights never write GitHub issues.
+
+    Match the actual command's continuation lines so an unrelated later
+    --check-transfers flag cannot suppress a real publisher invocation.
+    """
+    lines = body.splitlines()
+    count = 0
+    for index, line in enumerate(lines):
+        if script not in line:
+            continue
+        command = line.strip()
+        next_index = index
+        while command.rstrip().endswith(chr(92)) and next_index + 1 < len(lines):
+            next_index += 1
+            command = command.rstrip()[:-1] + " " + lines[next_index].strip()
+        if "--self-test" in command:
+            continue
+        if script == PUBLISHER and "--check-transfers" in command:
+            continue
+        count += 1
+    return count
+
+
 def audit(workflow_directory: Path, toolkit_revision: str):
     if not re.fullmatch(r"[0-9a-f]{40}", toolkit_revision):
         raise ValueError("Toolkit revision must be a pinned 40-character commit")
@@ -59,11 +83,10 @@ def audit(workflow_directory: Path, toolkit_revision: str):
         if name in seen:
             raise ValueError("duplicate workflow name")
         seen.add(name)
-        # Self-test commands exercise code but do not publish an issue. They
-        # must not be conflated with live issue-writing entrypoints.
-        active_lines = [line for line in body.splitlines() if "--self-test" not in line]
-        count_pub = sum(PUBLISHER in line for line in active_lines)
-        count_inc = sum(INCIDENT in line for line in active_lines)
+        # Self-tests and --check-transfers are read-only even when written
+        # as multi-line commands; count only effectful publication call sites.
+        count_pub = count_effectful_invocations(body, PUBLISHER)
+        count_inc = count_effectful_invocations(body, INCIDENT)
         has_write = bool(ISSUE_WRITE.search(body))
         uncontrolled = bool(UNCONTROLLED.search(body))
         spec = EXPECTED.get(name)

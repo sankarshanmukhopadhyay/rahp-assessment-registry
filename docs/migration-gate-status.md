@@ -35,7 +35,7 @@
 | | |
 | --- | --- |
 | Evidence | Every Registry workflow now has `timeout-minutes`, and read-only workflows supersede only stale PR runs (this change). Write workflows already share the non-cancelling `registry-case-publication` group. |
-| Preparation | Toolkit writer inventory: six issue-writing workflows, ten canonical publisher call sites and one controller-incident call site remain Toolkit-owned ([inventory](../ops/migration/toolkit-writer-cutover-inventory.md)). |
+| Preparation | Toolkit writer inventory: six issue-writing workflows, ten **effectful** canonical publisher call sites, one additional non-writing `--check-transfers` preflight and one controller-incident call site remain Toolkit-owned ([inventory](../ops/migration/toolkit-writer-cutover-inventory.md)). Preflight does not count as publisher authority. |
 | Unproven | One authoritative owner per case across the fleet; migration disposition for each writer and each worker correlation path. |
 | Decisions needed | (a) Exit criterion for the twice-daily `dtg-live-shadow` schedule: proposed *retire the cron after the gate-6 shadow cycle completes or after N consecutive clean cycles, whichever is first; keep dispatch*. (b) Whether the weekly writer-inventory schedule is kept or replaced by dispatch plus path triggers, since #11 asks to avoid schedules for one-time checks. |
 | Next executable step | Record the one-to-one writer disposition table the inventory document calls for, then settle (a) and (b). |
