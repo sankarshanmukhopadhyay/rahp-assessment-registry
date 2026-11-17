@@ -39,3 +39,29 @@ reconcile them through the canonical RAHP engine and, if applicable, the
 DPIP/Interop Lab contract. The operational cutover remains blocked on the
 full set of [issue #11](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/11)
 conditions. **No release warranted.**
+
+## Case-to-execution binding receipt
+
+The workflow also generates `build/registry-assessment/execution-binding.json`
+from the *actual canonical Toolkit result* using
+[`bind_registry_execution.py`](../scripts/bind_registry_execution.py).
+This receipt records the Registry case and owner URL, source finding and
+immutable revision, Toolkit revision, canonical assessment and correlation IDs,
+and the SHA-256 digest of the normalized machine result. A deterministic
+binding key is derived from those identities. An independent verification pass
+recomputes both the identity and result digest and refuses changed or unknown
+fields.
+
+The binding expressly sets `case_determination_imported=false`,
+`external_specialist_authenticated=false`, `delivery_acknowledged=false`
+and `controller_cutover_qualified=false`. It is an executable **reference
+integrity** boundary for later Registry-to-Toolkit mapping; it is not a
+signature, issuer-authentication proof, specialist return receipt, Registry
+case mutation or assurance determination. Its reproducibility depends on
+the pinned execution inputs and the retained workflow artifact.
+
+Before enabling live specialist returns, a future Registry controller must
+use this source/execution distinction and add authenticated, source-pinned
+return routing, durable acknowledgments, conflict handling and owner
+reconciliation. Do not mistake a matching SHA-256 hash of locally supplied
+data for external authority.
