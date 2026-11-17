@@ -9,6 +9,9 @@ on:
       - 'scripts/bind_registry_execution.py'
       - 'tests/test_registry_execution_binding.py'
       - 'cases/dtg/network-answer-proof-2026-11.json'
+      - 'ops/executions/**'
+      - 'scripts/verify_persisted_execution.py'
+      - 'tests/test_persisted_execution.py'
   push:
     branches: [main]
     paths:
@@ -19,6 +22,9 @@ on:
       - 'scripts/bind_registry_execution.py'
       - 'tests/test_registry_execution_binding.py'
       - 'cases/dtg/network-answer-proof-2026-11.json'
+      - 'ops/executions/**'
+      - 'scripts/verify_persisted_execution.py'
+      - 'tests/test_persisted_execution.py'
   workflow_dispatch:
 permissions:
   contents: read
@@ -74,6 +80,8 @@ jobs:
             --result build/registry-assessment/result.json \
             --toolkit-revision "$expected" \
             --out build/registry-assessment/execution-binding.json --verify
+          python3 scripts/verify_persisted_execution.py \
+            --actual-result build/registry-assessment/result.json
       - name: Retain source-pinned indeterminate run and receipt
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2

@@ -67,3 +67,30 @@ establish operational cutover. The full T1 specialist path requires an
 authenticated Registry-addressed handoff/return protocol that preserves
 the existing v1 contracts and DPIP's durable outbox. No release is
 warranted solely from successful journal publication.
+
+## Git-versioned canonical execution preservation
+
+The accepted pilot's complete canonical Toolkit machine result, execution
+binding and original qualification receipt from [CI run
+43988780802](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/actions/runs/43988780802)
+are now retained in
+[`ops/executions/RAHP-AR-DTG-0001/rahp-369ffe8e6f037e6235d5.json`](../ops/executions/RAHP-AR-DTG-0001/rahp-369ffe8e6f037e6235d5.json).
+Unlike the Actions artifact, this record is present in Git history and remains
+available after artifact retention expires. The source workflow run URL is a
+provenance *locator*, not an independent attestation of GitHub workflow identity.
+
+The [persistent execution validator](../scripts/verify_persisted_execution.py)
+reconstructs the original case-to-execution binding using the existing
+canonical Registry qualification contract; checks the stored result digest,
+source, identity, required open residuals, explicit no-PASS and no-import
+semantics; rejects duplicate record identities and incompatible paths; and,
+in the canonical assessment workflow, compares the stored result against a
+**fresh invocation of the pinned Toolkit controller**. No new assessment engine
+or assessment result schema is introduced.
+
+This is source-controlled, reviewable, tamper-evident *relative to protected Git
+history*; it is not an append-only log, independent execution attestation or
+production event store. The pilot record remains `INDETERMINATE/evidence-required`.
+No DPIP/Lab return, external case status change or new Toolkit issue is
+implied. New cases must have an explicitly versioned and qualified execution
+contract before expanding the current pilot-specific validator.

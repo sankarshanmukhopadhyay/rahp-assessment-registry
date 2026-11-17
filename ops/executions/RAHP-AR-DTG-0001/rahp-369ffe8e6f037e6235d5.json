@@ -1,0 +1,124 @@
+{
+  "schema": "rahp-registry-canonical-execution-record/v1",
+  "source_workflow_run": "https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/actions/runs/43988780802",
+  "result": {
+    "schema": "rahp-assurance-run-state/v1",
+    "assessment_id": "rahp:369ffe8e6f037e6235d5",
+    "correlation_key": "registry:RAHP-AR-DTG-0001:2026-11-13",
+    "subject": {
+      "type": "network-response-consumer",
+      "id": "RAHP-AR-DTG-0001",
+      "components": [
+        "VTI",
+        "VTN"
+      ]
+    },
+    "source_pins": [
+      {
+        "repository": "OpenVTC/verifiable-trust-infrastructure",
+        "revision": "303174f8ca630ca14ddc2cbf5abcb0d10e205c38"
+      }
+    ],
+    "scope": "Consuming-path verification of positive Trust Task responses and refusal handling at the pinned OpenVTC VTI/VTN boundary.",
+    "non_scope": "No claim about other deployments, trust graphs, unobserved clients or external upstream acceptance.",
+    "personas": [
+      "network client",
+      "relying operator"
+    ],
+    "scenarios": [
+      "signed success path",
+      "wrong-purpose or forged positive response",
+      "unsigned refusal or unavailable resolver"
+    ],
+    "risks": [],
+    "harms": [
+      "unauthorized positive network decisions"
+    ],
+    "assurance_propositions": [
+      "Unverified positive responses cannot cause authoritative network effects.",
+      "Refusals and unavailable verification cannot become positive network authorization."
+    ],
+    "requirements_examined": [],
+    "cross_spec_assumptions": [],
+    "evidence": [],
+    "tests": [],
+    "inference": "Required evidence is unavailable for: DTG-0001-R1, DTG-0001-R2.",
+    "confidence": "bounded by named evidence and assessor result",
+    "boundedness": "Conclusion applies only to the configured subject, immutable pins and evidence classes represented in this run.",
+    "state": "TERMINAL_INDETERMINATE_EVIDENCE_REQUIRED",
+    "terminal": true,
+    "outcome": "INDETERMINATE",
+    "reason_code": "evidence-required",
+    "residuals": [
+      {
+        "id": "rahp:369ffe8e6f037e6235d5:residual",
+        "summary": "Required evidence is unavailable for: DTG-0001-R1, DTG-0001-R2."
+      }
+    ],
+    "actions": [
+      {
+        "surface": "evidence-test",
+        "action": "Obtain source-pinned native VTN consumer positive, negative, retry and refusal evidence for both residual requirements.",
+        "acceptance_criterion": "Both DTG-0001-R1 and DTG-0001-R2 have independently inspectable provenance and failing countercases before a comparable assessment rerun."
+      }
+    ],
+    "harm_traceability": [
+      {
+        "persona": "affected party",
+        "scenario": "configured assurance scenario",
+        "harm": "material harm proposition remains unresolved",
+        "proposition": "Unverified positive responses cannot cause authoritative network effects.",
+        "control": "configured control/guardrail or missing assurance-model contract",
+        "evidence": "attributable evidence ledger",
+        "conclusion": "INDETERMINATE"
+      }
+    ],
+    "lineage": {
+      "clean_room": true,
+      "historical_inputs_used": false,
+      "run": {
+        "lineage_prefix": "registry:RAHP-AR-DTG-0001:2026-11-13"
+      }
+    }
+  },
+  "binding": {
+    "binding_key": "rahp-execution:b41e27c36da98ad39b285333174d3b5e",
+    "case_determination_imported": false,
+    "case_id": "RAHP-AR-DTG-0001",
+    "controller_cutover_qualified": false,
+    "delivery_acknowledged": false,
+    "external_specialist_authenticated": false,
+    "registry_case_url": "https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/4",
+    "result_artifact": "build/registry-assessment/result.json",
+    "result_outcome": "INDETERMINATE",
+    "result_reason_code": "evidence-required",
+    "result_sha256": "39d4d435f88a47d63a51ede1f3abea885646046bb2f21956a682d59dc79e56bc",
+    "result_state": "TERMINAL_INDETERMINATE_EVIDENCE_REQUIRED",
+    "schema": "rahp-registry-execution-binding/v1",
+    "source_finding_id": "4cdb4f9a7399aea0a55a",
+    "source_pins": [
+      {
+        "repository": "OpenVTC/verifiable-trust-infrastructure",
+        "revision": "303174f8ca630ca14ddc2cbf5abcb0d10e205c38"
+      }
+    ],
+    "toolkit_assessment_id": "rahp:369ffe8e6f037e6235d5",
+    "toolkit_correlation_key": "registry:RAHP-AR-DTG-0001:2026-11-13",
+    "toolkit_revision": "70298566dc897669e22bf37759843d6b7c0597d2"
+  },
+  "qualification": {
+    "canonical_toolkit_revision": "70298566dc897669e22bf37759843d6b7c0597d2",
+    "case_id": "RAHP-AR-DTG-0001",
+    "controller_cutover_qualified": false,
+    "evidence_state": "missing-native-consumer-evidence",
+    "external_effects": false,
+    "registry_assessment_imported": false,
+    "result_assessment_id": "rahp:369ffe8e6f037e6235d5",
+    "result_outcome": "INDETERMINATE",
+    "schema": "rahp-registry-canonical-run-qualification/v1",
+    "source_pin": {
+      "repository": "OpenVTC/verifiable-trust-infrastructure",
+      "revision": "303174f8ca630ca14ddc2cbf5abcb0d10e205c38"
+    }
+  }
+}
