@@ -96,7 +96,7 @@ An explicitly reviewed intent can result in four **non-mutating** decisions:
   Registry owner. The *existing* controlled durable outbox remains the only
   authorized issue-writing transport; this result is **not** permission to
   write while Toolkit is still an active external case publisher.
-- `reassessment_required`: a newer material observation maps to a reviewed
+- `no_new_case_for_covered_route`: an observed reviewed route is already\n  marked `covered` or `no-action`; even explicit case-intake metadata cannot\n  convert that disposition into a new issue.\n- `reassessment_required`: a newer material observation maps to a reviewed
   durable proposition owner, but its changed source revision/finding is not
   yet represented. No issue is reopened, no new case created, no original
   case result overwritten. A separate accountable reassessment acceptance
