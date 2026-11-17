@@ -14,6 +14,53 @@ class CaseValidationTest(unittest.TestCase):
     def setUpClass(cls):
         cls.pilot = json.loads((ROOT / "cases/dtg/network-answer-proof-2026-11.json").read_text())
 
+    def test_source_branch_or_invalid_revision_rejected(self):
+        for revision in ("main", "0"*39, "g"*40, 123):
+            with self.subTest(revision=revision):
+                case = deepcopy(self.pilot)
+                case["source"]["revision"] = revision
+                self.assertIn("source revision must be immutable 40-hex commit",
+                              validate(case))
+
+    def test_referral_source_url_must_match_producer_repository(self):
+        case = deepcopy(self.pilot)
+        case["referrals"] = [{
+            "role": "specialist_assessor",
+            "repository": "sankarshanmukhopadhyay/dtg-privacy-implementation-profile",
+            "issue_url": "https://github.com/sankarshanmukhopadhyay/rahp-toolkit/issues/1116",
+            "contract": "rahp-assessor-result/v1", "status": "requested"
+        }]
+        self.assertIn("referrals[0]: source issue URL must match producer repository",
+                      validate(case))
+
+    def test_returned_result_revision_must_be_immutable(self):
+        case = deepcopy(self.pilot)
+        case["referrals"] = [{
+            "role": "specialist_assessor",
+            "repository": "sankarshanmukhopadhyay/dtg-privacy-implementation-profile",
+            "issue_url": "https://github.com/sankarshanmukhopadhyay/dtg-privacy-implementation-profile/issues/305",
+            "contract": "rahp-assessor-result/v1", "status": "returned",
+            "result_url": "https://github.com/sankarshanmukhopadhyay/dtg-privacy-implementation-profile/issues/305",
+            "result_revision": "main"
+        }]
+        self.assertIn("referrals[0]: returned result revision must be immutable 40-hex commit",
+                      validate(case))
+
+    def test_matching_import_reference_is_structural_only(self):
+        case = deepcopy(self.pilot)
+        case["assessment"]["determination"] = "INDETERMINATE"
+        case["assessment"]["imported_result"] = {
+            "uri": "https://example.test/unknown",
+            "assessment_id": "a1",
+            "source_revision": case["source"]["revision"],
+            "determination": "INDETERMINATE"
+        }
+        # Structurally compatible, not evidence of result authenticity.
+        self.assertEqual(validate(case), [])
+        case["assessment"]["imported_result"]["source_revision"] = "a"*40
+        self.assertIn("imported RAHP result source revision must match case source revision",
+                      validate(case))
+
     def test_unowned_referral_rejected(self):
         case = deepcopy(self.pilot)
         case["referrals"] = [{"role": "specialist_assessor", "status": "requested"}]
