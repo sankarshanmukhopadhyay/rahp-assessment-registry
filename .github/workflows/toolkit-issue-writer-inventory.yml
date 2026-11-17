@@ -1,0 +1,51 @@
+name: Inventory Toolkit issue-writing authority (read-only)
+on:
+  pull_request:
+    paths:
+      - 'scripts/audit_toolkit_issue_writers.py'
+      - 'tests/test_toolkit_issue_writers.py'
+      - '.github/workflows/toolkit-issue-writer-inventory.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/audit_toolkit_issue_writers.py'
+      - 'tests/test_toolkit_issue_writers.py'
+      - '.github/workflows/toolkit-issue-writer-inventory.yml'
+  schedule:
+    - cron: '23 3 * * 1'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inventory:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Registry
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          path: registry
+      - name: Checkout live Toolkit authority
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: sankarshanmukhopadhyay/rahp-toolkit
+          ref: main
+          path: toolkit
+          persist-credentials: false
+      - name: Test inventory false-success and drift boundaries
+        run: python3 -m unittest discover -s registry/tests -p 'test_toolkit_issue_writers.py' -v
+      - name: Qualify live Toolkit publication and issue-number consumers
+        shell: bash
+        run: |
+          set -euo pipefail
+          revision="$(git -C toolkit rev-parse HEAD)"
+          python3 registry/scripts/audit_toolkit_issue_writers.py \
+            --toolkit-workflows toolkit/.github/workflows \
+            --toolkit-revision "$revision" \
+            --out build/toolkit-issue-writer-inventory.json
+      - name: Retain verified inventory with source revision
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: toolkit-issue-writer-inventory
+          path: build/toolkit-issue-writer-inventory.json
+          if-no-files-found: warn
