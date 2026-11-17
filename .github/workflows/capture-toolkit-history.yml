@@ -8,6 +8,10 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  # Supersede stale PR runs only; never cancel evidence-bearing main/dispatch runs.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
   export:
     runs-on: ubuntu-latest

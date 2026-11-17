@@ -16,9 +16,14 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  # Supersede stale PR runs only; never cancel evidence-bearing main/dispatch runs.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
   legacy-contract:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - name: Checkout canonical Toolkit
