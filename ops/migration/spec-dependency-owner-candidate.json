@@ -1,0 +1,24 @@
+{
+  "schema": "rahp-registry-monitored-owner-candidate/v1",
+  "key": "dtg:portfolio:combined:spec-dependency-alignment",
+  "monitor_revision": "7e2813c8daf867a21e4064513cc83612726aeb44",
+  "snapshot_date": "2026-11-16",
+  "repository": "trustoverip/dtgwg-trust-tasks-tf",
+  "finding_ids": [
+    "0add1f4cc0f048ce6bfc",
+    "29e39a0329123d8839a6",
+    "a60eaffaf3cbc1394553",
+    "acc9772126b1a3820240"
+  ],
+  "active_toolkit_issue": 272,
+  "historical_toolkit_issue": 615,
+  "protected_toolkit_issues": [
+    282,
+    826,
+    837
+  ],
+  "status": "candidate_only",
+  "independent_review_accepted": false,
+  "registry_owner_accepted": false,
+  "toolkit_writer_exclusion_accepted": false
+}

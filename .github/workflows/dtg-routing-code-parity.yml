@@ -4,6 +4,9 @@ on:
     paths:
       - '.github/workflows/dtg-routing-code-parity.yml'
       - 'ops/migration/nov16-annotated-tags.json'
+      - 'ops/migration/spec-dependency-owner-candidate.json'
+      - 'scripts/qualify_monitored_owner.py'
+      - 'tests/test_monitored_owner.py'
       - 'scripts/verify_release_tag_pins.py'
       - 'tests/test_release_tag_pins.py'
       - 'ops/dtg/**'
@@ -109,6 +112,17 @@ jobs:
             --findings monitor/data/findings/2026/11/16.json \
             --combined-events build/parity/2026-11-16/registry/combined-events.json \
             --out build/parity/2026-11-16/combined-source-qualification.json
+      - name: Qualify live Toolkit #272 owner and independent residuals without writes
+        env:
+          REGISTRY_INTAKE_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tests -p 'test_monitored_owner.py' -v
+          python3 scripts/qualify_monitored_owner.py \
+            --candidate ops/migration/spec-dependency-owner-candidate.json \
+            --combined build/parity/2026-11-16/registry/combined-events.json \
+            --evidence build/parity/2026-11-16/combined-source-qualification.json \
+            --out build/parity/2026-11-16/owner-candidate.json
       - name: Retain exact output and parity receipt
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
