@@ -59,6 +59,18 @@ class MaterialityIntakeTests(unittest.TestCase):
         self.assertFalse(receipt["new_issue_created"])
         self.assertFalse(receipt["toolkit_issue_written"])
 
+    def test_covered_or_no_action_cannot_mint_new_case(self):
+        manifest = copy.deepcopy(MANIFEST)
+        manifest["event"]["assessment_key"] = "dtg:case:approved-covered-001"
+        manifest["event"]["finding_id"] = "another-material-finding"
+        for outcome in ("covered", "no-action"):
+            with self.subTest(outcome=outcome):
+                receipt = materiality.plan(
+                    [OTHER], [{"finding": OTHER, "outcome": outcome}], manifest, []
+                )
+                self.assertEqual(receipt["state"], "no_new_case_for_covered_route")
+                self.assertFalse(receipt["new_issue_created"])
+
     def test_new_revision_under_existing_proposition_never_creates_duplicate(self):
         new = copy.deepcopy(FINDING)
         new["finding_id"] = "changed-source-finding"
