@@ -95,7 +95,9 @@ class PersistedCanonicalExecutionTests(unittest.TestCase):
             dir.mkdir()
             data = json.dumps(self.record)
             (dir / "rahp-369ffe8e6f037e6235d5.json").write_text(data)
-            (dir / "extra.json").write_text(data)
+            second = root / "ZZZ-REPLAY"
+            second.mkdir()
+            (second / "rahp-369ffe8e6f037e6235d5.json").write_text(data)
             with self.assertRaisesRegex(v.RecordError, "duplicate"):
                 v.validate_all(root)
 
