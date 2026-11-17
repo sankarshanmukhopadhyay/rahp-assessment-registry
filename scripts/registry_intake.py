@@ -170,28 +170,22 @@ def execute(events, token, *, dry_run=True, issue_snapshot=None):
     decisions = plan(events, issues)  # Validate entire batch before any write.
     if dry_run:
         return decisions
-    # Explicitly refuse creating an execution/controller anchor in this registry.
-    by_key = {e["assessment_key"]: e for e in events}
-    output = []
-    for item in decisions:
-        if item["action"] == "existing-owner":
-            output.append(item)
-            continue
-        event = by_key[item["assessment_key"]]
-        created = request("POST", URL, token, {
-            "title": event["title"], "body": render_body(event),
-            "assignees": ["sankarshanmukhopadhyay"],
-        })
-        output.append({"action": "created", "assessment_key": item["assessment_key"],
-                       "number": created["number"], "url": created["html_url"]})
-    return output
+    # This legacy adapter is a planner, never a publication transport. The
+    # source-controlled durable outbox is the sole Registry new-case write path.
+    # Refuse the whole batch before any effect if even one owner is absent.
+    if any(item["action"] != "existing-owner" for item in decisions):
+        raise IntakeError(
+            "new Registry issue creation requires the controlled durable outbox; "
+            "legacy intake apply is read-only"
+        )
+    return decisions
 
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--events", type=Path, required=True)
     p.add_argument("--issue-snapshot", type=Path, help="offline issue list for dry-run validation")
-    p.add_argument("--apply", action="store_true", help="explicitly allow registry GitHub issue writes")
+    p.add_argument("--apply", action="store_true", help="re-observe existing Registry owners only; no new issues")
     p.add_argument("--out", type=Path)
     args = p.parse_args()
     events = json.loads(args.events.read_text(encoding="utf-8"))
