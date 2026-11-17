@@ -8,6 +8,9 @@ on:
       - 'tests/test_dtg_routing_parity.py'
       - 'ops/dtg/**'
       - 'scripts/registry_materiality_intake.py'
+      - 'scripts/audit_toolkit_transfer_lineage.py'
+      - 'tests/test_toolkit_transfer_lineage.py'
+      - 'ops/migration/candidates/**'
       - 'scripts/registry_intake.py'
       - 'scripts/registry_outbox.py'
       - 'tests/test_registry_materiality_intake.py'
@@ -24,6 +27,9 @@ on:
       - 'tests/test_dtg_routing_parity.py'
       - 'ops/dtg/**'
       - 'scripts/registry_materiality_intake.py'
+      - 'scripts/audit_toolkit_transfer_lineage.py'
+      - 'tests/test_toolkit_transfer_lineage.py'
+      - 'ops/migration/candidates/**'
       - 'scripts/registry_intake.py'
       - 'scripts/registry_outbox.py'
       - 'tests/test_registry_materiality_intake.py'
@@ -165,6 +171,28 @@ jobs:
           assert receipt['toolkit_issue_written'] is False
           assert receipt['assurance_determination_imported'] is False
           print('PASS reviewed case materiality reconciliation; no external writes')
+          PY
+      - name: Audit exact Toolkit transfer-candidate lineage (read-only)
+        env:
+          REGISTRY_INTAKE_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s registry/tests -p 'test_toolkit_transfer_lineage.py' -v
+          python3 registry/scripts/audit_toolkit_transfer_lineage.py \
+            --candidate registry/ops/migration/candidates/toolkit-1194.json \
+            --findings build/live/findings.json \
+            --routing build/live/toolkit/routing.json \
+            --combined build/live/toolkit/combined-events.json \
+            --dpip build/live/toolkit/dpip-events.json \
+            --out build/live/toolkit-1194-transfer-lineage.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          r = json.loads(Path('build/live/toolkit-1194-transfer-lineage.json').read_text())
+          assert r['cutover_authorized'] is False
+          assert r['authority_transfer_accepted'] is False
+          assert r['publisher_suppression_active'] is False
+          assert r['issue_writes'] == 0
           PY
       - name: Retain Registry shadow evidence
         if: always()

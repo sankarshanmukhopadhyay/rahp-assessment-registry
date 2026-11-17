@@ -42,3 +42,7 @@ the existing Toolkit materiality publisher.
 ## Reviewed intake set reconciliation
 
 The live shadow now reconciles **all reviewed JSON manifests** committed to `outbox/pending/` against a single source-pinned snapshot, routed output and live Registry owner read. Duplicate keys, duplicate source finding IDs, ambiguous case ownership and unexpected manifest files fail closed. The receipt distinguishes findings without reviewed intent from those without a **confirmed existing Registry case owner**; reviewed pending creation is not case admission. This remains read-only and cannot authorize publication, specialist delivery, assurance PASS or cutover.
+
+## Toolkit transfer-candidate lineage
+
+The live shadow also examines [Toolkit #1194](../ops/migration/candidates/toolkit-1194.json) against the exact routed finding groups and generated combined/DPIP publication keys. It verifies source-observed immutable commit links and inspects the existing Toolkit owner and paginated comments for exact finding references. A textual issue reference does **not** establish publisher identity, accepted transfer, or suppression authority. The `toolkit-1194-transfer-lineage.json` receipt explicitly retains absent source pins and unmatched publication keys and cannot authorize any write or cutover.
