@@ -12,10 +12,14 @@ source-pinned external assessment intake intent using
 artifacts are additional evidence, not the queue of record.
 
 The [Registry durable intake replay workflow](../.github/workflows/registry-outbox-replay.yml)
-accepts a reviewed manifest path and defaults to **dry-run**. Explicit
-`apply=true` enables a Registry-only GitHub issue POST. The workflow uses the
-Registry's repository-scoped token and serializes against the existing pilot
-intake workflow. It never writes to Toolkit.
+accepts a reviewed manifest path and defaults to **dry-run**. Its PR and
+qualification job has only **Issues-read** privileges. An explicit main-branch
+`workflow_dispatch` with `apply=true` is required to start a separate
+Issues-write job. **Until the Toolkit external-case publisher has an accepted,
+verified coordinated cutover, new Registry issue creation is blocked by this
+workflow even when a reviewed manifest exists.** The write-scoped job may
+reconcile an already existing owner, which requires a second authoritative
+live re-read. It never writes to Toolkit.
 
 The delivery algorithm:
 
@@ -47,13 +51,18 @@ python3 scripts/registry_outbox.py \
   --manifest outbox/pending/network-answer-pilot.json \
   --receipt build/outbox/receipt.json
 
-# Only after explicit review and authorization; writes only Registry issues.
+# The command below is a direct operator API, not a substitute for workflow\n# cutover authorization. The controlled workflow currently blocks new creates.
 python3 scripts/registry_outbox.py \
   --manifest outbox/pending/network-answer-pilot.json \
   --receipt build/outbox/receipt.json --apply
 ```
 
 The seeded pilot must resolve existing Registry #4, not produce another issue.
+A new-case `pending` intent cannot be applied from the controlled workflow
+while Toolkit can still publish external-case issues; this prevents dual-active
+publication even if the operator supplies a plausible source-controlled
+manifest. GitHub's lack of an atomic unique-key issue creation API remains a
+separate concurrency limitation.
 Do not use unreviewed new-case manifests to exercise `apply`.
 
 ## Limitations and further gates

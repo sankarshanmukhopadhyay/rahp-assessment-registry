@@ -34,6 +34,21 @@ def issue(ev, number=18):
 
 
 class OutboxTests(unittest.TestCase):
+    def test_workflow_grants_write_only_to_explicit_main_branch_publish(self):
+        path = Path(__file__).resolve().parents[1] / ".github/workflows/registry-outbox-replay.yml"
+        text = path.read_text(encoding="utf-8")
+        prefix, rest = text.split("  publish:", 1)
+        self.assertIn("  pull_request:", prefix)
+        self.assertIn("  contents: read\n  issues: read", prefix)
+        self.assertNotIn("issues: write", prefix)
+        self.assertIn("if: github.event_name == 'workflow_dispatch' && inputs.apply == true", rest)
+        self.assertIn("github.ref == 'refs/heads/main'", rest)
+        self.assertIn("issues: write", rest)
+        self.assertIn("new Registry issue creation requires a coordinated", rest)
+        self.assertIn("receipt.get('state') != 'owner_observed'", rest)
+        self.assertIn("--receipt build/outbox/replayed.json --apply", rest)
+        self.assertNotIn("gh issue create", rest)
+
     def test_unrecognized_schema_or_additional_fields_fail(self):
         for item in ([], {}, {"schema": "wrong", "event": event()},
                      {**manifest(), "assurance_determination": "PASS"}):
