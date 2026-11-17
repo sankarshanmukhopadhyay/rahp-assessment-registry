@@ -110,7 +110,7 @@ class PortableReturnTests(unittest.TestCase):
         s, t = fixture()
         p = portable()
         del p["action_required"]
-        with self.assertRaisesRegex(v.ConsumerError, "schema"):
+        with self.assertRaisesRegex(v.ConsumerError, "canonical portable assessor validation failed"):
             v.verify_portable_historical_return(s, t, FakeConsumer(p), FakeCanonicalSchema)
 
     def test_stale_or_wrong_producer_source_pin_rejected(self):
