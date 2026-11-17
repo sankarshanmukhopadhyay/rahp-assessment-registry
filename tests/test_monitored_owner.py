@@ -96,7 +96,7 @@ class CandidateTests(unittest.TestCase):
         requests=[]
         def fetch(url):
             requests.append(url)
-            return batch if "page=1" in url else [self.owner]
+            return batch if url.endswith("&page=1") else [self.owner]
         observed=q.all_open_toolkit_issues("token", fetch=fetch)
         self.assertEqual(len(observed), 101)
         self.assertEqual(len(requests), 2)
