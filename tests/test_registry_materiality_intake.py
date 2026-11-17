@@ -8,6 +8,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 import registry_materiality_intake as materiality
 import registry_intake as intake
+import registry_outbox as outbox
 
 MANIFEST = json.loads((ROOT / "outbox/pending/network-answer-pilot.json").read_text())
 EVENT = MANIFEST["event"]
@@ -84,6 +85,60 @@ class MaterialityIntakeTests(unittest.TestCase):
         self.assertEqual(receipt["state"], "reassessment_required")
         self.assertFalse(receipt["source_reassessment_applied"])
         self.assertFalse(receipt["new_issue_created"])
+
+    def test_reviewed_new_case_continues_through_actual_outbox_consumer(self):
+        manifest = copy.deepcopy(MANIFEST)
+        manifest["event"]["assessment_key"] = "dtg:case:approved-new-001"
+        manifest["event"]["finding_id"] = "another-material-finding"
+        planned = materiality.plan(
+            [OTHER], [{"finding": OTHER, "outcome": "combined"}], manifest, []
+        )
+        self.assertEqual(planned["state"], "pending_reviewed_creation")
+        # The real delivery consumer is exercised; only GitHub HTTP is injected.
+        ev = manifest["event"]
+        issue = {
+            "number": 31, "state": "open",
+            "html_url": f"https://github.com/{intake.REGISTRY}/issues/31",
+            "body": intake.render_body(ev),
+        }
+        remote = [[], [issue]]
+        posts = []
+        receipt = outbox.deliver(
+            manifest, "test-token", apply=True,
+            load_issues=lambda: remote.pop(0),
+            post=lambda payload: (
+                posts.append(payload),
+                {"number": 31, "html_url": issue["html_url"]}
+            )[1],
+        )
+        self.assertEqual(receipt["state"], "owner_observed")
+        self.assertEqual(receipt["owner_number"], 31)
+        self.assertEqual(len(posts), 1)
+        self.assertEqual(posts[0]["body"], intake.render_body(ev))
+        self.assertIsNone(receipt["assurance_determination"])
+
+    def test_reviewed_reassessment_cannot_become_outbox_create(self):
+        newer = copy.deepcopy(FINDING)
+        newer["finding_id"] = "changed-source-finding"
+        newer["evidence_urls"] = [
+            EVENT["source_url"],
+            f"https://github.com/{EVENT['source_repository']}/commit/{'b'*40}",
+        ]
+        manifest = copy.deepcopy(MANIFEST)
+        manifest["event"]["finding_id"] = newer["finding_id"]
+        manifest["event"]["source_revision"] = "b" * 40
+        planned = materiality.plan(
+            [newer], [{"finding": newer, "outcome": "combined"}], manifest, [OWNER]
+        )
+        self.assertEqual(planned["state"], "reassessment_required")
+        posts = []
+        with self.assertRaisesRegex(outbox.DeliveryError, "reassessment required"):
+            outbox.deliver(
+                manifest, "test-token", apply=True,
+                load_issues=lambda: [OWNER],
+                post=lambda payload: posts.append(payload),
+            )
+        self.assertEqual(posts, [])
 
     def test_duplicate_source_findings_rejected(self):
         with self.assertRaisesRegex(materiality.MaterialityError, "duplicate monitored"):
