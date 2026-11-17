@@ -88,6 +88,7 @@ def locate(intent, delivery, observed, *, get):
             raise LocatorError("Toolkit current owner lost source findings")
     return {
         "schema": "rahp-registry-group-reference-continuity/v1",
+        "state": "references_verified",
         "source_group_sha256": intent["source_group_sha256"],
         "registry_case_issue_url": url,
         "authenticated_observation_url": confirmed["html_url"],
