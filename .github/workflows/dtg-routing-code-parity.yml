@@ -30,7 +30,7 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           repository: sankarshanmukhopadhyay/dtg-portfolio-monitor
-          ref: 1a1982212bce36d79a5fb9dc6d58bec7b7d9e01a
+          ref: 7e2813c8daf867a21e4064513cc83612726aeb44
           path: monitor
           persist-credentials: false
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
@@ -43,24 +43,49 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          snapshot=monitor/data/findings/2026/11/13.json
-          test -s "$snapshot"
-          python3 toolkit/tools/dtg_portfolio_routing.py \
-            --findings "$snapshot" \
-            --policy toolkit/instances/dtg/assurance-routing.yaml \
-            --normalization-policy toolkit/instances/dtg/finding-normalization.yaml \
-            --snapshot-date 2026-11-13 \
-            --out-dir build/parity/toolkit
-          python3 ops/dtg/dtg_portfolio_routing.py \
-            --findings "$snapshot" \
-            --policy ops/dtg/config/assurance-routing.yaml \
-            --normalization-policy ops/dtg/config/finding-normalization.yaml \
-            --snapshot-date 2026-11-13 \
-            --out-dir build/parity/registry
-          python3 scripts/compare_dtg_routing_outputs.py \
-            --toolkit build/parity/toolkit \
-            --registry build/parity/registry \
-            --out build/parity/receipt.json
+          # Preserve historical source dates; this is a pinned replay, not a
+          # claim of current freshness or live publication.
+          for day in 13 16; do
+            snapshot="monitor/data/findings/2026/11/${day}.json"
+            test -s "$snapshot"
+            date="2026-11-${day}"
+            mkdir -p "build/parity/${date}"
+            python3 toolkit/tools/dtg_portfolio_routing.py \
+              --findings "$snapshot" \
+              --policy toolkit/instances/dtg/assurance-routing.yaml \
+              --normalization-policy toolkit/instances/dtg/finding-normalization.yaml \
+              --snapshot-date "$date" \
+              --out-dir "build/parity/${date}/toolkit"
+            python3 ops/dtg/dtg_portfolio_routing.py \
+              --findings "$snapshot" \
+              --policy ops/dtg/config/assurance-routing.yaml \
+              --normalization-policy ops/dtg/config/finding-normalization.yaml \
+              --snapshot-date "$date" \
+              --out-dir "build/parity/${date}/registry"
+            python3 scripts/compare_dtg_routing_outputs.py \
+              --toolkit "build/parity/${date}/toolkit" \
+              --registry "build/parity/${date}/registry" \
+              --out "build/parity/${date}/receipt.json"
+          done
+          python3 - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+          expected = ("2026-11-13", "2026-11-16")
+          evidence = []
+          for day in expected:
+              receipt = json.loads(Path(f"build/parity/{day}/receipt.json").read_text())
+              if receipt.get("unexplained_differences"):
+                  raise SystemExit("unexplained routing parity discrepancy: " + day)
+              snapshot = Path(f"monitor/data/findings/2026/11/{day[-2:]}.json")
+              evidence.append({"date": day, "source_sha256": hashlib.sha256(snapshot.read_bytes()).hexdigest(),
+                               "receipt": f"build/parity/{day}/receipt.json"})
+          Path("build/parity/snapshot-set.json").write_text(json.dumps({
+              "schema": "rahp-registry-two-snapshot-routing-parity/v1",
+              "monitor_revision": "7e2813c8daf867a21e4064513cc83612726aeb44",
+              "toolkit_revision": "70298566dc897669e22bf37759843d6b7c0597d2",
+              "sources": evidence, "source_writes": 0, "case_writes": 0,
+              "operational_cutover_qualified": False}, indent=2, sort_keys=True) + "\n")
+          PY
       - name: Retain exact output and parity receipt
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2

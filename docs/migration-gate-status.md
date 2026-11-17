@@ -27,7 +27,7 @@
 | | |
 | --- | --- |
 | Evidence | Pinned DTG routing parity (run 43877660730); live dual-router parity on the 2026-11-16 snapshot with byte-identical output for all five output classes (run 43993512587, PR #31). |
-| Unproven | Parity across a second, later snapshot; parity under an unmapped-event or stale-snapshot countercase on the live path; the Toolkit's own failed monitor run (43871548910) is not explained by parity. |
+| Unproven | A second distinct source snapshot is now exercised by the pinned routing workflow (CI result required); parity under unmapped/stale-source negative cases on the **live** path and operational publication coalescence remain separate. The Toolkit's historical failed monitor run (43871548910) is not explained by a parity replay. |
 | Next executable step | Run the parity comparison on a second pinned snapshot and retain the countercase receipts next to the first. |
 
 ## Gate 3. Operational workflow migration with bounded CI cost
