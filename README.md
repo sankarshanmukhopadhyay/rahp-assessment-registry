@@ -46,6 +46,10 @@ The [opt-in fail-closed intake adapter](docs/external-intake.md) supports source
 
 The [controlled Registry outbox replay](docs/durable-intake-replay.md) persists reviewed source-pinned intake intent in Git and requires an authoritative live issue re-read before acknowledging delivery. Its apply path is manually authorized and Registry-only; it is not yet connected to automatic materiality monitoring, controller execution or DPIP/Lab returns.
 
+## Canonical source-pinned pilot assessment
+
+The [Registry-executed RAHP pilot](docs/canonical-registry-assessment.md) invokes the immutable Toolkit controller with the existing source-pinned case and an explicitly empty native-evidence ledger. Its expected result is `INDETERMINATE` / `evidence-required`, not a Registry case PASS or operational cutover.
+
 ## Pilot scope and migration status
 
 The initial pilot's **external evidence coordination ownership was manually transferred** from historical, now-closed [Toolkit #1203](https://github.com/sankarshanmukhopadhyay/rahp-toolkit/issues/1203) to active [Registry #4](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/4). The case remains `not_assessed`; its residual evidence obligations are open. This is not a transfer of source remediation or canonical Toolkit assessment authority.
