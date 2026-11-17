@@ -21,6 +21,8 @@ workflow even when a reviewed manifest exists.** The write-scoped job may
 reconcile an already existing owner, which requires a second authoritative
 live re-read. It never writes to Toolkit.
 
+The Python transport also refuses new-case creation on direct `--apply` invocation while the existing Toolkit publisher remains authoritative. The internal `allow_new_case` test injection exercises the future one-POST/readback consumer path under controlled fixtures, **not** a production operator authorization interface. An accepted transfer and coordinated publisher-suppression evidence must precede any future production authorization mechanism.
+
 The delivery algorithm:
 
 1. Re-read the complete Registry issue set; refuse duplicate keyed owners,
@@ -51,7 +53,7 @@ python3 scripts/registry_outbox.py \
   --manifest outbox/pending/network-answer-pilot.json \
   --receipt build/outbox/receipt.json
 
-# The command below is a direct operator API, not a substitute for workflow\n# cutover authorization. The controlled workflow currently blocks new creates.
+# Direct apply is existing-owner-only; both the Python transport and the\n# controlled workflow block new cases until cutover is qualified.
 python3 scripts/registry_outbox.py \
   --manifest outbox/pending/network-answer-pilot.json \
   --receipt build/outbox/receipt.json --apply
