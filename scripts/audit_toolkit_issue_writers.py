@@ -20,7 +20,7 @@ EXPECTED = {
                      "tools/dpip_lifecycle_reconcile.py", "tools/evidence_provenance_router.py"],
     },
     "dtg-portfolio-materiality-handoff.yml": {
-        "publisher": 4, "incident": 0, "consumer": ["tools/dpip_handoff.py"],
+        "publisher": 3, "incident": 0, "consumer": ["tools/dpip_handoff.py"],
     },
     "instance-watch.yml": {
         "publisher": 4, "incident": 1, "consumer": ["tools/dtg_repository_review_worker.py"],
@@ -38,6 +38,42 @@ UNCONTROLLED = re.compile(
     r"api[.]github[.]com/repos/[^ \n]+/issues|"
     r"\bgithub[.]rest[.]issues[.](?:create|update|createComment)\b"
 )
+
+
+def count_effectful_invocations(body: str, script: str) -> int:
+    """Count entrypoint commands; multi-line preflights never write GitHub issues.
+
+    Match the actual command's continuation lines so an unrelated later
+    --check-transfers flag cannot suppress a real publisher invocation.
+    """
+    lines = body.splitlines()
+    count = 0
+    for index, line in enumerate(lines):
+        if script not in line:
+            continue
+        command = line.strip()
+        next_index = index
+        # In a YAML folded block ('run: >-'), successive equally-indented
+        # lines are one shell command even without an explicit backslash.
+        previous = next((item.strip() for item in reversed(lines[:index])
+                         if item.strip()), "")
+        folded = previous in ("run: >-", "run: >", "run: >+")
+        indentation = len(line) - len(line.lstrip())
+        while next_index + 1 < len(lines):
+            continued = command.rstrip().endswith(chr(92))
+            following = lines[next_index + 1]
+            follow_indent = len(following) - len(following.lstrip())
+            if not continued and not (folded and following.strip()
+                                      and follow_indent >= indentation):
+                break
+            next_index += 1
+            command = command.rstrip().removesuffix(chr(92)) + " " + following.strip()
+        if "--self-test" in command:
+            continue
+        if script == PUBLISHER and "--check-transfers" in command:
+            continue
+        count += 1
+    return count
 
 
 def audit(workflow_directory: Path, toolkit_revision: str):
@@ -59,11 +95,10 @@ def audit(workflow_directory: Path, toolkit_revision: str):
         if name in seen:
             raise ValueError("duplicate workflow name")
         seen.add(name)
-        # Self-test commands exercise code but do not publish an issue. They
-        # must not be conflated with live issue-writing entrypoints.
-        active_lines = [line for line in body.splitlines() if "--self-test" not in line]
-        count_pub = sum(PUBLISHER in line for line in active_lines)
-        count_inc = sum(INCIDENT in line for line in active_lines)
+        # Self-tests and --check-transfers are read-only even when written
+        # as multi-line commands; count only effectful publication call sites.
+        count_pub = count_effectful_invocations(body, PUBLISHER)
+        count_inc = count_effectful_invocations(body, INCIDENT)
         has_write = bool(ISSUE_WRITE.search(body))
         uncontrolled = bool(UNCONTROLLED.search(body))
         spec = EXPECTED.get(name)

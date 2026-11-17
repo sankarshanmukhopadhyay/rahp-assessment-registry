@@ -31,7 +31,7 @@ class PublicationInventoryTests(unittest.TestCase):
         def exercise(path):
             errors, receipt = audit.audit(path, REVISION)
             self.assertEqual(errors, [])
-            self.assertEqual(receipt["producer_call_count"], 10)
+            self.assertEqual(receipt["producer_call_count"], 9)
             self.assertEqual(receipt["incident_call_count"], 1)
             self.assertTrue(receipt["inventory_complete"])
             self.assertFalse(receipt["cutover_authorized"])
@@ -46,6 +46,47 @@ class PublicationInventoryTests(unittest.TestCase):
             errors, report = audit.audit(path, REVISION)
             self.assertEqual(errors, [])
             self.assertEqual(report["incident_call_count"], 1)
+        self.with_fixture(exercise)
+
+    def test_multiline_transfer_preflight_is_not_a_publisher(self):
+        def exercise(path):
+            target = path / "dtg-portfolio-materiality-handoff.yml"
+            with target.open("a") as out:
+                out.write("          python3 " + audit.PUBLISHER + " " + chr(92) + "\n")
+                out.write("            --check-transfers " + chr(92) + "\n")
+                out.write("            out/combined.json out/dpip.json\n")
+            errors, report = audit.audit(path, REVISION)
+            self.assertEqual(errors, [])
+            self.assertEqual(report["producer_call_count"], 9)
+        self.with_fixture(exercise)
+
+    def test_current_toolkit_baseline_excludes_selftest_and_preflight(self):
+        self.assertEqual(audit.EXPECTED["dtg-portfolio-materiality-handoff.yml"]["publisher"], 3)
+        self.assertEqual(sum(spec["publisher"] for spec in audit.EXPECTED.values()), 9)
+
+    def test_yaml_folded_transfer_preflight_is_not_a_publisher(self):
+        def exercise(path):
+            target = path / "dtg-portfolio-materiality-handoff.yml"
+            with target.open("a") as out:
+                out.write("      - name: Transfer preflight\n")
+                out.write("        run: >-\n")
+                out.write("          python3 " + audit.PUBLISHER + "\n")
+                out.write("          --check-transfers\n")
+                out.write("          out/combined.json out/dpip.json\n")
+            errors, report = audit.audit(path, REVISION)
+            self.assertEqual(errors, [])
+            self.assertEqual(report["producer_call_count"], 9)
+        self.with_fixture(exercise)
+
+    def test_readonly_flag_in_separate_command_does_not_hide_writer(self):
+        def exercise(path):
+            target = path / "dtg-portfolio-materiality-handoff.yml"
+            with target.open("a") as out:
+                out.write("          python3 " + audit.PUBLISHER + " " + chr(92) + "\n")
+                out.write("            --events out/combined.json\n")
+                out.write("          echo --check-transfers\n")
+            errors, _ = audit.audit(path, REVISION)
+            self.assertTrue(any("publisher call-site drift" in e for e in errors))
         self.with_fixture(exercise)
 
     def test_unexpected_writer_fails_closed(self):
