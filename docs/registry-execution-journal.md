@@ -94,3 +94,23 @@ production event store. The pilot record remains `INDETERMINATE/evidence-require
 No DPIP/Lab return, external case status change or new Toolkit issue is
 implied. New cases must have an explicitly versioned and qualified execution
 contract before expanding the current pilot-specific validator.
+
+## Delivery acknowledgment publisher identity
+
+A matching marker and identical JSON text are **not** proof that a publication
+worker wrote the comment: public issues may accept comments from other GitHub
+accounts. The journal therefore accepts an existing publication receipt only
+when the GitHub API exposes both the expected `github-actions[bot]` account
+login and its stable numeric user ID `41898282`, and the comment URL resolves
+to the expected issue and comment ID in this Registry. Missing actor metadata,
+lookalike markers, mismatched IDs, foreign URLs and contradictory results
+fail closed. The same check applies when recovering a POST that timed out after
+remote delivery.
+
+The actor check establishes the **GitHub-reported posting identity**, not proof
+of a specific workflow run, independently attested action or approval. Another
+workflow with write permissions to this repository could still post as GitHub
+Actions; the primary control remains restricted `issues:write` on the manual
+publication job, protected branch/review governance, and the source-bound
+result contract. Production-grade actor/run attribution and exclusive publication
+must be demonstrated before enabling broader automated case writing.
