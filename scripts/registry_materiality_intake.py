@@ -22,7 +22,7 @@ SHA = re.compile(r"^[0-9a-f]{40}$")
 GIT_COMMIT = re.compile(
     r"^https://github[.]com/([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)/commit/([0-9a-f]{40})$"
 )
-ALLOWED_OUTCOMES = {"combined", "dpip", "review", "RAHP", "security"}
+ALLOWED_OUTCOMES = {"combined", "dpip", "covered", "no-action", "UNMAPPED"}
 
 
 class MaterialityError(ValueError):
