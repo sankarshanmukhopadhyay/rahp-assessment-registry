@@ -1,6 +1,6 @@
 # Registry-to-Toolkit controller migration contract
 
-**Status:** migration analysis and acceptance contract, not an implemented controller cutover. Governing tracker: [Registry #11](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/11). The original pilot compatibility gate remains [#2](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/2).
+**Status:** migration analysis and acceptance contract, not an implemented controller cutover. Governing tracker: [Registry #11](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/11). Per-gate evidence and open items: [gate status](migration-gate-status.md). The original pilot compatibility gate remains [#2](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/2).
 
 ## Verified current coupling
 
