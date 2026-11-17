@@ -30,6 +30,8 @@
 | Unproven | Operational publication coalescence, live unmapped/stale-source countercase reconciliation, and sustained cross-snapshot source freshness. Historical pinning does not explain Toolkit failed run 43871548910. |
 | Next executable step | Verify the six exact November 16 annotated release-tag objects against live GitHub and bind all 13 grouped findings to either directly observed commits or supplemental verified tag targets. [Registry PRs #58–#62](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/pull/62) now source-qualify the group and test exact live Toolkit owner and pending-intent lineage. Next require explicit maintainer acceptance of the current digest, then prove delivery, first-party issue-number consumer compatibility and exclusive writer fencing before an authority switch. |
 
+**Pending review: coordinated transaction rehearsal (Toolkit PR #1218; Registry branch `feat/transfer-writer-quiescence`).** Toolkit's draft source-scoped reserved-group selection preserves unrelated events, and its canonical publisher re-reads the current transfer ledger before issue mutation. Registry's draft successor workflow adds a read-only active-writer quiescence check. These are **unmerged implementation proposals**, not executed cross-repository fencing or gate evidence. Pre-existing/other Toolkit writer paths, future scheduled invocations, consumer identity mapping and reverse-transfer authorization remain unproven. The live Toolkit ledger remains empty.
+
 ## Gate 3. Operational workflow migration with bounded CI cost
 
 | | |
