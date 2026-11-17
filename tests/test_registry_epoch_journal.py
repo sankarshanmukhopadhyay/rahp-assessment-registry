@@ -18,7 +18,9 @@ class EpochJournalTests(unittest.TestCase):
         record = journal.from_offered_runs(
             case, case_issue, comments, runs, consumer, RealContractStub)[0]
         live_issue = {"number": 4, "html_url": record["registry_case_url"], "state": "open",
-                      "body": "<!-- rahp-registry-case:" + case["case_id"] + " -->"}
+                      "body": "<!-- rahp-registry-case:" + case["case_id"] + " -->\n"
+                              + case["source"]["repository"] + "\n"
+                              + case["source"]["revision"]}
         return case, record, live_issue
 
     def comment(self, record, number=120):
@@ -40,6 +42,13 @@ class EpochJournalTests(unittest.TestCase):
         with self.assertRaisesRegex(journal.EpochJournalError, "conflicting"):
             journal.reconcile(second, owner, read_comments=lambda: remote)
         self.assertFalse(first["qualified_return"]["case_determination_imported"])
+
+    def test_real_github_user_shape_can_acknowledge(self):
+        _, record, owner = self.qualified()
+        comment = self.comment(record)
+        comment["user"].update({"type": "Bot", "avatar_url": "https://avatars.github.test/x"})
+        self.assertEqual(journal.reconcile(
+            record, owner, read_comments=lambda: [comment])["state"], "observed")
 
     def test_same_epoch_same_issue_replay_is_idempotent(self):
         _, record, owner = self.qualified()
@@ -107,6 +116,13 @@ class EpochJournalTests(unittest.TestCase):
         tampered["source_pin"]["revision"] = "a" * 40
         with self.assertRaisesRegex(journal.EpochJournalError, "source pin"):
             journal.record_for(tampered, case)
+
+    def test_live_case_source_drift_rejected(self):
+        _, record, owner = self.qualified()
+        changed = {**owner, "body": owner["body"].replace(
+            record["epoch"]["source_pin"]["revision"], "f" * 40)}
+        with self.assertRaisesRegex(journal.EpochJournalError, "source pin"):
+            journal.reconcile(record, changed, read_comments=lambda: [])
 
     def test_closed_or_foreign_case_cannot_receive_epoch(self):
         _, record, owner = self.qualified()

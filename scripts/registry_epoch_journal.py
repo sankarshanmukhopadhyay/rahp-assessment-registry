@@ -148,7 +148,11 @@ def lookup(comments, record):
     if not matching:
         return None
     candidate = matching[0]
-    if candidate.get("user") != ACTOR:
+    actor = candidate.get("user")
+    if (not isinstance(actor, dict)
+            or type(actor.get("id")) is not int
+            or actor["id"] != ACTOR["id"]
+            or actor.get("login") != ACTOR["login"]):
         raise EpochJournalError("epoch marker is not from authorized workflow publisher")
     if candidate.get("body") != comment_text(record):
         raise EpochJournalError("conflicting return for persisted examination epoch")
@@ -172,9 +176,13 @@ def reconcile(record, issue, *, apply=False, exclusive_operator_lock=False,
         raise EpochJournalError("Registry case is not open")
     if issue.get("html_url") != record.get("registry_case_url"):
         raise EpochJournalError("Registry case owner has changed")
+    body = issue.get("body") or ""
     if ("<!-- rahp-registry-case:" + record["epoch"]["case_id"] + " -->"
-            not in (issue.get("body") or "")):
+            not in body):
         raise EpochJournalError("live case owner does not bind examination identity")
+    pin = record["epoch"]["source_pin"]
+    if pin["repository"] not in body or pin["revision"] not in body:
+        raise EpochJournalError("live Registry case has a different source pin")
     text = comment_text(record)
     prior = lookup(read_comments(), record)
     base = {"schema": "rahp-registry-epoch-journal-receipt/v1",
