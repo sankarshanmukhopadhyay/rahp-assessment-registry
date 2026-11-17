@@ -154,6 +154,7 @@ jobs:
           assert receipt['state'] in {
               'outside_observed_materiality', 'existing_owner',
               'reassessment_required', 'pending_reviewed_creation',
+              'no_new_case_for_covered_route',
           }
           assert receipt['new_issue_created'] is False
           assert receipt['existing_issue_mutated'] is False
