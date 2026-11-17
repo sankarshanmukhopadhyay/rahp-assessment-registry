@@ -1,6 +1,6 @@
 # Registry #11 completion-gate status
 
-**Status:** working ledger, not an acceptance record. Governing tracker: [Registry #11](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/11). Observed against Registry `main` at `50d8cd2` (2026-11-17) plus the evidence cited in #11's comments. Update this file in the same PR that moves a gate; a PR should state which row it moves and which executable-path gap it closes.
+**Status:** working ledger, not an acceptance record. Governing tracker: [Registry #11](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/11). Evidence updated through merged Registry PRs #51–#54 (2026-11-17). This is a maintained evidence record, not a declaration that the six gates have been accepted. Update this file in the same PR that moves a gate; a PR should state which row it moves and which executable-path gap it closes.
 
 **Rules of this ledger**
 
@@ -17,18 +17,18 @@
 
 | | |
 | --- | --- |
-| Evidence | 769-issue metadata inventory (712 closed, 57 open) in [`archive/`](../archive/README.md). Toolkit #1203 carries a non-destructive forward link to Registry #4, and #4 and its case record link back; the case validator rejects incomplete accepted succession ([case succession](case-succession.md), PR #43). |
+| Evidence | [PR #51](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/pull/51) passed full CI with a real 769-issue metadata inventory check (712 closed, 57 open), source mapping and duplicate tests. Live Toolkit #1203 comments [#6916545170](https://github.com/sankarshanmukhopadhyay/rahp-toolkit/issues/1203#issuecomment-6916545170) and [#6949243039](https://github.com/sankarshanmukhopadhyay/rahp-toolkit/issues/1203#issuecomment-6949243039) link to Registry #4; Registry #4 body and comment [#6916600885](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/4#issuecomment-6916600885) link back. |
 | Preparation | Full-content staging and its aggregate-only screening ([persistent history staging](persistent-history-staging.md), PR #42); PR #17 remains unmerged. |
 | Unproven | Reverse links for any case beyond #4; full comment/event/attachment fidelity (not required by default: the gate asks for a locator and index); manual privacy review of any republication. |
-| Next executable step | Fix the gate-1 acceptance criterion as *locator completeness plus reverse links for every transferred case*, add a validator check that every accepted `historical_source_issue` appears in the archive inventory, and leave PR #17 unmerged unless a separate privacy review authorizes republication. |
+| Next executable step | [PR #51](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/pull/51) now validates the complete metadata locator and accepted successions in normal CI. A live check observed reciprocal Toolkit #1203 ↔ Registry #4 comments. Retain the original URLs, obtain independent review of this bounded locator acceptance, and leave full-content PR #17 unmerged without separate privacy authorization. |
 
 ## Gate 2. Exact monitored-source parity
 
 | | |
 | --- | --- |
-| Evidence | Pinned DTG routing parity (run 43877660730); live dual-router parity on the 2026-11-16 snapshot with byte-identical output for all five output classes (run 43993512587, PR #31). |
-| Unproven | A second distinct source snapshot is now exercised by the pinned routing workflow (CI result required); parity under unmapped/stale-source negative cases on the **live** path and operational publication coalescence remain separate. The Toolkit's historical failed monitor run (43871548910) is not explained by a parity replay. |
-| Next executable step | Run the parity comparison on a second pinned snapshot and retain the countercase receipts next to the first. |
+| Evidence | [PR #53](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/pull/53), [Actions run #44106684291](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/actions/runs/44106684291): both authoritative routers completed byte-identical output parity against **two pinned snapshots**, 2026-11-13 and 2026-11-16, retaining each source digest and receipt. Earlier same-fresh-source live parity passed in run 43993512587. No publisher effects were exercised. |
+| Unproven | Operational publication coalescence, live unmapped/stale-source countercase reconciliation, and sustained cross-snapshot source freshness. Historical pinning does not explain Toolkit failed run 43871548910. |
+| Next executable step | Independently review the two retained snapshot receipts, then exercise a scoped monitored source transition through the actual producer/consumer path. Do not treat a historical replay as a live publisher switch. |
 
 ## Gate 3. Operational workflow migration with bounded CI cost
 
@@ -44,7 +44,7 @@
 
 | | |
 | --- | --- |
-| Evidence | Real historical return replay for Toolkit #1116 with DPIP #304/#305, including the duplicate-epoch hazard; canonical portable-result validation; read-only Registry-addressed admission evaluator (PR #30); **within a single offered run set**, `qualify_epoch` rejects duplicate source/examination epochs across DPIP issue numbers and permits idempotent replay of the same issue (`tests/test_registry_epoch_disposition.py`); it does **not** enforce persistent cross-dispatch uniqueness. |
+| Evidence | Historical Toolkit #1116 and DPIP #304/#305 portable-result replay; per-batch qualifier [PR #50](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/pull/50); [PR #52](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/pull/52) adds durable **case-comment** cross-delivery epoch conflict detection with authoritative re-read and negative tests, corrected for live GitHub actor shape and source pin in [PR #54](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/pull/54). No real Registry-directed return has been journaled. |
 | Unproven | A live Registry-addressed DPIP return; authenticated return transport; integration of the persistent case-comment epoch journal with an actual, serialized Registry-directed specialist return; independent concurrent writers not sharing the lock; a Lab `rahp-evidence-producer-result/v1` path; controller reconciliation of a Registry-addressed return. |
 | Next executable step | Admit one source-bound DPIP referral on a Registry case with an accepted credential scope, deliver it once, retain negative-path receipts (duplicate, delayed, stale, wrong-target) through the actual consumer. |
 
