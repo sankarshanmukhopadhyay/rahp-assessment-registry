@@ -58,6 +58,20 @@ def verify_live_reservation(manifest, manifest_path, token, *, fetch=None):
         raise DeliveryError("reservation requires a committed canonical pending-intake path")
     if fetch is None:
         fetch = lambda url: intake.request("GET", url, token)
+    registry_ref = fetch("https://api.github.com/repos/" + intake.REGISTRY + "/branches/main")
+    registry_head = ((registry_ref or {}).get("commit") or {}).get("sha")
+    if not isinstance(registry_head, str) or not COMMIT_SHA.fullmatch(registry_head):
+        raise DeliveryError("Registry main branch revision unavailable")
+    committed = fetch("https://api.github.com/repos/" + intake.REGISTRY +
+                      "/contents/" + manifest_path + "?ref=" + registry_head)
+    if not isinstance(committed, dict) or committed.get("encoding") != "base64":
+        raise DeliveryError("Registry pending intent is not committed")
+    try:
+        actual = json.loads(base64.b64decode(committed["content"]).decode("utf-8"))
+    except (KeyError, ValueError, UnicodeError, binascii.Error) as exc:
+        raise DeliveryError("invalid committed Registry intent") from exc
+    if actual != manifest:
+        raise DeliveryError("Registry committed intent does not match qualification input")
     ref = fetch(TOOLKIT_API + "/branches/main")
     head = ((ref or {}).get("commit") or {}).get("sha")
     if not isinstance(head, str) or not COMMIT_SHA.fullmatch(head):
@@ -91,8 +105,12 @@ def verify_live_reservation(manifest, manifest_path, token, *, fetch=None):
     new_ref = fetch(TOOLKIT_API + "/branches/main")
     if ((new_ref or {}).get("commit") or {}).get("sha") != head:
         raise DeliveryError("Toolkit main changed during reservation qualification")
-    return {"toolkit_main_sha": head, "toolkit_issue_url": url,
-            "registry_intent_path": manifest_path, "assessment_key": event["assessment_key"]}
+    registry_again = fetch("https://api.github.com/repos/" + intake.REGISTRY + "/branches/main")
+    if ((registry_again or {}).get("commit") or {}).get("sha") != registry_head:
+        raise DeliveryError("Registry main changed during intent qualification")
+    return {"toolkit_main_sha": head, "registry_main_sha": registry_head,
+            "toolkit_issue_url": url, "registry_intent_path": manifest_path,
+            "assessment_key": event["assessment_key"]}
 
 
 def deliver(manifest, token, *, apply=False, allow_new_case=False, load_issues=None, post=None):

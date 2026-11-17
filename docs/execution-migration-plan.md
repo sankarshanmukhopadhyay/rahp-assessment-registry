@@ -61,3 +61,12 @@ coordinator must demonstrate exclusive publication across *all* relevant
 Toolkit writers (including in-flight runs) and preserve first-party controller,
 DPIP and reviewer correlation before Registry production issue POST is enabled.
 A successful read-only reservation check alone does not establish those facts.
+
+### Committed-intent cross-check
+
+The Registry reservation qualifier also reads the pending-intake JSON from
+**Registry `main` at an immutable commit** and compares its parsed record
+exactly with the supplied manifest. It rereads Registry `main` before
+acknowledging qualification and rejects branch drift. Local files or PR-only
+manifests do not confer authority even when Toolkit contains a reservation.
+The result is read-only; it cannot publish an issue or establish cutover.

@@ -52,9 +52,16 @@ class OutboxTests(unittest.TestCase):
         issue = {"html_url": issue_url, "state": "open",
                  "body": "<!-- rahp-assessment-key:" + key + " --> " + ev["finding_id"]}
         contents = {"encoding": "base64", "content": base64.b64encode(json.dumps(ledger).encode()).decode()}
+        committed = {"encoding": "base64", "content": base64.b64encode(
+            json.dumps(manifest()).encode()).decode()}
         urls = []
+        registry_head = {"commit": {"sha": "d" * 40}}
         def fetch(url):
             urls.append(url)
+            if "/rahp-assessment-registry/branches/main" in url:
+                return registry_head
+            if "/rahp-assessment-registry/contents/" in url:
+                return committed
             if "/branches/main" in url:
                 return head
             if "/contents/" in url:
@@ -64,7 +71,7 @@ class OutboxTests(unittest.TestCase):
             self.fail("unrecognized Toolkit read " + url)
         proof = outbox.verify_live_reservation(manifest(), path, "", fetch=fetch)
         self.assertEqual(proof["toolkit_main_sha"], sha)
-        self.assertEqual(len(urls), 4)
+        self.assertEqual(len(urls), 7)
 
         for changes in (
             {"state": "accepted"},
@@ -92,6 +99,20 @@ class OutboxTests(unittest.TestCase):
             return fetch(url)
         with self.assertRaisesRegex(outbox.DeliveryError, "changed"):
             outbox.verify_live_reservation(manifest(), path, "", fetch=drifting)
+
+        committed["content"] = base64.b64encode(json.dumps(
+            {"schema": "rahp-registry-pending-intake/v1", "event": {**ev, "source_revision": "f" * 40}}
+        ).encode()).decode()
+        with self.assertRaisesRegex(outbox.DeliveryError, "does not match"):
+            outbox.verify_live_reservation(manifest(), path, "", fetch=fetch)
+        committed["content"] = base64.b64encode(json.dumps(manifest()).encode()).decode()
+        registry_reads = iter([registry_head, {"commit": {"sha": "e" * 40}}])
+        def registry_drifting(url):
+            if "/rahp-assessment-registry/branches/main" in url:
+                return next(registry_reads)
+            return fetch(url)
+        with self.assertRaisesRegex(outbox.DeliveryError, "Registry main changed"):
+            outbox.verify_live_reservation(manifest(), path, "", fetch=registry_drifting)
 
     def test_reservation_rejects_uncommitted_or_traversal_paths(self):
         for path in ("../outbox/pending/test.json", "/tmp/test.json",
