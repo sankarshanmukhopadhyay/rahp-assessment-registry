@@ -118,7 +118,12 @@ def plan(findings, routed, manifest, issues):
                 status = "existing_owner"
                 owner = decision["number"]
             elif decision["action"] == "create":
-                status = "pending_reviewed_creation"
+                # Covered/no-action are route dispositions, not a new external
+                # examination mandate. A reviewed manifest cannot invert them.
+                if matches[0].get("outcome") in ("covered", "no-action"):
+                    status = "no_new_case_for_covered_route"
+                else:
+                    status = "pending_reviewed_creation"
             else:
                 raise MaterialityError("unsupported Registry owner decision")
     # Every other routed item remains unadmitted; treating a routed candidate
