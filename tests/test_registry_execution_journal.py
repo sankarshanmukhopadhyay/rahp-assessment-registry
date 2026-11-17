@@ -45,7 +45,8 @@ class JournalTests(unittest.TestCase):
 
     def comment(self, record, n=100):
         return {"id": n, "html_url": f"https://github.com/{gh.REGISTRY}/issues/4#issuecomment-{n}",
-                "body": journal.comment_text(record)}
+                "body": journal.comment_text(record),
+                "user": {"login": "github-actions[bot]", "id": 41898282}}
 
     def call(self, record=None, *, apply=False, comments=None, post=None, issue=None):
         record = record or self.record()
@@ -100,6 +101,58 @@ class JournalTests(unittest.TestCase):
         bad["body"] = bad["body"].replace("Evidence missing", "Evidence tampered")
         with self.assertRaisesRegex(journal.JournalError, "conflicting"):
             self.call(r, comments=lambda: [bad])
+
+    def test_identical_public_comment_by_untrusted_user_is_not_receipt(self):
+        r = self.record()
+        comment = self.comment(r)
+        comment['user'] = {'login': 'outside-reviewer', 'id': 9999}
+        with self.assertRaisesRegex(journal.JournalError, 'authorized workflow publisher'):
+            self.call(r, apply=True, comments=lambda: [comment],
+                      post=lambda body: self.fail('must not publish on unauthorized marker'))
+
+    def test_actor_login_alone_is_not_sufficient(self):
+        r = self.record()
+        comment = self.comment(r)
+        comment['user']['id'] = 12345
+        with self.assertRaisesRegex(journal.JournalError, 'authorized workflow publisher'):
+            self.call(r, comments=lambda: [comment])
+
+    def test_actor_id_alone_is_not_sufficient(self):
+        r = self.record()
+        comment = self.comment(r)
+        comment['user']['login'] = 'attacker'
+        with self.assertRaisesRegex(journal.JournalError, 'authorized workflow publisher'):
+            self.call(r, comments=lambda: [comment])
+
+    def test_missing_actor_is_never_acknowledged(self):
+        r = self.record()
+        comment = self.comment(r)
+        del comment['user']
+        with self.assertRaisesRegex(journal.JournalError, 'authorized workflow publisher'):
+            self.call(r, comments=lambda: [comment])
+
+    def test_foreign_case_url_not_accepted_as_receipt(self):
+        r = self.record()
+        comment = self.comment(r)
+        comment['html_url'] = 'https://github.com/attacker/repository/issues/4#issuecomment-100'
+        with self.assertRaisesRegex(journal.JournalError, 'URL does not match'):
+            self.call(r, comments=lambda: [comment])
+
+    def test_id_mismatched_to_url_not_accepted(self):
+        r = self.record()
+        comment = self.comment(r)
+        comment['id'] = 101
+        with self.assertRaisesRegex(journal.JournalError, 'URL does not match'):
+            self.call(r, comments=lambda: [comment])
+
+    def test_untrusted_matching_record_during_ambiguous_post_stays_unacknowledged(self):
+        r = self.record()
+        comment = self.comment(r)
+        comment['user'] = {'login': 'outside-reviewer', 'id': 9999}
+        history = [[], [comment]]
+        with self.assertRaisesRegex(journal.JournalError, 'authorized workflow publisher'):
+            self.call(r, apply=True, comments=lambda: history.pop(0),
+                      post=lambda body: (_ for _ in ()).throw(gh.IntakeError('HTTP 502')))
 
     def test_duplicate_acknowledgment_refused(self):
         r = self.record()
