@@ -82,6 +82,23 @@ class LineageTests(unittest.TestCase):
         with self.assertRaisesRegex(audit.LineageError, "duplicate"):
             audit.qualify(*args)
 
+    def test_unmapped_finding_is_explicitly_blocked(self):
+        args = list(inputs())
+        args[2][0]["outcome"] = "UNMAPPED"
+        args[3][0]["body"] = "| " + chr(96) + "b" * 20 + chr(96) + " | source |"
+        report = audit.qualify(*args)
+        self.assertIn("unmapped_route_has_no_generated_case",
+                      report["findings"][0]["blockers"])
+        self.assertIsNone(report["findings"][0]["publisher_key"])
+
+    def test_covered_route_is_not_new_case_authority(self):
+        args = list(inputs())
+        args[2][0]["outcome"] = "covered"
+        args[3][0]["body"] = "| " + chr(96) + "b" * 20 + chr(96) + " | source |"
+        report = audit.qualify(*args)
+        self.assertIn("route_does_not_request_new_case",
+                      report["findings"][0]["blockers"])
+
     def test_missing_source_cannot_become_case(self):
         args = list(inputs())
         args[0]["finding_ids"].append("d" * 20)

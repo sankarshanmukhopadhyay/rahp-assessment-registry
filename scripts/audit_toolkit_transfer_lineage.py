@@ -89,6 +89,10 @@ def qualify(candidate, findings, routed, combined, dpip, issue, comments):
             blockers.append("source_finding_absent")
         if route is None:
             blockers.append("source_not_routed")
+        elif route["outcome"] == "UNMAPPED":
+            blockers.append("unmapped_route_has_no_generated_case")
+        elif route["outcome"] in ("covered", "no-action"):
+            blockers.append("route_does_not_request_new_case")
         if not pins:
             blockers.append("immutable_source_commit_absent")
         if not mentioned:
@@ -111,6 +115,7 @@ def qualify(candidate, findings, routed, combined, dpip, issue, comments):
         "candidate_owner_issue": num,
         "findings": records,
         "candidate_finding_count": len(records),
+        "findings_with_blockers_count": sum(bool(r["blockers"]) for r in records),
         "source_observed_count": sum(r["source_repository"] is not None for r in records),
         "no_commit_pin_count": sum(not r["commit_pins"] for r in records),
         "unbound_publisher_key_count": sum(
