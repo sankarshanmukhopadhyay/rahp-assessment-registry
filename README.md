@@ -56,7 +56,7 @@ The [ONDTF-GOV-006 case](cases/ondtf/emergency-authority-v1.json) is source-pinn
 
 ## Historical preservation and operator references
 
-[History locator and inventory](archive/README.md) · [Case succession](docs/case-succession.md) · [Execution migration](docs/execution-migration-plan.md) · [History capture](docs/history-capture.md) · [Full-content staging review](docs/persistent-history-staging.md) · [Execution journal](docs/registry-execution-journal.md) · [Registry native intake](docs/registry-native-intake.md).
+[History locator and inventory](archive/README.md) · [Case succession](docs/case-succession.md) · [Execution migration](docs/execution-migration-plan.md) · [History capture](docs/history-capture.md) · [Full-content staging review](docs/persistent-history-staging.md) · [Execution journal](docs/registry-execution-journal.md) · [Registry native intake](docs/registry-native-intake.md) · [#11 gate status](docs/migration-gate-status.md).
 
 ## Pilot scope and migration status
 
