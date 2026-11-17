@@ -116,7 +116,7 @@ class JournalTests(unittest.TestCase):
     def test_forged_pass_and_false_import_rejected(self):
         r = self.record()
         r["canonical_result"]["outcome"] = "PASS"
-        with self.assertRaises(journal.JournalError):
+        with self.assertRaises(binding.BindingError):
             journal.form_entry(self.case, self.spec, self.ledger, r["canonical_result"], r["binding"])
         r = self.record()
         r["binding"]["case_determination_imported"] = True
