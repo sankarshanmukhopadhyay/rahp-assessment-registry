@@ -42,6 +42,35 @@ def validate(case):
     if errors:
         return errors
 
+    # Source GitHub identity is historical and must not be silently moved.
+    # Accepted coordination means one real Registry issue with an immutable
+    # reference back to its original Toolkit issue, not a copied issue body.
+    owners = case["owners"]
+    if isinstance(owners, dict) and owners.get("handoff") == "accepted":
+        source_url = owners.get("historical_source_issue")
+        registry_url = owners.get("current_active_issue")
+        require(isinstance(source_url, str) and
+                re.fullmatch(
+                    r"https://github[.]com/sankarshanmukhopadhyay/rahp-toolkit/issues/[1-9][0-9]*",
+                    source_url or "") is not None,
+                "accepted handoff requires canonical Toolkit historical issue URL")
+        require(owners.get("registry") == "sankarshanmukhopadhyay/rahp-assessment-registry",
+                "accepted handoff registry owner mismatch")
+        require(isinstance(registry_url, str) and
+                re.fullmatch(
+                    r"https://github[.]com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/[1-9][0-9]*",
+                    registry_url or "") is not None,
+                "accepted handoff requires canonical Registry successor issue URL")
+        require(owners.get("execution") == "sankarshanmukhopadhyay/rahp-toolkit",
+                "accepted coordination handoff must not imply RAHP engine transfer")
+        require(case["assessment"].get("determination") == "not_assessed" or
+                bool(case["assessment"].get("imported_result")),
+                "accepted handoff cannot invent assurance outcome")
+    elif isinstance(owners, dict) and owners.get("current_active_issue"):
+        require(re.fullmatch(
+                    r"https://github[.]com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/[1-9][0-9]*",
+                    owners["current_active_issue"]) is not None,
+                "case issue owner URL must reference Registry")
 
     referrals = case.get("referrals", [])
     require(isinstance(referrals, list), "referrals must be an array")
@@ -116,6 +145,7 @@ def run(root=CASES):
     if not paths:
         return ["no case records found"]
     issues, seen = [], set()
+    active_issue_owners = {}
     for path in paths:
         try:
             case = json.loads(path.read_text(encoding="utf-8"))
@@ -127,6 +157,15 @@ def run(root=CASES):
         if ident in seen:
             errors.append("duplicate case_id")
         seen.add(ident)
+        # Two accepted case records cannot each claim sole ownership of the
+        # same Registry issue; proposition splitting requires explicit review.
+        if isinstance(case.get("owners"), dict) and case["owners"].get("handoff") == "accepted":
+            url = case["owners"].get("current_active_issue")
+            if isinstance(url, str):
+                if url in active_issue_owners:
+                    errors.append("multiple accepted case records claim the same Registry issue owner")
+                else:
+                    active_issue_owners[url] = str(path)
         issues.extend(f"{path}: {error}" for error in errors)
     return issues
 
