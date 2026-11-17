@@ -112,3 +112,40 @@ privacy proposition and is not an authorization to dispatch a specialist run.
 Future live Registry-addressed return qualification requires a source-pinned
 privacy case with an explicit accepted referral, credential scope, idempotent
 transport, durable reconciliation and retained negative-path receipts.
+
+## Registry-targeted specialist-return admission boundary (read-only)
+
+The Registry now has a **non-mutating** DPIP admission evaluator in
+[`scripts/registry_specialist_return.py`](../scripts/registry_specialist_return.py).
+It reuses the existing pinned Toolkit portable-result validation and actual
+DPIP outbox/delivery digest logic from the historical consumer compatibility
+checker. A return is **not eligible** merely because its `rahp-assessor-result/v1`
+shape is valid or a GitHub issue references a Registry URL.
+
+The evaluator requires an explicitly accepted/returned DPIP referral in the
+Registry case, one matching DPIP source issue, an open current Registry owner,
+matching immutable case and changed-artifact pins, a single canonical DPIP
+source-referral/examination identity, a terminal DPIP examination, matching
+portable producer and source-delivered results, referenced producer setup and
+execution receipts, and exact return-outbox/target-acknowledgment digests.
+Missing, duplicated, stale, contradictory or wrong-controller histories fail
+closed. The existing Toolkit #1116/DPIP #305 historical source remains
+Toolkit-addressed and cannot be admitted as a Registry #4 return.
+
+The read-only compatibility workflow exercises this same code against the
+**actual pinned Toolkit schema validator** using an explicitly synthetic
+Registry-addressed route, while testing that the *actual Registry case #4*
+(with `referrals: []`) is rejected. That establishes the interface and
+negative authority boundary, **not** live producer routing. The synthetic
+record is not published as an actual DPIP result or evidence of successful
+cross-repository transport.
+
+The receipt records provenance-chain observations but explicitly marks
+`return_transport_authenticated=false`,
+`controller_reconciliation_executed=false`, and
+`case_determination_imported=false`. Source issue authorship, GitHub token
+authority, and execution-run provenance are not independently authenticated by
+an exact payload digest or schema-valid GitHub comment. Before live use,
+an appropriately admitted source-bound referral, credential authorization,
+authentic receiver and actual Toolkit-controller reconciliation are required.
+The current Toolkit/DPIP production handoffs remain unchanged.
