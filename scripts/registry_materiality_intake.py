@@ -155,10 +155,74 @@ def plan(findings, routed, manifest, issues):
     }
 
 
+
+def plan_many(findings, routed, manifests, issues):
+    """Reconcile a reviewed set against one observed source and owner snapshot."""
+    if not isinstance(manifests, dict) or not manifests:
+        raise MaterialityError("at least one reviewed intake manifest required")
+    checked_source(findings, routed)
+    keys, findings_seen, owners, observations, confirmed = set(), set(), set(), set(), set()
+    results = []
+    for filename, manifest in sorted(manifests.items()):
+        event = outbox.require_event(manifest)
+        key, fid = event["assessment_key"], event["finding_id"]
+        if key in keys or fid in findings_seen:
+            raise MaterialityError("duplicate reviewed assessment key or finding")
+        keys.add(key)
+        findings_seen.add(fid)
+        decision = plan(findings, routed, manifest, issues)
+        if decision["owner_number"] is not None:
+            if decision["owner_number"] in owners:
+                raise MaterialityError("ambiguous Registry owner across reviewed manifests")
+            owners.add(decision["owner_number"])
+        if decision["approved_source_observed"]:
+            observations.add(fid)
+            if decision["state"] == "existing_owner":
+                confirmed.add(fid)
+        results.append({"manifest": filename, "decision": decision})
+    return {
+        "schema": "rahp-registry-materiality-batch-shadow/v1",
+        "state": "read_only_reconciliation",
+        "monitored_source_sha256": results[0]["decision"]["monitored_source_sha256"],
+        "router_output_sha256": results[0]["decision"]["router_output_sha256"],
+        "observed_routed_count": len(routed),
+        "reviewed_intent_count": len(results),
+        "reviewed_source_match_count": len(observations),
+        "unreviewed_routed_count": len(routed) - len(observations),
+        "without_confirmed_registry_owner_count": len(routed) - len(confirmed),
+        "intents": results,
+        "new_issue_created": False,
+        "existing_issue_mutated": False,
+        "source_reassessment_applied": False,
+        "toolkit_issue_written": False,
+        "assurance_determination_imported": False,
+        "cutover_authorized": False,
+    }
+
+
+def read_reviewed_manifests(directory):
+    if not directory.is_dir() or directory.is_symlink():
+        raise MaterialityError("reviewed manifest directory required")
+    files = sorted(directory.iterdir())
+    if not files:
+        raise MaterialityError("reviewed manifest directory is empty")
+    manifests = {}
+    for item in files:
+        if not re.fullmatch(r"[a-z0-9][a-z0-9-]*[.]json", item.name):
+            raise MaterialityError("unexpected reviewed manifest filename")
+        if item.is_symlink() or not item.is_file():
+            raise MaterialityError("reviewed manifest must be an ordinary file")
+        manifests[item.name] = json.loads(item.read_text(encoding="utf-8"))
+    return manifests
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
-    for name in ("findings", "routing", "approved", "receipt"):
+    for name in ("findings", "routing", "receipt"):
         p.add_argument("--" + name, required=True, type=Path)
+    source = p.add_mutually_exclusive_group(required=True)
+    source.add_argument("--approved", type=Path)
+    source.add_argument("--approved-dir", type=Path)
     args = p.parse_args()
     receipt = {"schema": "rahp-registry-materiality-intake-shadow/v1",
                "state": "invalid", "new_issue_created": False,
@@ -169,8 +233,13 @@ def main():
             raise MaterialityError("read-only Registry token required for live owner reconciliation")
         findings = json.loads(args.findings.read_text(encoding="utf-8"))
         routed = json.loads(args.routing.read_text(encoding="utf-8"))
-        manifest = json.loads(args.approved.read_text(encoding="utf-8"))
-        receipt = plan(findings, routed, manifest, intake.read_all(token))
+        issues = intake.read_all(token)
+        if args.approved_dir is not None:
+            receipt = plan_many(findings, routed,
+                                read_reviewed_manifests(args.approved_dir), issues)
+        else:
+            manifest = json.loads(args.approved.read_text(encoding="utf-8"))
+            receipt = plan(findings, routed, manifest, issues)
     except (OSError, ValueError, TypeError, KeyError, intake.IntakeError,
             outbox.DeliveryError) as exc:
         receipt["error"] = str(exc)
@@ -180,8 +249,10 @@ def main():
                             encoding="utf-8")
     if receipt["state"] == "invalid":
         return 1
+    unowned = receipt.get("without_confirmed_registry_owner_count",
+                          receipt.get("unadmitted_routed_count"))
     print("Registry materiality:", receipt["state"],
-          f"(unadmitted routed: {receipt['unadmitted_routed_count']}, no writes)")
+          f"(routed without confirmed Registry owner: {unowned}, no writes)")
     return 0
 
 
