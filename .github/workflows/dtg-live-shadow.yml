@@ -7,6 +7,11 @@ on:
       - 'scripts/compare_dtg_routing_outputs.py'
       - 'tests/test_dtg_routing_parity.py'
       - 'ops/dtg/**'
+      - 'scripts/registry_materiality_intake.py'
+      - 'scripts/registry_intake.py'
+      - 'scripts/registry_outbox.py'
+      - 'tests/test_registry_materiality_intake.py'
+      - 'outbox/pending/network-answer-pilot.json'
   schedule:
     - cron: '7 1,13 * * *'
   workflow_dispatch:
@@ -18,8 +23,14 @@ on:
       - 'scripts/compare_dtg_routing_outputs.py'
       - 'tests/test_dtg_routing_parity.py'
       - 'ops/dtg/**'
+      - 'scripts/registry_materiality_intake.py'
+      - 'scripts/registry_intake.py'
+      - 'scripts/registry_outbox.py'
+      - 'tests/test_registry_materiality_intake.py'
+      - 'outbox/pending/network-answer-pilot.json'
 permissions:
   contents: read
+  issues: read
 concurrency:
   group: registry-dtg-live-shadow
   cancel-in-progress: false
@@ -54,6 +65,8 @@ jobs:
         run: python3 -m unittest discover -s registry/tests -p 'test_verify_live_shadow.py' -v
       - name: Fail closed on material routing mismatches
         run: python3 -m unittest discover -s registry/tests -p 'test_dtg_routing_parity.py' -v
+      - name: Falsify reviewed materiality case/intake and reassessment boundaries
+        run: python3 -m unittest discover -s registry/tests -p 'test_registry_materiality_intake.py' -v
       - name: Fetch newest valid source through Toolkit's canonical freshness contract
         id: snapshot
         run: >-
@@ -119,6 +132,36 @@ jobs:
           receipt['effects'] = {'new_issues': 0, 'external_referrals': 0, 'source_writes': 0}
           (root / 'dual-router-parity.json').write_text(json.dumps(receipt, indent=2, sort_keys=True) + '\n')
           print('PASS live dual-router output equality with independently qualified source freshness; no publication')
+          PY
+      - name: Reconcile live materiality with reviewed Registry case intent (read-only)
+        env:
+          REGISTRY_INTAKE_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python3 registry/scripts/registry_materiality_intake.py \
+            --findings build/live/findings.json \
+            --routing build/live/registry/routing.json \
+            --approved registry/outbox/pending/network-answer-pilot.json \
+            --receipt build/live/registry-materiality-intake.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          base = Path('build/live')
+          receipt = json.loads((base / 'registry-materiality-intake.json').read_text())
+          actual = json.loads((base / 'registry/routing.json').read_text())
+          assert receipt['observed_routed_count'] == len(actual)
+          assert receipt['unadmitted_routed_count'] + int(receipt['approved_source_observed']) == len(actual)
+          assert receipt['state'] in {
+              'outside_observed_materiality', 'existing_owner',
+              'reassessment_required', 'pending_reviewed_creation',
+              'no_new_case_for_covered_route',
+          }
+          assert receipt['new_issue_created'] is False
+          assert receipt['existing_issue_mutated'] is False
+          assert receipt['source_reassessment_applied'] is False
+          assert receipt['toolkit_issue_written'] is False
+          assert receipt['assurance_determination_imported'] is False
+          print('PASS reviewed case materiality reconciliation; no external writes')
           PY
       - name: Retain Registry shadow evidence
         if: always()

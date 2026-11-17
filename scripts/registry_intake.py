@@ -19,6 +19,11 @@ URL = "https://api.github.com/repos/" + REGISTRY + "/issues"
 MIGRATED_FINDINGS = {
     "4cdb4f9a7399aea0a55a": {"issue_number": 4, "case_id": "RAHP-AR-DTG-0001"},
 }
+# Reviewed proposition-to-owner mapping survives a new finding ID or source revision.
+# A new material observation cannot mint a duplicate case while #4 owns the proposition.
+MIGRATED_KEYS = {
+    "dtg:network:trust-task-answer-verification": {"issue_number": 4, "case_id": "RAHP-AR-DTG-0001"},
+}
 
 
 class IntakeError(ValueError):
@@ -83,7 +88,11 @@ def plan(events, issues):
             raise IntakeError("duplicate assessment key in one batch; consolidate first")
         seen.add(key)
         owner = index.get(key)
-        migrated = MIGRATED_FINDINGS.get(event["finding_id"])
+        by_finding = MIGRATED_FINDINGS.get(event["finding_id"])
+        by_key = MIGRATED_KEYS.get(key)
+        if by_finding and by_key and by_finding != by_key:
+            raise IntakeError("reviewed finding and proposition owners conflict")
+        migrated = by_finding or by_key
         if migrated:
             canonical = by_number.get(migrated["issue_number"])
             if not canonical or canonical.get("state") != "open" or (
