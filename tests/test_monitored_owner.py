@@ -27,9 +27,10 @@ class CandidateTests(unittest.TestCase):
         self.protected=[{"number":n,"html_url":q.URL+str(n),"state":"open"}
                         for n in (282,826,837)]
         self.registry=[]
+        self.open_toolkit=[self.owner]
     def check(self):
         return q.qualify(self.spec,self.events,self.evidence,self.owner,
-                         self.historical,self.protected,self.registry)
+                         self.historical,self.protected,self.registry,self.open_toolkit)
     def test_candidate_not_cutover(self):
         value=self.check()
         self.assertTrue(value["current_source_qualified"])
@@ -71,6 +72,37 @@ class CandidateTests(unittest.TestCase):
             "body":"<!-- registry-assessment-key:"+q.KEY+" -->"}]
         with self.assertRaisesRegex(q.CandidateError,"already owned"):
             self.check()
+    def test_second_open_toolkit_owner_cannot_be_silently_ignored(self):
+        competitor = {"number": 1900, "state": "open", "html_url": q.URL+"1900",
+                      "body": q.MARKER + " unrelated wrapper"}
+        self.open_toolkit.append(competitor)
+        with self.assertRaisesRegex(q.CandidateError, "multiple"):
+            self.check()
+
+    def test_empty_and_malformed_owner_inventory_fail_closed(self):
+        self.open_toolkit=[]
+        with self.assertRaisesRegex(q.CandidateError, "missing"):
+            self.check()
+        self.open_toolkit=[{"number": 272, "state": "closed", "body": q.MARKER}]
+        with self.assertRaisesRegex(q.CandidateError, "open-only"):
+            self.check()
+        self.open_toolkit=None
+        with self.assertRaisesRegex(q.CandidateError, "inventory required"):
+            self.check()
+
+    def test_toolkit_inventory_pagination_and_read_failure(self):
+        batch=[{"number": n, "state": "open", "body": "",
+                "html_url": q.URL+str(n)} for n in range(1, 101)]
+        requests=[]
+        def fetch(url):
+            requests.append(url)
+            return batch if "page=1" in url else [self.owner]
+        observed=q.all_open_toolkit_issues("token", fetch=fetch)
+        self.assertEqual(len(observed), 101)
+        self.assertEqual(len(requests), 2)
+        with self.assertRaisesRegex(q.CandidateError, "unavailable"):
+            q.all_open_toolkit_issues("token", fetch=lambda _: None)
+
     def test_unknown_source_identity_fails(self):
         self.spec["monitor_revision"]="e"*40
         with self.assertRaises(q.CandidateError): self.check()
