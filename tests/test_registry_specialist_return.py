@@ -215,7 +215,7 @@ class RegistryDPIPAdmissionTests(unittest.TestCase):
 
     def test_missing_execution_provenance_rejected(self):
         d = fixtures()
-        d[4] = [c for c in d[4] if "dpip-execution-evidence:" not in c["body"]]
+        d[4][:] = [c for c in d[4] if "dpip-execution-evidence:" not in c["body"]]
         with self.assertRaisesRegex(bridge.SpecialistAdmissionError, "canonical DPIP return chain rejected"):
             self.admit(d)
 
