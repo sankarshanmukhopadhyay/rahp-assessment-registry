@@ -145,3 +145,28 @@ governed changed-source reassessment append/retry, full Toolkit-versus-Registry
 materiality journal side-effect parity and coordinated disabling/rollback of
 the existing Toolkit issue publisher remain unqualified. A green read-only
 consumer is not a complete authority switch.
+
+## Qualified direct-first-intake lane (November 2026)
+
+The manual `registry-outbox-replay.yml` workflow has a separate
+`direct_intake` input for source-qualified cases that have **no** historical
+Toolkit owner. It uses `registry_direct_intake.py` to verify the approved
+`ops/migration/direct-intake-authorizations.json` record, the identical
+committed `outbox/pending/*.json` manifest on Registry `main`, the actual
+source commit, a live Toolkit owner scan and stable branch heads. Direct
+authority is limited to the exact approved source proposition; ordinary
+DTG/CAWG transfer remains blocked. A write is permitted only on an explicit
+main-branch workflow dispatch with `apply=true` and `direct_intake=true`.
+
+Case [#47](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/47)
+was first created by a bounded, operator-mediated GitHub transport from the
+committed ONDTF intent, then separately re-read and source-verified. This
+**does not** prove that the automated dispatch creation branch has completed a
+real POST. The read-only live outbox shadow independently verifies #47 through
+`registry_outbox.py`, including the exact source and proposition marker.
+Repeated replay must remain owner observation, not issue creation.
+
+Neither administrative issue creation nor the canonical controller's
+evidence-required result demonstrates specialist execution, independent
+assurance, publication exclusivity for monitored DTG sources, or rollback of
+the wider Toolkit writer fleet.

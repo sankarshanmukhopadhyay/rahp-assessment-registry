@@ -48,6 +48,15 @@ class DirectAdmissionTests(unittest.TestCase):
             return {"sha": e["source_revision"], "html_url": e["source_url"]}
         self.fail("unexpected source endpoint: " + url)
 
+    def test_live_shadow_reconciles_direct_owner_without_writes(self):
+        workflow = (ROOT / ".github/workflows/outbox-live-shadow.yml").read_text()
+        self.assertIn("ondtf-emergency-authority-v1.json", workflow)
+        self.assertIn("receipt['owner_number'] == 47", workflow)
+        self.assertIn("receipt['state'] == 'owner_observed'", workflow)
+        self.assertIn("receipt['assurance_determination'] is None", workflow)
+        self.assertNotIn("--apply", workflow)
+        self.assertNotIn("issues: write", workflow)
+
     def test_manual_dispatch_has_exclusive_direct_intake_gate(self):
         workflow = (ROOT / ".github/workflows/registry-outbox-replay.yml").read_text()
         self.assertIn("direct_intake:", workflow)
