@@ -94,7 +94,7 @@ class OutboxTests(unittest.TestCase):
         issue["body"] = "<!-- rahp-assessment-key:" + key + " --> " + ev["finding_id"]
         next_head = iter([head, {"commit": {"sha": "c" * 40}}])
         def drifting(url):
-            if "/branches/main" in url:
+            if "/rahp-toolkit/branches/main" in url:
                 return next(next_head)
             return fetch(url)
         with self.assertRaisesRegex(outbox.DeliveryError, "changed"):
