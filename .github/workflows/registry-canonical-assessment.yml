@@ -8,8 +8,6 @@ on:
       - 'tests/test_registry_assessment_run.py'
       - 'scripts/bind_registry_execution.py'
       - 'tests/test_registry_execution_binding.py'
-      - 'scripts/bind_registry_execution.py'
-      - 'tests/test_registry_execution_binding.py'
       - 'cases/dtg/network-answer-proof-2026-11.json'
   push:
     branches: [main]
@@ -18,6 +16,8 @@ on:
       - 'ops/assessments/**'
       - 'scripts/verify_registry_assessment_run.py'
       - 'tests/test_registry_assessment_run.py'
+      - 'scripts/bind_registry_execution.py'
+      - 'tests/test_registry_execution_binding.py'
       - 'cases/dtg/network-answer-proof-2026-11.json'
   workflow_dispatch:
 permissions:
