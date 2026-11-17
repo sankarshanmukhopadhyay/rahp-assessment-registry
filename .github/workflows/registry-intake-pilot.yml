@@ -17,7 +17,7 @@ permissions:
   contents: read
   issues: write
 concurrency:
-  group: registry-intake-pilot
+  group: registry-case-publication
   cancel-in-progress: false
 jobs:
   pilot:
