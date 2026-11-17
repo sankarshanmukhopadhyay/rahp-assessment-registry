@@ -75,3 +75,62 @@ A new source revision matching an existing case needs a governed
 reassessment/append protocol, not an automatic replacement or forged
 completion receipt. Full shadow parity, controller/producer compatibility,
 rollback and human acceptance remain the gates in [issue #11](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/11).
+
+## Source-matched materiality admission (read-only operational consumer)
+
+The Registry's [materiality intake consumer](../scripts/registry_materiality_intake.py)
+now runs inside the **live dual-router DTG shadow** using the freshest
+Toolkit-qualified, Monitor-verified source snapshot and the actual Registry
+routing output. It requires the exact routed finding JSON to match its source
+record, refuses duplicate findings, and tests the proposed intake against
+the existing Git-committed `rahp-registry-pending-intake/v1` intent.
+The proposal must contain a 40-hex immutable source revision demonstrably
+present as an exact `/commit/<sha>` evidence URL in that finding. Its source
+URL and external owner must also match the observed source repository.
+
+An explicitly reviewed intent can result in four **non-mutating** decisions:
+
+- `existing_owner`: source-pinned finding maps to exactly one open Registry
+  case and the existing case body acknowledges that precise revision/finding.
+- `pending_reviewed_creation`: a reviewed source observation has no current
+  Registry owner. The *existing* controlled durable outbox remains the only
+  authorized issue-writing transport; this result is **not** permission to
+  write while Toolkit is still an active external case publisher.
+- `reassessment_required`: a newer material observation maps to a reviewed
+  durable proposition owner, but its changed source revision/finding is not
+  yet represented. No issue is reopened, no new case created, no original
+  case result overwritten. A separate accountable reassessment acceptance
+  is required.
+- `outside_observed_materiality`: the committed reviewed intent is not
+  present in the current source snapshot/routing. It does **not** prove the
+  absence of other material changes. All other routed observations remain
+  unadmitted and are counted in the receipt.
+
+The reviewed `dtg:network:trust-task-answer-verification` proposition now
+resolves to Registry #4 **by both stable proposition key and original
+finding ID**, so a later source/finding under the same proposition cannot
+silently create a second Registry case. A changed revision is instead
+marked `reassessment_required`. This does not imply revalidation of new
+runtime behavior.
+
+The CI workflow has only `contents:read` and `issues:read`. It preserves
+the materiality admission receipt beside source, source-qualifier and both
+router outputs; it cannot create issues or invoke DPIP. The actual manual
+outbox dispatcher remains a separately authorized pathway. Its historical
+tests prove one-write/readback and ambiguous POST recovery using controlled
+fixtures, **not** an actual new live case creation. Source-materiality
+observation alone does not confer that operational authority.
+
+The current approved pilot is from the 2026-11-13 source. It may be absent
+from a later valid Monitor snapshot. That is a legitimate
+`outside_observed_materiality` state, **not** success for the new
+materiality intake backlog, which must be explicitly reviewed before
+the Registry assumes new case ownership.
+
+### Remaining acceptance for #11
+
+Actual Registry case publication for **a newly admitted** material source,
+governed changed-source reassessment append/retry, full Toolkit-versus-Registry
+materiality journal side-effect parity and coordinated disabling/rollback of
+the existing Toolkit issue publisher remain unqualified. A green read-only
+consumer is not a complete authority switch.
