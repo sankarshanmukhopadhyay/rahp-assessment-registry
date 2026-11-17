@@ -46,7 +46,7 @@
     ],
     "actions": [
       {
-        "surface": "adoption-evidence",
+        "surface": "evidence-test",
         "action": "Obtain independently inspectable jurisdictional adoption evidence and negative traces for enforcement, expiry, revocation, review and remedy.",
         "acceptance_criterion": "Both ONDTF-0001-R1 and ONDTF-0001-R2 cite attributable implementation-level positive and negative evidence before a new assurance determination."
       }
