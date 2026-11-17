@@ -96,7 +96,7 @@ jobs:
           REGISTRY_INTAKE_TOKEN: ${{ github.token }}
         run: |
           python3 -m unittest discover -s tests -p 'test_toolkit_writer_quiescence.py' -v
-          python3 scripts/verify_toolkit_writer_quiescence.py \\
+          python3 scripts/verify_toolkit_writer_quiescence.py \
             --out build/group/toolkit-writer-quiescence.json --require-quiescent
       - name: Requalify all source and authority evidence before issue POST
         env:
