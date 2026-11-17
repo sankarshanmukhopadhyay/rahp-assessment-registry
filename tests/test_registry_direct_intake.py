@@ -48,6 +48,18 @@ class DirectAdmissionTests(unittest.TestCase):
             return {"sha": e["source_revision"], "html_url": e["source_url"]}
         self.fail("unexpected source endpoint: " + url)
 
+    def test_manual_dispatch_has_exclusive_direct_intake_gate(self):
+        workflow = (ROOT / ".github/workflows/registry-outbox-replay.yml").read_text()
+        self.assertIn("direct_intake:", workflow)
+        self.assertIn("if: github.event_name == 'workflow_dispatch'", workflow)
+        self.assertIn("github.ref == 'refs/heads/main'", workflow)
+        self.assertIn("if: inputs.direct_intake == true", workflow)
+        self.assertIn("if: inputs.direct_intake != true", workflow)
+        self.assertIn("receipt.get('state') != 'owner_observed'", workflow)
+        self.assertIn("receipt.get('state') == 'qualified'", workflow)
+        self.assertNotIn("gh issue create", workflow)
+        self.assertNotIn("  schedule:", workflow)
+
     def test_real_source_admission_is_exact_and_read_only(self):
         proof = direct.run(self.manifest, PATH, "", fetch=self.fetch)
         self.assertEqual(proof["state"], "qualified")

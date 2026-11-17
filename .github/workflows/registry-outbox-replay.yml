@@ -7,6 +7,10 @@ on:
       - 'scripts/registry_intake.py'
       - 'scripts/registry_materiality_intake.py'
       - 'tests/test_registry_outbox.py'
+      - 'scripts/registry_direct_intake.py'
+      - 'tests/test_registry_direct_intake.py'
+      - 'ops/migration/direct-intake-authorizations.json'
+      - 'outbox/pending/**'
       - 'tests/test_registry_materiality_intake.py'
   workflow_dispatch:
     inputs:
@@ -17,6 +21,11 @@ on:
         type: string
       apply:
         description: 'Verify existing Registry owner in controlled write-mode; new creation still requires cutover'
+        required: true
+        type: boolean
+        default: false
+      direct_intake:
+        description: 'Enable only reviewed direct-source first intake (not historical Toolkit transfer)'
         required: true
         type: boolean
         default: false
@@ -53,9 +62,15 @@ jobs:
             exit 1
           fi
           test -f "$REQUEST_MANIFEST" && test ! -L "$REQUEST_MANIFEST"
-          python3 scripts/registry_outbox.py \
-            --manifest "$REQUEST_MANIFEST" \
-            --receipt build/outbox/preflight.json
+          if [[ "${{ inputs.direct_intake }}" = "true" ]]; then
+            python3 scripts/registry_direct_intake.py \
+              --manifest "$REQUEST_MANIFEST" \
+              --receipt build/outbox/preflight.json
+          else
+            python3 scripts/registry_outbox.py \
+              --manifest "$REQUEST_MANIFEST" \
+              --receipt build/outbox/preflight.json
+          fi
       - name: Retain qualified source intent and live owner evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -80,6 +95,8 @@ jobs:
         with:
           python-version: '3.12'
       - name: Refuse new-case dual publication before coordinated Toolkit cutover
+        env:
+          DIRECT_INTAKE: ${{ inputs.direct_intake }}
         run: |
           python3 - <<'PY'
           import json
@@ -89,15 +106,25 @@ jobs:
           assert receipt.get('mode') == 'dry_run'
           assert receipt.get('assurance_determination') is None
           assert receipt.get('controller_execution') is None
-          if receipt.get('state') != 'owner_observed':
-              raise SystemExit(
-                  'BLOCKED: new Registry issue creation requires a coordinated, '
-                  'evidence-qualified Toolkit publisher cutover. The reviewed '
-                  'materiality/source pin alone does not confer publication authority.'
-              )
-          print('Existing owner-only replay authorized; no new issue creation.')
+          import os
+          if os.environ.get('DIRECT_INTAKE') == 'true':
+              assert receipt.get('schema') == 'rahp-registry-direct-intake-qualification/v1'
+              assert receipt.get('state') == 'qualified'
+              assert receipt.get('source_only_direct_intake') is True
+              assert receipt.get('source_commit_observed') is True
+              assert receipt.get('no_toolkit_issue_created') is True
+              print('Exact admitted direct-first-intake owner creation authorized for this dispatch.')
+          else:
+              if receipt.get('state') != 'owner_observed':
+                  raise SystemExit(
+                      'BLOCKED: new Registry issue creation requires a coordinated, '
+                      'evidence-qualified Toolkit publisher cutover. The reviewed '
+                      'materiality/source pin alone does not confer publication authority.'
+                  )
+              print('Existing owner-only replay authorized; no new issue creation.')
           PY
       - name: Reconcile only the existing owner with authoritative re-read
+        if: inputs.direct_intake != true
         env:
           REGISTRY_INTAKE_TOKEN: ${{ github.token }}
           REQUEST_MANIFEST: ${{ inputs.manifest }}
@@ -117,6 +144,32 @@ jobs:
           assert post['assurance_determination'] is None
           assert post['controller_execution'] is None
           print('Existing Registry case verified again; no new issue, no RAHP PASS.')
+          PY
+      - name: Publish strictly approved direct case with authoritative re-read
+        if: inputs.direct_intake == true
+        env:
+          REGISTRY_INTAKE_TOKEN: ${{ github.token }}
+          REQUEST_MANIFEST: ${{ inputs.manifest }}
+        run: |
+          set -euo pipefail
+          python3 scripts/registry_direct_intake.py \
+            --manifest "$REQUEST_MANIFEST" \
+            --receipt build/outbox/replayed.json --apply
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          before = json.loads(Path('build/outbox/preflight.json').read_text())
+          after = json.loads(Path('build/outbox/replayed.json').read_text())
+          assert before['state'] == 'qualified'
+          assert after['state'] == 'owner_observed'
+          assert after['owner_url'] and after['owner_number']
+          for key in ('assessment_key', 'source_revision', 'registry_main_sha',
+                      'toolkit_main_sha'):
+              assert before[key] == after[key]
+          assert after['assurance_determination'] is None
+          assert after['controller_execution'] is None
+          assert after['first_case_execution'] is False
+          print('Source-qualified case owner observed; controller/assurance not executed.')
           PY
       - name: Retain replay acknowledgment
         if: always()
