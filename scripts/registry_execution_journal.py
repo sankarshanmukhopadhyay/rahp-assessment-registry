@@ -22,6 +22,8 @@ MARKER = re.compile(r"<!-- rahp-registry-execution:v1:([0-9a-f]{32}) -->")
 ROOT = f"https://api.github.com/repos/{gh.REGISTRY}"
 PILOT_OWNER = 4
 MAX_ENTRY_BYTES = 30000
+EXPECTED_PUBLISHER_LOGIN = "github-actions[bot]"
+EXPECTED_PUBLISHER_USER_ID = 41898282
 
 
 class JournalError(ValueError):
@@ -103,11 +105,23 @@ def check_existing(comments, record, text):
     if len(matches) > 1:
         raise JournalError("multiple execution records with the same canonical identity")
     if len(matches) == 1:
-        if matches[0].get("body") != text:
+        candidate = matches[0]
+        # Public issue comments are user-writable. Matching content is not
+        # proof that the authorized workflow publisher performed the write.
+        actor = candidate.get("user")
+        if (not isinstance(actor, dict)
+                or actor.get("id") != EXPECTED_PUBLISHER_USER_ID
+                or actor.get("login") != EXPECTED_PUBLISHER_LOGIN):
+            raise JournalError("execution marker lacks authorized workflow publisher")
+        if candidate.get("body") != text:
             raise JournalError("existing execution identity contains a conflicting result")
-        if not isinstance(matches[0].get("id"), int) or not matches[0].get("html_url"):
+        if not isinstance(candidate.get("id"), int) or candidate["id"] <= 0:
             raise JournalError("existing execution lacks durable remote acknowledgment")
-        return matches[0]
+        expected = (f"https://github.com/{gh.REGISTRY}/issues/{PILOT_OWNER}"
+                    f"#issuecomment-{candidate['id']}")
+        if candidate.get("html_url") != expected:
+            raise JournalError("execution acknowledgment URL does not match the Registry case")
+        return candidate
     return None
 
 
