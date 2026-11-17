@@ -35,6 +35,45 @@ class ConsumerEligibilityTests(unittest.TestCase):
     def evaluate(self):
         return gate.evaluate(self.intent, self.issues, self.combined, self.dpip)
 
+    def install_simulated_entrypoints(self):
+        self.combined.api = lambda *args: None
+        self.dpip.api = lambda *args: None
+        self.combined.run = lambda token, issue_number=None: (
+            self.combined.api("GET", "issues/" + str(issue_number), token), 0)[1]
+        self.dpip.run = lambda repo, dpip_repo, rtoken, dtoken, numbers=None: (
+            self.dpip.api("GET", repo, "issues/" + str(numbers[0]), rtoken), 0)[1]
+
+    def test_worker_entrypoints_execute_only_one_exact_read(self):
+        self.install_simulated_entrypoints()
+        result = gate.probe_actual_noeffect_entrypoints(
+            self.issues[272], self.combined, self.dpip)
+        self.assertTrue(result["only_exact_toolkit_issue_read"])
+        self.assertTrue(result["canonical_combined_entrypoint_exercised"])
+        self.assertTrue(result["canonical_dpip_handoff_entrypoint_exercised"])
+        self.assertFalse(result["assessment_executed"])
+        self.assertFalse(result["specialist_referral_executed"])
+
+    def test_effectful_or_cross_namespace_consumer_is_refused(self):
+        self.install_simulated_entrypoints()
+        self.combined.run = lambda token, issue_number=None: (
+            self.combined.api("POST", "issues/47/comments", token), 0)[1]
+        with self.assertRaisesRegex(gate.ConsumerGateError, "unexpected"):
+            gate.probe_actual_noeffect_entrypoints(
+                self.issues[272], self.combined, self.dpip)
+        self.install_simulated_entrypoints()
+        self.dpip.run = lambda repo, dpip_repo, rtoken, dtoken, numbers=None: (
+            self.dpip.api("GET", repo, "issues/47", rtoken), 0)[1]
+        with self.assertRaisesRegex(gate.ConsumerGateError, "unexpected"):
+            gate.probe_actual_noeffect_entrypoints(
+                self.issues[272], self.combined, self.dpip)
+
+    def test_newly_eligible_work_is_not_silently_executed(self):
+        self.install_simulated_entrypoints()
+        self.issues[272]["labels"].append({"name": "assessment-required"})
+        with self.assertRaisesRegex(gate.ConsumerGateError, "requires authorized"):
+            gate.probe_actual_noeffect_entrypoints(
+                self.issues[272], self.combined, self.dpip)
+
     def test_current_source_preserves_all_namespaces_without_auto_dispatch(self):
         output = self.evaluate()
         self.assertEqual(output["state"], "consumer_migration_blocked")
