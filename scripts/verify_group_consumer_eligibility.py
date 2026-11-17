@@ -109,6 +109,51 @@ def evaluate(intent, issues, combined, dpip):
     }
 
 
+
+def probe_actual_noeffect_entrypoints(issue, combined, dpip):
+    """Execute the genuine consumers on a pinned issue under a deny-write API.
+
+    This proves only the current issue is not an executable task. If the
+    labels change, return an explicit blocked result rather than running a
+    potentially effectful entrypoint or mistaking its return 0 for assurance.
+    """
+    from unittest.mock import patch
+
+    if combined.is_combined(issue) or (
+            dpip.issue_has_label(issue, dpip.REQUESTED) and
+            not dpip.issue_has_label(issue, dpip.COMPLETE)):
+        raise ConsumerGateError("active Toolkit consumer requires authorized execution mapping")
+    observed = []
+
+    def combined_api(method, path, token, payload=None):
+        observed.append(("combined", method, path))
+        if method == "GET" and path == "issues/272":
+            return issue
+        raise ConsumerGateError("unexpected combined worker read or mutation")
+
+    def dpip_api(method, repository, path, token, payload=None):
+        observed.append(("dpip", method, repository, path))
+        if method == "GET" and repository == TK and path == "issues/272":
+            return issue
+        raise ConsumerGateError("unexpected DPIP handoff read or mutation")
+
+    with patch.object(combined, "api", side_effect=combined_api):
+        combined_status = combined.run("observation-only", issue_number=272)
+    with patch.object(dpip, "api", side_effect=dpip_api):
+        dpip_status = dpip.run(TK, "sankarshanmukhopadhyay/dtg-privacy-implementation-profile",
+                               "observation-only", "observation-only", [272])
+    if (combined_status != 0 or dpip_status != 0 or observed != [
+            ("combined", "GET", "issues/272"),
+            ("dpip", "GET", TK, "issues/272")]):
+        raise ConsumerGateError("canonical consumer attempted unexpected route or mutation")
+    return {"canonical_combined_entrypoint_exercised": True,
+            "canonical_dpip_handoff_entrypoint_exercised": True,
+            "only_exact_toolkit_issue_read": True,
+            "external_issue_write_attempted": False,
+            "assessment_executed": False,
+            "specialist_referral_executed": False}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--manifest", required=True, type=Path)
@@ -128,6 +173,7 @@ def main():
         issues = {number: intake.request("GET", API + str(number), token)
                   for number in NUMBERS}
         receipt = evaluate(intent, issues, combined, dpip)
+        receipt.update(probe_actual_noeffect_entrypoints(issues[272], combined, dpip))
     except (OSError, TypeError, ValueError, KeyError, ImportError,
             intake.IntakeError) as exc:
         receipt["error"] = str(exc)
