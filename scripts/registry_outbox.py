@@ -43,7 +43,7 @@ def owner_for(event, issues):
 TOOLKIT = "sankarshanmukhopadhyay/rahp-toolkit"
 TOOLKIT_API = "https://api.github.com/repos/" + TOOLKIT
 TRANSFER_PATH = "instances/dtg/registry-transfers.json"
-PENDING_PATH = re.compile(r"^outbox/pending/[a-z0-9][a-z0-9-]*\\.json$")
+PENDING_PATH = re.compile(r"^outbox/pending/[a-z0-9][a-z0-9-]*\.json$")
 COMMIT_SHA = re.compile(r"^[0-9a-f]{40}$")
 
 
@@ -79,7 +79,7 @@ def verify_live_reservation(manifest, manifest_path, token, *, fetch=None):
     if set(reservation) != required or reservation["state"] != "reserved" or reservation["registry_intent_path"] != manifest_path or reservation["source_revision"] != event["source_revision"] or reservation["finding_id"] != event["finding_id"]:
         raise DeliveryError("Toolkit reservation does not match committed pending intake")
     url = reservation["toolkit_issue_url"]
-    match = re.fullmatch(r"https://github\\.com/sankarshanmukhopadhyay/rahp-toolkit/issues/([1-9][0-9]*)", str(url))
+    match = re.fullmatch(r"https://github\.com/sankarshanmukhopadhyay/rahp-toolkit/issues/([1-9][0-9]*)", str(url))
     if not match:
         raise DeliveryError("invalid historical Toolkit issue identity")
     issue = fetch(TOOLKIT_API + "/issues/" + match.group(1))
