@@ -101,3 +101,38 @@ For full producer migration, historical writer permission exclusion, a real
 eligible consumer mapping, and governed reversal remain under active
 [Registry #77](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/77).
 The closed #11 tracker preserves original gates but does not accept them.
+
+## Durable return of the accepted monitored execution
+
+The [controlled transferred execution-return workflow](../.github/workflows/registry-transferred-execution-return.yml)
+re-executes the **real pinned Toolkit controller** for case #88, qualifies its
+`INDETERMINATE / evidence-required` result against the accepted Toolkit
+group ledger, and verifies the open live Registry case before any publication.
+Its [source-epoch journal](../scripts/registry_transferred_execution_journal.py)
+keeps the exact normalized result and its case/execution binding together. It
+rejects a conflicting second result for the same source epoch, duplicate or
+unauthorized markers, missing or changed case ownership and unobserved POSTs.
+This journal does not dispatch historical Toolkit #272 or change the case
+determination.
+
+Ordinary pull requests, scheduled operations and main pushes run the
+**read-only** qualification. A deliberate main-branch `workflow_dispatch`
+with `apply=true` is effectful only when invoked by the repository owner.
+The separately permitted one-shot merge-commit path requires owner identity,
+a source-digest-specific `Registry-Case-88-Return-Authorization` commit
+trailer, the exact Registry `main` ref and shared
+`registry-case-publication` serialization; the record must then be
+re-observed as a unique authenticated case comment before delivery is marked
+`acknowledged`. A failed or timed-out POST without a matching durable
+observation remains **unacknowledged**. A token with broader permissions,
+another workflow using the same bot identity or a non-cooperating external
+writer is not thereby excluded by GitHub's issue API.
+
+**Interpretation:** a returned canonical execution record strengthens the
+case-to-engine-to-case evidence chain. It is not an independent assurance
+determination, eligible legacy Toolkit reviewer execution, DPIP/Lab
+interoperability or proof of publisher exclusivity. The accepted Registry
+source case remains `not_assessed` until independently justified review
+and controlled disposition. Actual positive comment publication must be
+cited by its GitHub Actions run and case-comment acknowledgment; a dry-run
+or green CI is not sufficient.
