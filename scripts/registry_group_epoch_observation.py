@@ -122,6 +122,45 @@ def qualify_epoch(intent, groups, findings, row, issue, monitor_revision):
             "registry_issue_number": expected_number}
 
 
+EPOCH_SCOPE = re.compile(
+    r"<!-- rahp-registry-epoch-scope:v1:(accept|withdraw):([0-9a-f]{64}) -->")
+SCOPE_ISSUE_NUMBER = 77
+MAINTAINER = "sankarshanmukhopadhyay"
+
+
+def epoch_scope_decision(history, digest):
+    """Require a fresh authenticated decision for the exact changed source group.
+
+    The original accepted_group maintainer scope only approves its original
+    group digest; a subsequent event is a distinct governance proposition.
+    """
+    if not isinstance(history, list):
+        raise EpochError("Registry epoch authorization history unavailable")
+    decisions = []
+    observed_ids = set()
+    for comment in history:
+        if not isinstance(comment, dict):
+            raise EpochError("malformed Registry epoch decision history")
+        body = comment.get("body") or ""
+        matches = EPOCH_SCOPE.findall(body)
+        for action, observed in matches:
+            if observed != digest:
+                continue
+            author = comment.get("user") or {}
+            comment_id = comment.get("id")
+            if (not isinstance(author, dict) or
+                    author.get("login") != MAINTAINER or
+                    comment.get("author_association") != "OWNER" or
+                    type(comment_id) is not int or comment_id < 1 or
+                    comment_id in observed_ids):
+                raise EpochError("unauthorized or ambiguous source-epoch approval")
+            observed_ids.add(comment_id)
+            decisions.append((comment_id, action))
+    if not decisions:
+        return False
+    return sorted(decisions)[-1][1] == "accept"
+
+
 def acknowledgment_body(observation):
     return ("<!-- rahp-registry-observation:v1:" +
             observation["source_group_sha256"] + " -->\n\n" +
@@ -136,7 +175,8 @@ def acknowledgment_body(observation):
 
 
 def observe(intent, groups, findings, ledger, issue, existing_comments,
-            monitor_revision, *, apply=False, post=None, reread=None):
+            monitor_revision, *, apply=False, post=None, reread=None,
+            scope_history=None):
     row = accepted_record(intent, ledger)
     if row is None:
         return {"state": "inactive_no_accepted_transfer",
@@ -150,16 +190,20 @@ def observe(intent, groups, findings, ledger, issue, existing_comments,
     n = current["registry_issue_number"]
     digest = current["source_group_sha256"]
     old = ack.observed(existing_comments, n, digest)
+    scoped = epoch_scope_decision(scope_history if scope_history is not None else [], digest)
     receipt = {"schema": "rahp-registry-new-group-epoch/v1",
                **current, "state": "observed" if old else "pending",
                "comment_url": old.get("html_url") if old else None,
                "observation_acknowledged": old is not None,
+               "maintainer_epoch_authorized": scoped,
                "issue_written": False, "assurance_determination": None,
                "toolkit_issue_number_substituted": False,
                "controller_execution_dispatched": False,
                "cutover_authorized": False}
     if old or not apply:
         return receipt
+    if not scoped:
+        return {**receipt, "state": "pending_epoch_approval"}
     if post is None or reread is None:
         raise EpochError("new source epoch requires controlled POST and authoritative re-read")
     response, error = None, None
@@ -220,11 +264,13 @@ def main():
         def post(body):
             return gh.request("POST", API + REG + "/issues/" + str(number) +
                               "/comments", token, {"body": body})
+        approvals = ack.comments(SCOPE_ISSUE_NUMBER, get) if row else []
         receipt = observe(
             intent, json.loads(args.combined.read_text(encoding="utf-8")),
             json.loads(args.findings.read_text(encoding="utf-8")), ledger,
             owner, history, args.monitor_revision, apply=args.apply,
-            post=post, reread=lambda: ack.comments(number, get))
+            post=post, reread=lambda: ack.comments(number, get),
+            scope_history=approvals)
         if (initial.read_head(get, TK) != toolkit_sha or
                 initial.read_head(get, REG) != registry_sha or
                 initial.read_head(get, MON) != monitor_sha):
