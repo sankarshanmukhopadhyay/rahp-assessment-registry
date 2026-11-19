@@ -19,6 +19,10 @@ on:
       - 'cases/dtg/vti-session-refusal-2026-11.json'
       - 'ops/assessments/vti-session-refusal.*.json'
       - 'tests/test_vti_direct_execution.py'
+      - 'cases/dtg/spec-dependency-2026-11.json'
+      - 'ops/assessments/dtg-spec-dependency-transferred.*.json'
+      - 'scripts/bind_transferred_execution.py'
+      - 'tests/test_transferred_execution_binding.py'
   push:
     branches: [main]
     paths:
@@ -39,6 +43,10 @@ on:
       - 'cases/dtg/vti-session-refusal-2026-11.json'
       - 'ops/assessments/vti-session-refusal.*.json'
       - 'tests/test_vti_direct_execution.py'
+      - 'cases/dtg/spec-dependency-2026-11.json'
+      - 'ops/assessments/dtg-spec-dependency-transferred.*.json'
+      - 'scripts/bind_transferred_execution.py'
+      - 'tests/test_transferred_execution_binding.py'
   workflow_dispatch:
 permissions:
   contents: read
@@ -153,6 +161,48 @@ jobs:
             --result build/registry-assessment/vti-result.json \
             --toolkit-revision "$expected" \
             --out build/registry-assessment/vti-binding.json --verify
+      - name: Checkout current Toolkit transfer authority without write credentials
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: sankarshanmukhopadhyay/rahp-toolkit
+          ref: main
+          path: toolkit-authority
+          persist-credentials: false
+      - name: Qualify accepted Registry 88 group through canonical Toolkit execution
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tests -p 'test_transferred_execution_binding.py' -v
+          expected=70298566dc897669e22bf37759843d6b7c0597d2
+          [[ "$(git -C toolkit rev-parse HEAD)" = "$expected" ]]
+          authority_revision="$(git -C toolkit-authority rev-parse HEAD)"
+          python3 toolkit/tools/autonomous_assurance_controller.py \
+            --spec ops/assessments/dtg-spec-dependency-transferred.spec.json \
+            --ledger ops/assessments/dtg-spec-dependency-transferred.ledger.json \
+            --machine-output build/registry-assessment/accepted-group-result.json \
+            --human-output build/registry-assessment/accepted-group-result.md
+          python3 scripts/bind_transferred_execution.py \
+            --case cases/dtg/spec-dependency-2026-11.json \
+            --transfer-ledger toolkit-authority/instances/dtg/registry-transfers.json \
+            --spec ops/assessments/dtg-spec-dependency-transferred.spec.json \
+            --evidence-ledger ops/assessments/dtg-spec-dependency-transferred.ledger.json \
+            --result build/registry-assessment/accepted-group-result.json \
+            --engine-revision "$expected" \
+            --transfer-ledger-revision "$authority_revision" \
+            --out build/registry-assessment/accepted-group-binding.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          receipt=json.loads(Path("build/registry-assessment/accepted-group-binding.json").read_text())
+          assert receipt["result_outcome"] == "INDETERMINATE"
+          assert all(receipt[k] is False for k in (
+              "case_determination_imported",
+              "source_transfer_authority_extended",
+              "registry_to_toolkit_dispatch_authorized",
+              "specialist_return_authenticated",
+              "controller_cutover_qualified"))
+          print("Registry #88 canonical execution binding: source-qualified; no assurance import")
+          PY
       - name: Retain source-pinned indeterminate run and receipt
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
