@@ -1,0 +1,12 @@
+{
+  "schema": "rahp-history-successor-assignments/v1",
+  "assignments": [
+    {
+      "historical_source_issue": "https://github.com/sankarshanmukhopadhyay/rahp-toolkit/issues/272",
+      "registry_successor": "https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/88",
+      "case_id": "RAHP-AR-DTG-0002",
+      "decided_on": "2026-11-19",
+      "evidence_url": "https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/88#issuecomment-7000114450"
+    }
+  ]
+}
