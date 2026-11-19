@@ -104,10 +104,10 @@ a future-dispatch exclusion or distributed lock.
 | C: DPIP/Lab real specialist interoperability | Read-only portable-result and persisted epoch qualification, historical #304/#305 negative tests | **Blocked:** committed Registry cases #4 and #47 have no admitted referrals; no authenticated live Registry-targeted accepted specialist return or Toolkit controller reconciliation. Do not alter #272 labels just to force dispatch. |
 | D: real cycle and governed reverse transfer | Historical shadow/parity evidence and simulated interruption/replay | **Blocked:** no nonempty accepted ledger, exclusive live cycle, durable Registry writer fence or authorized reverse-transfer proof. Never delete reserved/accepted records as rollback. |
 
-**Materiality readiness:** the Monitor `main` at
-`7e2813c8daf867a21e4064513cc83612726aeb44` has committed
+**Materiality readiness at the initial 19 November checkpoint:** the Monitor `main` at
+`7e2813c8daf867a21e4064513cc83612726aeb44` had committed
 November finding snapshots dated 13 and 16 November; none newer was
-present on 19 November. Upstream VTI has merged changes after that
+published at that observation time. This was subsequently superseded by the recovery recorded below. Upstream VTI has merged changes after that
 snapshot. [The source-pinned candidate triage](../ops/migration/dtg-vti-materiality-candidates-2026-11-19.md)
 records candidate materiality and overlaps without admitting a new
 Registry case, creating Toolkit fallback issues, or claiming fresh
@@ -120,3 +120,51 @@ only where its actual runtime preconditions can be positively established.
 Absent a verified future-dispatch freeze and owner/consumer compatibility,
 do not activate #272 transfer or claim migration completion. This status
 does not authorize a new publication, specialist run, PASS or release.
+
+## 19 November execution and source-recovery increment
+
+**Fresh monitoring restored with an explicit remaining operations gap.** The
+canonical Monitor collection [run #44392990900](https://github.com/sankarshanmukhopadhyay/dtg-portfolio-monitor/actions/runs/44392990900)
+produced genuine 18 November observations but failed on GitHub Actions PR
+creation permission. The existing bot-authored generated commit was recovered
+via [Monitor PR #38](https://github.com/sankarshanmukhopadhyay/dtg-portfolio-monitor/pull/38),
+validated and DCO-checked, and merged at
+`ee5736fa82a3c969f3c9eb055217c3404ff1815d`. The newly published
+snapshot contains 61 findings and the collection state records 910 events,
+571 change units, zero collection warnings. This is **operator-mediated
+publication**, not unattended continuity. The precise recurring permission
+dependency remains [Monitor #35](https://github.com/sankarshanmukhopadhyay/dtg-portfolio-monitor/issues/35).
+
+**Live Registry routing restored without source-boundary weakening.**
+[Registry PR #81](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/pull/81)
+merged at `214f924b82f1a6cdcaab7a81d78816cedb72a140` after full
+`validate`, `shadow` and DCO checks passed. The actual live shadow
+executed both canonical Toolkit and Registry routers against the fresh
+Monitor source and produced byte-identical routing with 38 qualifying
+material findings, two combined groups, zero DPIP-routed groups and
+20 unresolved findings. It observed **38 routed findings without a
+confirmed Registry owner**, with no issue writes. This is monitored parity,
+not direct admission or operational publisher cutover. Historical
+16 November tag-provenance evidence is now verified against its immutable
+16 November Monitor commit, never against the current 18 November snapshot.
+
+**A real direct Registry-owned assessment has executed.** [VTI case #79](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/79)
+was created against an exact reviewed direct-intake manifest
+([PR #78](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/pull/78)).
+[PR #80](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/pull/80)
+merged the canonical Registry case record, source-pinned spec, empty native
+evidence ledger, negative tests and the existing Toolkit-controller workflow
+integration. [Actual canonical run #44454385308](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/actions/runs/44454385308)
+passed and generated/reverified direct execution binding
+`rahp-execution:0bfcc939a6a521d25236be09908cc561`.
+The result is `INDETERMINATE / evidence-required`, and the Registry case
+continues to record `not_assessed` pending governed determination import.
+This establishes direct-case execution, not migrated #272 reviewer/DPIP
+issue-number interoperability.
+
+**Gate disposition remains unchanged:** all G1–G6 acceptance checkboxes
+remain open. Toolkit ledger is still empty. No #272 transfer, specialist
+return, dual-writer exclusion, governed reverse transfer or release has been
+accepted. [Active execution tracker #77](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/77)
+retains exactly those obligations; predecessor #11 is a closed historical
+tracker, not evidence of completed cutover.
