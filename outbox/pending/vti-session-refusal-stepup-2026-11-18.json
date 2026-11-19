@@ -1,0 +1,14 @@
+{
+  "schema": "rahp-registry-pending-intake/v1",
+  "event": {
+    "kind": "external_assessment",
+    "assessment_key": "external:direct:vti:session-refusal-stepup-consumer",
+    "title": "RAHP materiality: VTI session refusal and step-up handoff preservation",
+    "proposition": "Evaluate the VTI session transport change that preserves a trust-task-error document and stepUpHandoff in VtcClient::send_task. Establish that a refusal remains non-authorizing across TSP and HTTPS, that the resumed operation is bound to its original principal, purpose, session and expiry, and that replay, wrong-target, lost details, stale step-up and transport substitution cannot convert refusal or parked state into execution authority. The upstream merged PR reports targeted and end-to-end tests; require independently attributable runtime/canonical RAHP evidence before an assurance determination. This proposition concerns the VTI client consuming path, not the generic error-vocabulary obligation in Toolkit #691 or Registry #4's positive network-answer verification.",
+    "source_repository": "OpenVTC/verifiable-trust-infrastructure",
+    "source_revision": "05f4a26ebb3dab6302a2fb8ad0657fa259e175a3",
+    "source_url": "https://github.com/OpenVTC/verifiable-trust-infrastructure/commit/05f4a26ebb3dab6302a2fb8ad0657fa259e175a3",
+    "finding_id": "vti-session-refusal-stepup-20261118",
+    "responsible_owner": "OpenVTC/verifiable-trust-infrastructure"
+  }
+}
