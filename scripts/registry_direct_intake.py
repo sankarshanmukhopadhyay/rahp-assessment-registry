@@ -54,6 +54,9 @@ def qualify(manifest, manifest_path, token, *, fetch=None):
     if not isinstance(manifest_path, str) or not PENDING.fullmatch(manifest_path):
         raise AdmissionError("direct intake requires a canonical committed pending path")
     key = event["assessment_key"]
+    if not isinstance(event.get("case_id"), str) or not re.fullmatch(
+            r"RAHP-AR-[A-Z0-9]+(?:-[A-Z0-9]+)+", event["case_id"]):
+        raise AdmissionError("direct first intake requires canonical case ID")
     if not DIRECT.fullmatch(key) or event.get("controller_issue_url"):
         raise AdmissionError("first-time intake requires Registry-exclusive namespace and no historic controller issue")
     if event["responsible_owner"] != event["source_repository"]:
@@ -71,15 +74,15 @@ def qualify(manifest, manifest_path, token, *, fetch=None):
     authority = _json_contents(fetch(API + REGISTRY + "/contents/" + AUTH_PATH +
                                      "?ref=" + registry_head), "direct admission authorization")
     if not isinstance(authority, dict) or set(authority) != {"schema", "admissions"} or (
-            authority["schema"] != "rahp-registry-direct-intake-authority/v1"
+            authority["schema"] != "rahp-registry-direct-intake-authority/v2"
             or not isinstance(authority["admissions"], list)):
         raise AdmissionError("unrecognized direct-intake authority ledger")
-    required = {"assessment_key", "manifest_path", "source_repository", "source_revision",
+    required = {"assessment_key", "case_id", "manifest_path", "source_repository", "source_revision",
                 "finding_id", "status"}
     matches = [record for record in authority["admissions"]
                if isinstance(record, dict) and record.get("assessment_key") == key]
     if len(matches) != 1 or set(matches[0]) != required or matches[0] != {
-            "assessment_key": key, "manifest_path": manifest_path,
+            "assessment_key": key, "case_id": event["case_id"], "manifest_path": manifest_path,
             "source_repository": event["source_repository"],
             "source_revision": event["source_revision"],
             "finding_id": event["finding_id"], "status": "approved"}:

@@ -35,6 +35,9 @@ def owner_for(event, issues):
         if len(matching) != 1:
             raise DeliveryError("existing owner is missing or ambiguous")
         body = matching[0].get("body") or ""
+        if event.get("case_id") and (
+                "<!-- rahp-registry-case:" + event["case_id"] + " -->" not in body):
+            raise DeliveryError("existing owner lacks the approved Registry case identity")
         if event["source_revision"] not in body or event["finding_id"] not in body:
             raise DeliveryError("existing owner does not acknowledge this exact source revision/finding; reassessment required")
     return decision

@@ -131,6 +131,39 @@ class DirectAdmissionTests(unittest.TestCase):
         with self.assertRaisesRegex(direct.AdmissionError, "no exact"):
             direct.run(self.manifest, PATH, "", fetch=self.fetch)
 
+    def test_case_identity_is_bound_before_first_direct_post(self):
+        event = self.manifest["event"]
+        self.assertEqual(event["case_id"], "RAHP-AR-ONDTF-0001")
+        rendered = intake.render_body(event)
+        self.assertIn("<!-- rahp-registry-case:RAHP-AR-ONDTF-0001 -->", rendered)
+        self.assertIn(intake.marker(event["assessment_key"]), rendered)
+        for candidate in (None, "", "RAHP-AR-OTHER-9999", 13):
+            with self.subTest(candidate=candidate):
+                modified = copy.deepcopy(self.manifest)
+                if candidate is None:
+                    del modified["event"]["case_id"]
+                else:
+                    modified["event"]["case_id"] = candidate
+                with self.assertRaises(ValueError):
+                    direct.run(modified, PATH, "", apply=True, fetch=self.fetch,
+                               post=lambda _: self.fail("must not POST"))
+
+    def test_legacy_direct_authority_version_is_rejected(self):
+        self.authority["schema"] = "rahp-registry-direct-intake-authority/v1"
+        with self.assertRaisesRegex(direct.AdmissionError, "unrecognized"):
+            direct.run(self.manifest, PATH, "", fetch=self.fetch)
+
+    def test_existing_owner_requires_exact_case_marker(self):
+        event = self.manifest["event"]
+        owner = {"number": 47, "state": "open",
+                 "html_url": "https://github.com/" + intake.REGISTRY + "/issues/47",
+                 "body": intake.render_body(event).replace(
+                     "<!-- rahp-registry-case:" + event["case_id"] + " -->", "")}
+        with self.assertRaisesRegex(ValueError, "case identity"):
+            direct.run(self.manifest, PATH, "", apply=True, fetch=self.fetch,
+                       load_issues=lambda: [owner],
+                       post=lambda _: self.fail("must not POST"))
+
     def test_toolkit_existing_owner_precludes_new_case(self):
         self.issues = [{"number": 99, "body": "<!-- rahp-assessment-key:" +
                         self.manifest["event"]["assessment_key"] + " -->", "state": "open"}]

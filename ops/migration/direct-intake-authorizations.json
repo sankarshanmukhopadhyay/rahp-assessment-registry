@@ -1,5 +1,5 @@
 {
-  "schema": "rahp-registry-direct-intake-authority/v1",
+  "schema": "rahp-registry-direct-intake-authority/v2",
   "admissions": [
     {
       "assessment_key": "external:direct:ondtf:emergency-authority-lifecycle",
@@ -7,7 +7,8 @@
       "source_repository": "qbf-consulting/open-national-digital-trust-framework",
       "source_revision": "201bcacdb9b0595f2693c73440598c4b0e89b10d",
       "finding_id": "ondtf-gov-006-emergency-authority-lifecycle",
-      "status": "approved"
+      "status": "approved",
+      "case_id": "RAHP-AR-ONDTF-0001"
     },
     {
       "assessment_key": "external:direct:vti:session-refusal-stepup-consumer",
@@ -15,7 +16,8 @@
       "source_repository": "OpenVTC/verifiable-trust-infrastructure",
       "source_revision": "05f4a26ebb3dab6302a2fb8ad0657fa259e175a3",
       "finding_id": "vti-session-refusal-stepup-20261118",
-      "status": "approved"
+      "status": "approved",
+      "case_id": "RAHP-AR-VTI-0001"
     }
   ]
 }

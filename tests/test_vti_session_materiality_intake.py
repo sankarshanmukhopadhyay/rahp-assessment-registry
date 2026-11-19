@@ -47,6 +47,9 @@ class VTIMaterialityAdmissionTests(unittest.TestCase):
     def test_exact_source_qualifies_without_any_write_or_assurance(self):
         receipt = direct.run(self.manifest, PATH, "", fetch=self.get)
         self.assertEqual(receipt["state"], "qualified")
+        self.assertEqual(self.manifest["event"]["case_id"], "RAHP-AR-VTI-0001")
+        self.assertIn("<!-- rahp-registry-case:RAHP-AR-VTI-0001 -->",
+                      intake.render_body(self.manifest["event"]))
         self.assertTrue(receipt["source_only_direct_intake"])
         self.assertTrue(receipt["source_commit_observed"])
         self.assertTrue(receipt["no_toolkit_issue_created"])

@@ -9,6 +9,7 @@
     "source_revision": "201bcacdb9b0595f2693c73440598c4b0e89b10d",
     "source_url": "https://github.com/qbf-consulting/open-national-digital-trust-framework/commit/201bcacdb9b0595f2693c73440598c4b0e89b10d",
     "finding_id": "ondtf-gov-006-emergency-authority-lifecycle",
-    "responsible_owner": "qbf-consulting/open-national-digital-trust-framework"
+    "responsible_owner": "qbf-consulting/open-national-digital-trust-framework",
+    "case_id": "RAHP-AR-ONDTF-0001"
   }
 }

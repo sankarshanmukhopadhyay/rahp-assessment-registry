@@ -41,6 +41,10 @@ def validate_event(event):
         raise IntakeError("missing mandatory identity, source pin, proposition or owner")
     if not KEY.fullmatch(event["assessment_key"]):
         raise IntakeError("invalid assessment key")
+    case_id = event.get("case_id")
+    if case_id is not None and (not isinstance(case_id, str) or
+            not re.fullmatch(r"RAHP-AR-[A-Z0-9]+(?:-[A-Z0-9]+)+", case_id)):
+        raise IntakeError("invalid canonical Registry case identity")
     if not SHA.fullmatch(event["source_revision"]):
         raise IntakeError("source revision must be an immutable commit SHA")
     if not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", event["source_repository"]):
@@ -147,7 +151,9 @@ def read_all(token):
 
 def render_body(event):
     return "\n".join([
-        marker(event["assessment_key"]), "",
+        marker(event["assessment_key"]),
+        *(["<!-- rahp-registry-case:" + event["case_id"] + " -->"]
+          if event.get("case_id") else []), "",
         "## External assessment proposition", "", event["proposition"], "",
         "## Source and evidence boundary", "",
         "- Repository: `" + event["source_repository"] + "`",
