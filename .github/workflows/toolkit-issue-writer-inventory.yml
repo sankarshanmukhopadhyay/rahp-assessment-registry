@@ -12,6 +12,8 @@ on:
     paths:
       - 'scripts/audit_toolkit_issue_writers.py'
       - 'tests/test_toolkit_issue_writers.py'
+      - 'scripts/audit_toolkit_historical_refs.py'
+      - 'tests/test_toolkit_historical_refs.py'
       - '.github/workflows/toolkit-issue-writer-inventory.yml'
   schedule:
     - cron: '23 3 * * 1'
