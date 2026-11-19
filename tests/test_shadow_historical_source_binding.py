@@ -14,8 +14,7 @@ class ShadowSourceEpochTests(unittest.TestCase):
         self.assertIn("path: monitor-historical", content)
         self.assertIn("--findings monitor-historical/data/findings/2026/11/16.json", content)
         self.assertIn("--evidence registry/ops/migration/evidence/toolkit-1208-release-tags.json", content)
-        self.assertNotIn(
-            "--evidence registry/ops/migration/evidence/toolkit-1208-release-tags.json \\\n            --findings build/live/findings.json", content)
+        self.assertIn("--out build/live/toolkit-1208-supplemental-tag-pins.json", content)
 
     def test_fresh_live_qualification_and_read_only_semantics_are_unchanged(self):
         content = FLOW.read_text(encoding="utf-8")
