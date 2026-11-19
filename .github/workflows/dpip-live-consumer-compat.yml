@@ -10,12 +10,18 @@ on:
       - 'tests/test_registry_specialist_return.py'
       - 'scripts/registry_dpip_live_reconcile.py'
       - 'tests/test_registry_dpip_live_reconcile.py'
+      - 'tests/test_dtg_88_live_specialist_boundary.py'
+      - 'cases/dtg/spec-dependency-2026-11.json'
+      - 'ops/assessments/dtg-spec-dependency-source-materiality-2026-11.json'
   push:
     branches: [main]
     paths:
       - '.github/workflows/dpip-live-consumer-compat.yml'
       - 'scripts/verify_dpip_legacy_consumer.py'
       - 'tests/test_dpip_legacy_consumer.py'
+      - 'tests/test_dtg_88_live_specialist_boundary.py'
+      - 'cases/dtg/spec-dependency-2026-11.json'
+      - 'ops/assessments/dtg-spec-dependency-source-materiality-2026-11.json'
   workflow_dispatch:
 permissions:
   contents: read
@@ -72,6 +78,8 @@ jobs:
           PY
       - name: Exercise source-controlled Registry DPIP live adapter with qualified and rejected fixtures
         run: python3 -m unittest discover -s tests -p 'test_registry_dpip_live_reconcile.py' -v
+      - name: Reject unadmitted DPIP returns against actual accepted Registry case #88
+        run: python3 -m unittest discover -s tests -p 'test_dtg_88_live_specialist_boundary.py' -v
       - name: Read live Toolkit and DPIP historical issues and exercise actual consumer
         env:
           GITHUB_TOKEN: ${{ github.token }}
