@@ -56,6 +56,15 @@ class DTGSourceMaterialityTests(unittest.TestCase):
         self.assertEqual(REVIEW["group_assurance_determination"], "not_assessed")
         self.assertTrue(REVIEW["runtime_consumer_tests_executed"])
         self.assertFalse(REVIEW["target_native_vti_tests_executed"])
+        baseline = REVIEW["downstream_vti_dependency_observation"]["baseline_vti_0_39_runtime_replay"]
+        self.assertTrue(baseline["executed"])
+        self.assertEqual(baseline["source_revision"], "66a7c2aa362e82cdbbb3b384850d73fa64d97848")
+        self.assertEqual(baseline["jwt_unit_tests_passed"], 13)
+        self.assertEqual(baseline["trust_task_spine_tests_passed"], 16)
+        self.assertEqual(baseline["failed_tests"], 0)
+        self.assertFalse(REVIEW["downstream_vti_dependency_observation"]["target_native_runtime_reproduced"])
+        self.assertEqual(CASE["assessment"]["determination"], "not_assessed")
+
         self.assertEqual(REVIEW["upstream_rust_replay"]["source_commit"],
                          "69814c5ef60b5fa2d75fe2687efad1d12d34283f")
         self.assertEqual(REVIEW["upstream_rust_replay"]["extcritical_rust_tests_passed"], 2)
