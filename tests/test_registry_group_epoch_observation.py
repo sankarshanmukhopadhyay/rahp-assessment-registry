@@ -113,8 +113,11 @@ class NewEpochTests(unittest.TestCase):
         self.transfer["state"] = "reserved_group"
         self.assertEqual(self.observation()["state"], "inactive_no_accepted_transfer")
         self.transfer["state"] = "accepted_group"
+        # Rewriting an accepted transfer's original digest is never a
+        # legitimate "no change" transition; it invalidates the authority pin.
         self.transfer["group_sha256"] = epoch.group_digest(self.group)
-        self.assertEqual(self.observation()["state"], "no_changed_group")
+        with self.assertRaisesRegex(epoch.EpochError, "source/authority mismatch"):
+            self.observation()
 
     def test_falsified_source_and_owner_rejected_before_any_post(self):
         edits = [
