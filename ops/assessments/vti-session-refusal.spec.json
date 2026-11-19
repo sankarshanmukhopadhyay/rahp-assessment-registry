@@ -1,0 +1,59 @@
+{
+  "run": {
+    "lineage_prefix": "registry:RAHP-AR-VTI-0001:05f4a26ebb3d"
+  },
+  "target": {
+    "repository": "OpenVTC/verifiable-trust-infrastructure",
+    "revision": "05f4a26ebb3dab6302a2fb8ad0657fa259e175a3"
+  },
+  "resources": {},
+  "subject": {
+    "type": "trust-task-consumer",
+    "id": "RAHP-AR-VTI-0001",
+    "components": [
+      "vtc-client/send_task",
+      "session/TSP",
+      "HTTPS",
+      "trust-task-error",
+      "stepUpHandoff"
+    ]
+  },
+  "assurance_contract": {
+    "material": true,
+    "specialist_required": false,
+    "scope": "Source-pinned pressure test of VTI session versus HTTPS refusal preservation, step-up binding, replay and non-authorizing failure semantics.",
+    "non_scope": "No claim of deployment conformance, independently executed consuming-path tests, privacy specialist determination or production-authority cutover.",
+    "required_evidence": [
+      "VTI-0001-R1",
+      "VTI-0001-R2"
+    ],
+    "assurance_propositions": [
+      "An upstream Trust Task refusal, including its typed document and stepUpHandoff, must survive session and HTTPS transport boundaries without becoming successful authorization.",
+      "A step-up continuation must be bound to the original authorized principal, purpose, operation, context and validity and reject replay, ambiguity or substitution."
+    ],
+    "personas": [
+      "VTI client operator",
+      "requesting member",
+      "community resource authorization operator"
+    ],
+    "scenarios": [
+      "valid refusal with operation-bound stepUpHandoff",
+      "generic session error with missing refused document",
+      "wrong-target purpose or principal during step-up",
+      "stale or replayed step-up across transports",
+      "successful response distinguished from refusal and next-step"
+    ],
+    "harms": [
+      "implicit authorization from dropped error metadata",
+      "unauthorized repeated operation after step-up",
+      "unauditable refusal transformation"
+    ],
+    "actions": [
+      {
+        "surface": "evidence-test",
+        "action": "Obtain source-pinned consuming-path traces for session/TSP and HTTPS positive and negative cases, including authenticated step-up expiry and target binding.",
+        "acceptance_criterion": "VTI-0001-R1 and VTI-0001-R2 have attributable positive and adversarial evidence before any assurance determination is imported."
+      }
+    ]
+  }
+}
