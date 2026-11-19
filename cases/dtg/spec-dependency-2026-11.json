@@ -1,0 +1,92 @@
+{
+  "schema_version": "0.1.0",
+  "case_id": "RAHP-AR-DTG-0002",
+  "title": "Trust Tasks specification-dependency alignment, four-finding materiality review",
+  "subject": {
+    "system": "DTG Trust Tasks dependency / spec alignment",
+    "domain": "dtg",
+    "scope": "Source-qualified four-finding 16 November 2026 material change group; independent historical #282/#826/#837 obligations excluded"
+  },
+  "proposition": "Determine whether the four later Trust Tasks dependency/specification changes preserve, strengthen or weaken the prior dependency-alignment assurance proposition, or introduce new independently actionable security or interoperability obligations.",
+  "source": {
+    "repository": "sankarshanmukhopadhyay/dtg-portfolio-monitor",
+    "revision": "7e2813c8daf867a21e4064513cc83612726aeb44",
+    "upstream_repository": "trustoverip/dtgwg-trust-tasks-tf",
+    "finding_id": "0add1f4cc0f048ce6bfc",
+    "finding_ids": [
+      "0add1f4cc0f048ce6bfc",
+      "29e39a0329123d8839a6",
+      "a60eaffaf3cbc1394553",
+      "acc9772126b1a3820240"
+    ],
+    "group_sha256": "3fc843eeaf48f0023582951a2f67a15638bd6c21e929e92765b1394f83718d4c",
+    "snapshot": "https://raw.githubusercontent.com/sankarshanmukhopadhyay/dtg-portfolio-monitor/7e2813c8daf867a21e4064513cc83612726aeb44/data/findings/2026/11/16.json",
+    "observed_on": "2026-11-16"
+  },
+  "owners": {
+    "registry": "sankarshanmukhopadhyay/rahp-assessment-registry",
+    "current_active_issue": "https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/88",
+    "handoff": "accepted",
+    "upstream": "trustoverip/dtgwg-trust-tasks-tf",
+    "execution": "sankarshanmukhopadhyay/rahp-toolkit",
+    "historical_source_issue": "https://github.com/sankarshanmukhopadhyay/rahp-toolkit/issues/272",
+    "historical_wrapper_issue": "https://github.com/sankarshanmukhopadhyay/rahp-toolkit/issues/615",
+    "protected_residual_issues": [
+      "https://github.com/sankarshanmukhopadhyay/rahp-toolkit/issues/282",
+      "https://github.com/sankarshanmukhopadhyay/rahp-toolkit/issues/826",
+      "https://github.com/sankarshanmukhopadhyay/rahp-toolkit/issues/837"
+    ]
+  },
+  "lifecycle": {
+    "state": "active",
+    "updated_on": "2026-11-19",
+    "reason": "Unique Registry administrative successor #88 and authenticated exact four-finding source acknowledgment observed after reserved Toolkit #272 partition; semantic review and disposal remain independent."
+  },
+  "assessment": {
+    "change_classification": "uncertain",
+    "determination": "not_assessed",
+    "basis": "A source-pinned four-finding reviewer packet has been generated from the canonical Toolkit worker (Registry PR #83), but no independent source-semantic judgment or attributable Toolkit assessment determination has been imported.",
+    "independent_review": false
+  },
+  "evidence": {
+    "state": "partially_verified",
+    "sources": [
+      {
+        "url": "https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/pull/83",
+        "type": "canonical_reviewer_packet",
+        "claim": "Four-finding source-bound reviewer packet generated from pinned canonical Toolkit worker; output is a review aid and not a semantic determination."
+      },
+      {
+        "url": "https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/88#issuecomment-7000114450",
+        "type": "registry_source_observation",
+        "claim": "Authenticated original materiality group observation after Toolkit reservation; not an assurance conclusion."
+      },
+      {
+        "url": "https://github.com/sankarshanmukhopadhyay/rahp-toolkit/issues/272",
+        "type": "historical_toolkit_owner",
+        "claim": "Original Toolkit-local source issue preserves earlier conclusion and distinct residuals."
+      }
+    ],
+    "runtime_reproduced": false
+  },
+  "residuals": [
+    {
+      "id": "DTG-0002-R1",
+      "status": "open",
+      "owner": "https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/88",
+      "question": "Across the four exact source findings, which dependency/specification changes preserve, strengthen, weaken or introduce a material assurance proposition? Identify source-pinned rationale and falsifying counterexamples."
+    },
+    {
+      "id": "DTG-0002-R2",
+      "status": "open",
+      "owner": "https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/88",
+      "question": "Do the four changes jointly introduce a cross-specification interaction not evidenced by individual release-level tests? Preserve separate obligations #282, #826 and #837 without collapsing their authority."
+    }
+  ],
+  "reassessment": {
+    "trigger": "A new source-qualified change to this exact combined assessment key, source-pinned negative-path implementation evidence, or an independently substantiated disposition of the current four findings.",
+    "last_verified_on": "2026-11-19",
+    "not_before_evidence": true
+  },
+  "referrals": []
+}

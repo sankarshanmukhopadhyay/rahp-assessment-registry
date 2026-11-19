@@ -55,6 +55,44 @@ def verify(root=ROOT):
     if (len(source) != manifest.get("total_issues")
             or {"open": open_count, "closed": closed_count} != manifest.get("state_counts")):
         raise LocatorError("archive total or state counts contradict snapshot")
+    # Accepted successors added after the immutable archive capture belong to
+    # an explicit overlay. Never rewrite a historical 16 November snapshot to
+    # imply that the later Registry ownership decision already existed.
+    overlay_path = root / "archive/accepted-successors.json"
+    additions = {}
+    if overlay_path.exists():
+        payload = json.loads(overlay_path.read_text(encoding="utf-8"))
+        if (not isinstance(payload, dict) or
+                payload.get("schema") != "rahp-history-successor-assignments/v1"
+                or not isinstance(payload.get("assignments"), list)):
+            raise LocatorError("invalid post-capture successor assignment ledger")
+        for record in payload["assignments"]:
+            if not isinstance(record, dict) or set(record) != {
+                    "historical_source_issue", "registry_successor", "case_id",
+                    "decided_on", "evidence_url"}:
+                raise LocatorError("malformed post-capture successor assignment")
+            historical = record["historical_source_issue"]
+            successor = record["registry_successor"]
+            if (not isinstance(historical, str) or
+                    re.fullmatch(re.escape(TOOLKIT) + r"[1-9][0-9]*", historical) is None
+                    or not isinstance(successor, str) or
+                    re.fullmatch(re.escape(REGISTRY) + r"[1-9][0-9]*", successor) is None
+                    or not isinstance(record["case_id"], str) or
+                    not record["case_id"].strip() or
+                    not isinstance(record["decided_on"], str) or
+                    re.fullmatch(r"20[0-9]{2}-[0-9]{2}-[0-9]{2}",
+                                 record["decided_on"]) is None
+                    or not isinstance(record["evidence_url"], str) or
+                    not record["evidence_url"].startswith(successor + "#issuecomment-")):
+                raise LocatorError("invalid post-capture successor source/evidence")
+            if historical in additions:
+                raise LocatorError("duplicate post-capture historical succession")
+            number = int(historical.removeprefix(TOOLKIT))
+            if number not in source:
+                raise LocatorError("post-capture assignment lacks source locator")
+            if source[number].get("registry_successor") is not None:
+                raise LocatorError("post-capture overlay contradicts archived succession")
+            additions[historical] = record
     assigned_history, assigned_successors = {}, {}
     count_direct = count_accepted = 0
     for case_path in sorted((root / "cases").rglob("*.json")):
@@ -81,12 +119,17 @@ def verify(root=ROOT):
         if record is None:
             raise LocatorError("accepted history not represented in source locator: " + historical)
         if record.get("registry_successor") != successor:
-            raise LocatorError("historical locator lacks accepted successor mapping")
+            assignment = additions.get(historical)
+            if (assignment is None or assignment["registry_successor"] != successor
+                    or assignment["case_id"] != case.get("case_id")):
+                raise LocatorError("historical locator lacks accepted successor mapping")
         if historical in assigned_history or successor in assigned_successors:
             raise LocatorError("ambiguous historical issue or Registry successor ownership")
         assigned_history[historical] = case.get("case_id")
         assigned_successors[successor] = case.get("case_id")
         count_accepted += 1
+    if set(additions) - set(assigned_history):
+        raise LocatorError("post-capture successor mapping has no accepted case")
     return {"schema": "rahp-history-locator-qualification/v1",
             "source_issues": len(source), "open": open_count,
             "closed": closed_count, "accepted_succession": count_accepted,
