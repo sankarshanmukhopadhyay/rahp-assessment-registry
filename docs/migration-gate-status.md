@@ -162,9 +162,74 @@ continues to record `not_assessed` pending governed determination import.
 This establishes direct-case execution, not migrated #272 reviewer/DPIP
 issue-number interoperability.
 
-**Gate disposition remains unchanged:** all G1–G6 acceptance checkboxes
-remain open. Toolkit ledger is still empty. No #272 transfer, specialist
+**At this earlier checkpoint:** all G1–G6 acceptance checkboxes
+remained open and the Toolkit ledger was still empty. No #272 transfer, specialist
 return, dual-writer exclusion, governed reverse transfer or release has been
 accepted. [Active execution tracker #77](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/77)
 retains exactly those obligations; predecessor #11 is a closed historical
 tracker, not evidence of completed cutover.
+
+## 19 November first accepted source-group cutover (supersedes earlier empty-ledger checkpoints)
+
+**Actual administrative ownership transition completed for one exact source group.**
+The initial Toolkit #272 reservation passed Toolkit CI and merged as
+[#1225](https://github.com/sankarshanmukhopadhyay/rahp-toolkit/pull/1225),
+commit `cd5f17e2150f4cb852030e1fe72cb349ca3b08bf`. After re-reading
+the authenticated maintainer decision, exact source manifest and both
+unique-owner inventories, an operator-mediated GitHub API transaction created
+[Registry #88](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/88)
+with the source-controlled group successor body. The exact original group
+digest was then durably acknowledged by an [authenticated owner comment
+#7000114450](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/88#issuecomment-7000114450).
+Toolkit [#1226](https://github.com/sankarshanmukhopadhyay/rahp-toolkit/pull/1226)
+then passed all required checks and the independent **live** accepted-owner
+reader, and merged as `161faf2f7f43feb71fd15a505018b12dfb313749`.
+Toolkit's canonical ledger now has **one `accepted_group` record**, bound
+to Registry #88, exact four-finding Monitor group digest
+`3fc843eeaf48f0023582951a2f67a15638bd6c21e929e92765b1394f83718d4c`,
+original Monitor commit `7e2813c8daf867a21e4064513cc83612726aeb44`,
+historical Toolkit #272 and the original maintainer-scope digest.
+
+**Actual post-merge publisher test:** [Toolkit run
+#44462670290](https://github.com/sankarshanmukhopadhyay/rahp-toolkit/actions/runs/44462670290)
+completed successfully using the **accepted** main-branch ledger and
+current 18 November Monitor snapshot. Its original source partition staged
+**2 retained** and **1 held** event. Its canonical publication selector
+reported `changed_group_unqualified_retained`: the changed group is not
+authorized by the first four-finding observation receipt. Both retained
+events passed Toolkit publication preflight; no duplicate Toolkit issue
+creation or coalescing was reported in that cycle. This is actual
+source-scoped writer separation and lossless event retention evidence;
+it is **not** an unattended new-epoch Registry acknowledgment or review
+judgment. The changed group remains pending independently authenticated
+source-epoch approval on active [#77](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/77).
+
+**Accepted case persistence and historic source separation:**
+[Registry #89](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/pull/89),
+merge `8ff13419bb16913a381f3988de39769fbc5a8526`, persisted
+[`RAHP-AR-DTG-0002`](../cases/dtg/spec-dependency-2026-11.json)
+and a separately validated successor overlay at
+[`archive/accepted-successors.json`](../archive/accepted-successors.json).
+The original 16 November Toolkit metadata snapshot remains unchanged,
+while [Toolkit #272](https://github.com/sankarshanmukhopadhyay/rahp-toolkit/issues/272)
+is now administratively closed with an explicit referral to Registry #88.
+Historical wrapper #615 and independent #282/#826/#837 remain preserved.
+No RAHP assurance determination or independent materiality judgment has
+been imported; the Registry case remains `not_assessed / uncertain`.
+
+| Acceptance dimension | Disposition after actual cutover |
+| --- | --- |
+| One exact 16 November group reservation, Registry successor and current-source ACK | **Executed** with canonical issue/comment URLs and immutable source pins. |
+| Source-specific Toolkit publisher exclusion under current main revision | **Executed** for the observed later materiality cycle; other events retained and source group held pending new-epoch authority. |
+| Universal future-dispatch exclusion, especially deliberately invoked older workflow refs | **Not established** by a main-branch ledger and point-in-time quiescence; G3/G5/G6 broader exclusive-writer assurance remains open. |
+| Canonical Toolkit reviewer packet | **Executed read-only** for original four findings in Registry #83; effectful reviewer judgment and downstream DPIP/Lab return remain outstanding. |
+| Governed source-epoch reassessment and reversal | Subsequent source ACK requires separately accepted epoch digest. Registry writer-fenced reverse transfer **not executed**. |
+| Assurance conclusion | **None imported**. Passing GitHub workflows is not RAHP PASS. |
+
+**Gate decision:** This work satisfies a concrete source-scoped portion of
+Tranches A and D, but does not independently accept all six original G1–G6
+migration gates. The closed predecessor #11 remains historical; the
+remaining acceptance criteria remain on open #77. Do not remove the
+accepted ledger entry as a rollback, disable Toolkit-local development
+work, or mark specialist/independent assurance complete. No new release
+is justified by administrative ownership alone.
