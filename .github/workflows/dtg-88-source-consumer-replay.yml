@@ -24,6 +24,40 @@ jobs:
           ref: 69814c5ef60b5fa2d75fe2687efad1d12d34283f
           path: trust-tasks
           persist-credentials: false
+      - name: Checkout current pinned VTI consumer dependency evidence
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: OpenVTC/verifiable-trust-infrastructure
+          ref: 66a7c2aa362e82cdbbb3b384850d73fa64d97848
+          path: vti-source
+          persist-credentials: false
+      - name: Qualify observed VTI dependency mismatch against immutable target
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$(git -C vti-source rev-parse HEAD)" = 66a7c2aa362e82cdbbb3b384850d73fa64d97848 ]]
+          python3 - <<'PY'
+          import json
+          import re
+          import tomllib
+          from pathlib import Path
+          source = Path('vti-source')
+          case = json.loads(Path('ops/assessments/dtg-spec-dependency-source-materiality-2026-11.json').read_text())
+          observed = case['downstream_vti_dependency_observation']
+          assert observed['revision'] == '66a7c2aa362e82cdbbb3b384850d73fa64d97848'
+          manifest = tomllib.loads((source/'Cargo.toml').read_text())
+          deps = manifest['workspace']['dependencies']
+          assert deps['trust-tasks-rs']['version'] == observed['trust_tasks_rs_declared']
+          assert deps['trust-tasks-https']['version'] == observed['trust_tasks_https_declared']
+          assert deps['jsonwebtoken']['version'] == '11.1.0'
+          assert deps['jsonschema']['version'] == '0.60'
+          lock = tomllib.loads((source/'Cargo.lock').read_text())
+          for package, expected in observed['lockfile_versions'].items():
+              actual = sorted(x['version'] for x in lock['package'] if x['name'] == package)
+              assert actual == expected, (package, actual, expected)
+          assert not observed['target_native_runtime_reproduced']
+          print('PASS exact VTI source pin resolves old Trust Tasks and dual JWT/schema majors; no VTI runtime claim')
+          PY
       - name: Confirm immutable source and matching release contracts
         shell: bash
         run: |
