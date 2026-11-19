@@ -12,7 +12,7 @@ class ToolkitWriterQuiescenceTests(unittest.TestCase):
         calls = []
         def fetch(url):
             calls.append(url)
-            return {"workflow_runs": []}
+            return {"total_count": 0, "workflow_runs": []}
         result = guard.evaluate(fetch)
         self.assertTrue(result["quiescent_at_observation"])
         self.assertFalse(result["exclusive_lock_established"])
@@ -22,11 +22,11 @@ class ToolkitWriterQuiescenceTests(unittest.TestCase):
     def test_active_toolkit_writer_blocks(self):
         def fetch(url):
             if "status=in_progress" in url:
-                return {"workflow_runs": [{
+                return {"total_count": 1, "workflow_runs": [{
                     "id": 44, "path": ".github/workflows/dtg-portfolio-materiality-handoff.yml",
                     "status": "in_progress"
                 }]}
-            return {"workflow_runs": []}
+            return {"total_count": 0, "workflow_runs": []}
         result = guard.evaluate(fetch)
         self.assertFalse(result["quiescent_at_observation"])
         self.assertEqual(result["active_writer_runs"][0]["id"], 44)
@@ -34,17 +34,17 @@ class ToolkitWriterQuiescenceTests(unittest.TestCase):
     def test_unrelated_workflow_is_not_classified_as_a_writer(self):
         def fetch(url):
             if "status=queued" in url:
-                return {"workflow_runs": [{
+                return {"total_count": 1, "workflow_runs": [{
                     "id": 9, "path": ".github/workflows/validate.yml",
                     "status": "queued"
                 }]}
-            return {"workflow_runs": []}
+            return {"total_count": 0, "workflow_runs": []}
         result = guard.evaluate(fetch)
         self.assertTrue(result["quiescent_at_observation"])
         self.assertEqual(result["checked_nonterminal_runs"], 1)
 
     def test_malformed_or_partial_inventory_fails_closed(self):
-        for response in ({}, {"workflow_runs": None},
+        for response in ({}, {"total_count": 0, "workflow_runs": None},
                          {"workflow_runs": [{"path": ".github/workflows/instance-watch.yml",
                                              "status": "queued"}]}):
             with self.subTest(response=response):
@@ -54,18 +54,74 @@ class ToolkitWriterQuiescenceTests(unittest.TestCase):
     def test_wrong_status_for_matching_writer_fails_closed(self):
         def fetch(url):
             if "status=pending" in url:
-                return {"workflow_runs": [{
+                return {"total_count": 1, "workflow_runs": [{
                     "id": 17, "path": ".github/workflows/review-workers.yml",
                     "status": "completed"
                 }]}
-            return {"workflow_runs": []}
+            return {"total_count": 0, "workflow_runs": []}
         with self.assertRaisesRegex(guard.QuiescenceError, "inconsistent"):
             guard.evaluate(fetch)
 
+    def test_nonempty_total_with_empty_page_fails_closed(self):
+        with self.assertRaisesRegex(guard.QuiescenceError, "incomplete"):
+            guard.evaluate(lambda url: {"total_count": 3, "workflow_runs": []})
+
+    def test_missing_or_malformed_total_fails_closed(self):
+        for bad in (None, True, "1", -1):
+            with self.subTest(bad=bad):
+                with self.assertRaisesRegex(guard.QuiescenceError, "total_count"):
+                    guard.evaluate(lambda url: {
+                        "total_count": bad, "workflow_runs": []})
+
+    def test_total_and_pagination_drift_fail_closed(self):
+        def fetch(url):
+            if "status=queued" in url:
+                if url.endswith("&page=1"):
+                    return {"total_count": 101, "workflow_runs": [
+                        {"id": i + 1, "path": ".github/workflows/validate.yml",
+                         "status": "queued"} for i in range(100)]}
+                return {"total_count": 102, "workflow_runs": [
+                    {"id": 101, "path": ".github/workflows/validate.yml",
+                     "status": "queued"}]}
+            return {"total_count": 0, "workflow_runs": []}
+        with self.assertRaisesRegex(guard.QuiescenceError, "changed"):
+            guard.evaluate(fetch)
+
+    def test_repeated_run_identity_across_pages_fails_closed(self):
+        def fetch(url):
+            if "status=queued" in url:
+                if url.endswith("&page=1"):
+                    return {"total_count": 101, "workflow_runs": [
+                        {"id": i + 1, "path": ".github/workflows/validate.yml",
+                         "status": "queued"} for i in range(100)]}
+                return {"total_count": 101, "workflow_runs": [
+                    {"id": 1, "path": ".github/workflows/validate.yml",
+                     "status": "queued"}]}
+            return {"total_count": 0, "workflow_runs": []}
+        with self.assertRaisesRegex(guard.QuiescenceError, "repeated"):
+            guard.evaluate(fetch)
+
+    def test_consistent_multipage_inventory_is_accepted_as_observation(self):
+        def fetch(url):
+            if "status=queued" in url:
+                if url.endswith("&page=1"):
+                    return {"total_count": 101, "workflow_runs": [
+                        {"id": i + 1, "path": ".github/workflows/validate.yml",
+                         "status": "queued"} for i in range(100)]}
+                return {"total_count": 101, "workflow_runs": [
+                    {"id": 101, "path": ".github/workflows/validate.yml",
+                     "status": "queued"}]}
+            return {"total_count": 0, "workflow_runs": []}
+        receipt = guard.evaluate(fetch)
+        self.assertTrue(receipt["quiescent_at_observation"])
+        self.assertEqual(receipt["checked_nonterminal_runs"], 101)
+        self.assertFalse(receipt["cutover_authorized"])
+
     def test_inventory_is_bounded(self):
         def fetch(url):
-            return {"workflow_runs": [{
-                "id": i, "path": ".github/workflows/validate.yml",
+            page = int(url.rsplit("page=", 1)[1])
+            return {"total_count": 10000, "workflow_runs": [{
+                "id": (page - 1) * 100 + i + 1, "path": ".github/workflows/validate.yml",
                 "status": "queued"
             } for i in range(100)]}
         with self.assertRaisesRegex(guard.QuiescenceError, "pagination"):

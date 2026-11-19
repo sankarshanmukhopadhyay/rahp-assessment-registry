@@ -34,7 +34,10 @@ class QuiescenceError(ValueError):
 def evaluate(fetch):
     active = []
     checked = 0
+    seen_ids = set()
     for status in NONTERMINAL:
+        expected_total = None
+        observed = 0
         for page in range(1, 101):
             url = (API + "/actions/runs?status=" + status +
                    "&per_page=100&page=" + str(page))
@@ -42,19 +45,33 @@ def evaluate(fetch):
             if (not isinstance(response, dict) or
                     not isinstance(response.get("workflow_runs"), list)):
                 raise QuiescenceError("Toolkit Actions run inventory unavailable")
+            total = response.get("total_count")
+            if type(total) is not int or total < 0:
+                raise QuiescenceError("Toolkit Actions total_count unavailable or invalid")
+            if expected_total is None:
+                expected_total = total
+            elif total != expected_total:
+                raise QuiescenceError("Toolkit Actions inventory changed during pagination")
             rows = response["workflow_runs"]
-            if len(rows) > 100:
+            if len(rows) > 100 or observed + len(rows) > expected_total:
                 raise QuiescenceError("Toolkit Actions inventory page invalid")
             checked += len(rows)
+            observed += len(rows)
             for run in rows:
                 if not isinstance(run, dict):
                     raise QuiescenceError("invalid active-run record")
                 path = run.get("path")
+                run_id = run.get("id")
+                if (type(run_id) is not int or run_id < 1 or
+                        not isinstance(path, str) or run.get("status") != status or
+                        run_id in seen_ids):
+                    raise QuiescenceError("inconsistent or repeated Toolkit run identity")
+                seen_ids.add(run_id)
                 if path in WRITERS:
-                    if run.get("status") != status or not isinstance(run.get("id"), int):
-                        raise QuiescenceError("inconsistent active Toolkit writer identity")
-                    active.append({"id": run["id"], "workflow": path, "status": status})
+                    active.append({"id": run_id, "workflow": path, "status": status})
             if len(rows) < 100:
+                if observed != expected_total:
+                    raise QuiescenceError("incomplete Toolkit Actions run inventory")
                 break
         else:
             raise QuiescenceError("Toolkit Actions inventory exceeds pagination bound")
@@ -65,7 +82,6 @@ def evaluate(fetch):
             "quiescent_at_observation": not active,
             "exclusive_lock_established": False,
             "cutover_authorized": False}
-
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
