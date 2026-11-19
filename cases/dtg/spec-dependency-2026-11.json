@@ -45,7 +45,7 @@
   "assessment": {
     "change_classification": "new",
     "determination": "not_assessed",
-    "basis": "Source-level materiality established separately for four upstream findings: new purpose-of-use contract, acknowledged JWT public API compatibility break, strengthened room-read normative clarity, and composite 0.40.0 runtime/security changes. These classifications are source interpretation only; no independent consuming-path evidence or canonical RAHP assurance result has been imported. See ops/assessments/dtg-spec-dependency-source-materiality-2026-11.json. Pinned upstream Rust source-level replay passed in Registry PR #93/run #44466791200, but representative VTI target-native and independent cross-language replay remain unverified.",
+    "basis": "Source-level materiality established separately for four upstream findings: new purpose-of-use contract, acknowledged JWT public API compatibility break, strengthened room-read normative clarity, and composite 0.40.0 runtime/security changes. These classifications are source interpretation only; no independent consuming-path evidence or canonical RAHP assurance result has been imported. See ops/assessments/dtg-spec-dependency-source-materiality-2026-11.json. Pinned upstream Rust source-level replay passed in Registry PR #93/run #44466791200, but representative VTI target-native and independent cross-language replay remain unverified. Pinned VTI 0.39 baseline JWT (13) and receiver (16) tests passed in run #44469222142, but downstream Trust Tasks 0.40 adoption and independent conformance remain unverified.",
     "independent_review": false
   },
   "evidence": {
@@ -90,6 +90,11 @@
         "url": "https://github.com/OpenVTC/verifiable-trust-infrastructure/blob/66a7c2aa362e82cdbbb3b384850d73fa64d97848/Cargo.lock",
         "type": "pinned_downstream_dependency_resolution",
         "claim": "Current VTI lock resolves trust-tasks-rs/https 0.39.0, jsonwebtoken 10.4.0/11.1.0 and jsonschema 0.49.9/0.60.2; a consumer migration to upstream 0.40 is not established."
+      },
+      {
+        "url": "https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/actions/runs/44469222142",
+        "type": "pinned_downstream_vti_0_39_runtime_baseline",
+        "claim": "At immutable current VTI revision 66a7c2aa362e82cdbbb3b384850d73fa64d97848, 13 JWT tests and 16 Trust Task receiver-spine tests passed. This is a 0.39 baseline, not Trust Tasks 0.40 integration or target-native migration assurance."
       }
     ],
     "runtime_reproduced": false
