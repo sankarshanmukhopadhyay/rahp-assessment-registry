@@ -81,11 +81,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python3 scripts/registry_outbox.py \\
-            --manifest outbox/pending/ondtf-emergency-authority-v1.json \\
+          python3 scripts/registry_outbox.py \
+            --manifest outbox/pending/ondtf-emergency-authority-v1.json \
             --receipt build/outbox/ondtf-direct-owner.json
-          python3 scripts/registry_outbox.py \\
-            --manifest outbox/pending/vti-session-refusal-stepup-2026-11-18.json \\
+          python3 scripts/registry_outbox.py \
+            --manifest outbox/pending/vti-session-refusal-stepup-2026-11-18.json \
             --receipt build/outbox/vti-direct-owner.json
           python3 - <<'PY'
           import json
