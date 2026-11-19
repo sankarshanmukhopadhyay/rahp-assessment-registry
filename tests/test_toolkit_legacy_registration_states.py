@@ -61,7 +61,7 @@ class LegacyRegistrationStateTests(unittest.TestCase):
                     self.verify(lookup=lookup)
 
     def test_failed_read_never_yields_green(self):
-        with self.assertRaises(KeyError):
+        with self.assertRaises(module.RegistrationError):
             self.verify(lookup=lambda identity: {} if identity == module.LEGACY[0][0]
                         else self.legacy[identity])
 
