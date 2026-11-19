@@ -74,6 +74,32 @@ jobs:
               --manifest "$REQUEST_MANIFEST" \
               --receipt build/outbox/preflight.json
           fi
+      - name: Verify both live direct-case owner identities without writes
+        if: github.event_name == 'pull_request'
+        env:
+          REGISTRY_INTAKE_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/registry_outbox.py \\
+            --manifest outbox/pending/ondtf-emergency-authority-v1.json \\
+            --receipt build/outbox/ondtf-direct-owner.json
+          python3 scripts/registry_outbox.py \\
+            --manifest outbox/pending/vti-session-refusal-stepup-2026-11-18.json \\
+            --receipt build/outbox/vti-direct-owner.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          for name, number, case_id in (
+              ('ondtf', 47, 'RAHP-AR-ONDTF-0001'),
+              ('vti', 79, 'RAHP-AR-VTI-0001')):
+              receipt = json.loads(Path(f'build/outbox/{name}-direct-owner.json').read_text())
+              assert receipt['state'] == 'owner_observed'
+              assert receipt['owner_number'] == number
+              assert receipt['mode'] == 'dry_run'
+              assert receipt['assurance_determination'] is None
+              print(f'PASS source-qualified {case_id} owner #{number}; no writes')
+          PY
       - name: Retain qualified source intent and live owner evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
