@@ -137,6 +137,15 @@
     },
     "upstream_issue_url": "https://github.com/OpenVTC/verifiable-trust-infrastructure/issues/2655",
     "interpretation": "At this exact VTI source revision, VTI still consumes Trust Tasks 0.39 and resolves two JSON Web Token and JSON Schema majors. The upstream 0.40.0 breaking public type transition is not demonstrated as adopted or interoperable by VTI. This evidence is a source/lockfile dependency observation; downstream runtime tests were not executed.",
-    "target_native_runtime_reproduced": false
+    "target_native_runtime_reproduced": false,
+    "baseline_vti_0_39_runtime_replay": {
+      "source_revision": "66a7c2aa362e82cdbbb3b384850d73fa64d97848",
+      "workflow_run_url": "https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/actions/runs/44469222142",
+      "jwt_unit_tests_passed": 13,
+      "trust_task_spine_tests_passed": 16,
+      "failed_tests": 0,
+      "executed": true,
+      "contract_scope": "Current VTI 0.39 JWT and receiver-spine tests only, with source-native build prerequisites. Does not demonstrate downstream Trust Tasks 0.40 adoption, cross-language critical extension behavior or independent assurance."
+    }
   }
 }
