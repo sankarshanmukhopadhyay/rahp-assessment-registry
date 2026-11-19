@@ -52,12 +52,54 @@ jobs:
       - run: python3 -m pip install PyYAML==6.0.2
       - name: Reject tampered and duplicate epoch observations
         run: python3 -m unittest discover -s tests -p 'test_registry_group_epoch_observation.py' -v
+      - name: Check live accepted-group authority before source collection
+        id: authority
+        env:
+          REGISTRY_INTAKE_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p build/epoch
+          python3 - <<'PY'
+          import json
+          import os
+          import sys
+          from pathlib import Path
+          sys.path.insert(0, str(Path('scripts').resolve()))
+          import registry_group_epoch_observation as epoch
+          import registry_monitored_group_delivery as group
+          import registry_intake as gh
+          token = os.environ['REGISTRY_INTAKE_TOKEN']
+          fetch = lambda url: gh.request('GET', url, token)
+          sha = group.read_head(fetch, epoch.TK)
+          ledger = group.read_pinned(fetch, epoch.TK, group.LEDGER, sha)
+          intent = json.loads(Path(
+              'outbox/pending/spec-dependency-2026-11-16.json').read_text())
+          active = epoch.accepted_record(intent, ledger) is not None
+          with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as output:
+              output.write('active=' + str(active).lower() + '\n')
+          if not active:
+              receipt = {
+                  'schema': 'rahp-registry-new-group-epoch/v1',
+                  'state': 'inactive_no_accepted_transfer',
+                  'toolkit_main_sha': sha,
+                  'observation_acknowledged': False,
+                  'issue_written': False,
+                  'assurance_determination': None,
+                  'cutover_authorized': False,
+              }
+              Path('build/epoch/new-epoch-receipt.json').write_text(
+                  json.dumps(receipt, indent=2) + '\n')
+          print('Accepted group present:', active)
+          PY
       - name: Verify current Monitor source through canonical Toolkit freshness
+        if: steps.authority.outputs.active == 'true'
         id: source
         run: >-
           python3 toolkit/tools/fetch_dtg_portfolio_snapshot.py
           --lookback-days 2 --output build/epoch/findings.json
       - name: Reproduce original canonical Toolkit materiality grouping
+        if: steps.authority.outputs.active == 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -79,6 +121,7 @@ jobs:
             --normalization-policy toolkit/instances/dtg/finding-normalization.yaml \
             --snapshot-date "$day" --out-dir build/epoch
       - name: Acknowledge only exact accepted Registry successor and changed epoch
+        if: steps.authority.outputs.active == 'true'
         env:
           REGISTRY_INTAKE_TOKEN: ${{ github.token }}
           APPLY_MODE: ${{ github.event_name == 'schedule' || inputs.apply == true }}
