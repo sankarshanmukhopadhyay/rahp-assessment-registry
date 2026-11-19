@@ -4,6 +4,8 @@ on:
     paths:
       - 'scripts/audit_toolkit_issue_writers.py'
       - 'tests/test_toolkit_issue_writers.py'
+      - 'tests/test_toolkit_historical_refs.py'
+      - 'scripts/audit_toolkit_historical_refs.py'
       - '.github/workflows/toolkit-issue-writer-inventory.yml'
   push:
     branches: [main]
@@ -34,6 +36,7 @@ jobs:
         with:
           repository: sankarshanmukhopadhyay/rahp-toolkit
           ref: main
+          fetch-depth: 0 # historical branches must be locally resolvable
           path: toolkit
           persist-credentials: false
       - name: Test inventory false-success and drift boundaries
@@ -47,10 +50,20 @@ jobs:
             --toolkit-workflows toolkit/.github/workflows \
             --toolkit-revision "$revision" \
             --out build/toolkit-issue-writer-inventory.json
+      - name: Test old-ref source audit and false-success boundaries
+        run: python3 -m unittest discover -s registry/tests -p 'test_toolkit_historical_refs.py' -v
+      - name: Qualify historical branch source exposure (operator dispatch)
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          python3 registry/scripts/audit_toolkit_historical_refs.py \
+            --toolkit toolkit \
+            --out build/toolkit-historical-ref-audit.json
       - name: Retain verified inventory with source revision
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: toolkit-issue-writer-inventory
-          path: build/toolkit-issue-writer-inventory.json
+          path: |
+            build/toolkit-issue-writer-inventory.json
+            build/toolkit-historical-ref-audit.json
           if-no-files-found: warn
