@@ -34,7 +34,7 @@ class ToolkitWriterQuiescenceTests(unittest.TestCase):
     def test_unrelated_workflow_is_not_classified_as_a_writer(self):
         def fetch(url):
             if "status=queued" in url:
-                return {"workflow_runs": [{
+                return {"total_count": 1, "workflow_runs": [{
                     "id": 9, "path": ".github/workflows/validate.yml",
                     "status": "queued"
                 }]}
@@ -54,7 +54,7 @@ class ToolkitWriterQuiescenceTests(unittest.TestCase):
     def test_wrong_status_for_matching_writer_fails_closed(self):
         def fetch(url):
             if "status=pending" in url:
-                return {"workflow_runs": [{
+                return {"total_count": 1, "workflow_runs": [{
                     "id": 17, "path": ".github/workflows/review-workers.yml",
                     "status": "completed"
                 }]}
@@ -119,8 +119,9 @@ class ToolkitWriterQuiescenceTests(unittest.TestCase):
 
     def test_inventory_is_bounded(self):
         def fetch(url):
+            page = int(url.rsplit("page=", 1)[1])
             return {"total_count": 10000, "workflow_runs": [{
-                "id": i, "path": ".github/workflows/validate.yml",
+                "id": (page - 1) * 100 + i + 1, "path": ".github/workflows/validate.yml",
                 "status": "queued"
             } for i in range(100)]}
         with self.assertRaisesRegex(guard.QuiescenceError, "pagination"):
