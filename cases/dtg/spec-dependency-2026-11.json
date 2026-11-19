@@ -43,9 +43,9 @@
     "reason": "Unique Registry administrative successor #88 and authenticated exact four-finding source acknowledgment observed after reserved Toolkit #272 partition; semantic review and disposal remain independent."
   },
   "assessment": {
-    "change_classification": "uncertain",
+    "change_classification": "new",
     "determination": "not_assessed",
-    "basis": "A source-pinned four-finding reviewer packet has been generated from the canonical Toolkit worker (Registry PR #83), but no independent source-semantic judgment or attributable Toolkit assessment determination has been imported.",
+    "basis": "Source-level materiality established separately for four upstream findings: new purpose-of-use contract, acknowledged JWT public API compatibility break, strengthened room-read normative clarity, and composite 0.40.0 runtime/security changes. These classifications are source interpretation only; no independent consuming-path evidence or canonical RAHP assurance result has been imported. See ops/assessments/dtg-spec-dependency-source-materiality-2026-11.json.",
     "independent_review": false
   },
   "evidence": {
@@ -65,6 +65,16 @@
         "url": "https://github.com/sankarshanmukhopadhyay/rahp-toolkit/issues/272",
         "type": "historical_toolkit_owner",
         "claim": "Original Toolkit-local source issue preserves earlier conclusion and distinct residuals."
+      },
+      {
+        "url": "https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/blob/main/ops/assessments/dtg-spec-dependency-source-materiality-2026-11.json",
+        "type": "source_level_materiality_disposition",
+        "claim": "Four proposition-level source classifications and separately observed newer two-finding epoch; not a runtime or specialist assurance result."
+      },
+      {
+        "url": "https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/88#issuecomment-7000532885",
+        "type": "new_source_epoch_observation",
+        "claim": "Authenticated exact-digest 18 November two-finding source observation, separately authorized by Registry #77; not a novel finding set or determination."
       }
     ],
     "runtime_reproduced": false
@@ -74,19 +84,32 @@
       "id": "DTG-0002-R1",
       "status": "open",
       "owner": "https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/88",
-      "question": "Across the four exact source findings, which dependency/specification changes preserve, strengthen, weaken or introduce a material assurance proposition? Identify source-pinned rationale and falsifying counterexamples."
+      "question": "Source-level classification of all four original findings is recorded. Obtain reproducible target-native consumer evidence for the declared JWT public API break and 0.40.0 cross-runtime critical-extension behavior; preserve #1194 as independent purpose-of-use authority."
     },
     {
       "id": "DTG-0002-R2",
       "status": "open",
       "owner": "https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/88",
-      "question": "Do the four changes jointly introduce a cross-specification interaction not evidenced by individual release-level tests? Preserve separate obligations #282, #826 and #837 without collapsing their authority."
+      "question": "Test whether combined JWT major transition, 0.40.0 critical-extension handling, room-bound purpose semantics and cross-runtime dependencies create new failure modes. Do not conflate prior #282/#826/#837 obligations or treat the later two-finding subset as a new change."
     }
   ],
   "reassessment": {
-    "trigger": "A new source-qualified change to this exact combined assessment key, source-pinned negative-path implementation evidence, or an independently substantiated disposition of the current four findings.",
+    "trigger": "New source-qualified finding distinct from the original set, target-native negative evidence against JWT/critical-extension/purpose-bound consumers, or materially changed source-epoch digest with separately authorized reception.",
     "last_verified_on": "2026-11-19",
-    "not_before_evidence": true
+    "not_before_evidence": true,
+    "latest_observed_epoch": {
+      "monitor_revision": "ee5736fa82a3c969f3c9eb055217c3404ff1815d",
+      "observed_on": "2026-11-18",
+      "group_sha256": "ab73e10204e4f6073977634ea98015e8a1cb03cc5142e54e1afef5ce0e91bf85",
+      "finding_ids": [
+        "29e39a0329123d8839a6",
+        "acc9772126b1a3820240"
+      ],
+      "source_observation_ack": "https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/88#issuecomment-7000532885",
+      "authorization_url": "https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/77#issuecomment-7000523334",
+      "source_novelty": false,
+      "review_state": "source_review_completed_runtime_evidence_required"
+    }
   },
   "referrals": []
 }
