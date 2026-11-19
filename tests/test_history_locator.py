@@ -14,7 +14,7 @@ class LocatorTests(unittest.TestCase):
     def test_real_archive_and_accepted_succession(self):
         record = locator.verify(ROOT)
         self.assertEqual(record["source_issues"], 769)
-        self.assertGreaterEqual(record["accepted_succession"], 1)
+        self.assertGreaterEqual(record["accepted_succession"], 2)
         self.assertGreaterEqual(record["direct_cases_excluded"], 1)
         self.assertFalse(record["live_source_resolvability_verified"])
         self.assertFalse(record["independent_gate_accepted"])
@@ -55,6 +55,54 @@ class LocatorTests(unittest.TestCase):
             source[0]["registry_successor"] = locator.REGISTRY + "99"
             (root / path).write_text(json.dumps(source))
             with self.assertRaisesRegex(locator.LocatorError, "successor mapping"):
+                locator.verify(root)
+        self.fixture(mutate)
+
+    def test_post_capture_assignment_preserves_original_snapshot(self):
+        def mutate(root, path, case):
+            snapshot = json.loads((root / path).read_text())
+            snapshot[0].pop("registry_successor")
+            original = json.dumps(snapshot)
+            (root / path).write_text(original)
+            overlay = {"schema": "rahp-history-successor-assignments/v1",
+                       "assignments": [{
+                           "historical_source_issue": locator.TOOLKIT + "1203",
+                           "registry_successor": locator.REGISTRY + "4",
+                           "case_id": "one",
+                           "decided_on": "2026-11-19",
+                           "evidence_url": locator.REGISTRY + "4#issuecomment-123"}]}
+            dest = root / "archive/accepted-successors.json"
+            dest.write_text(json.dumps(overlay))
+            self.assertEqual(locator.verify(root)["accepted_succession"], 1)
+            self.assertEqual((root / path).read_text(), original)
+
+            overlay["assignments"][0]["case_id"] = "substituted"
+            dest.write_text(json.dumps(overlay))
+            with self.assertRaisesRegex(locator.LocatorError, "successor mapping"):
+                locator.verify(root)
+            overlay["assignments"][0]["case_id"] = "one"
+            overlay["assignments"][0]["evidence_url"] = "https://attacker.invalid/1"
+            dest.write_text(json.dumps(overlay))
+            with self.assertRaisesRegex(locator.LocatorError, "source/evidence"):
+                locator.verify(root)
+            overlay["assignments"][0]["evidence_url"] = locator.REGISTRY + "4#issuecomment-123"
+            overlay["assignments"].append(dict(overlay["assignments"][0]))
+            dest.write_text(json.dumps(overlay))
+            with self.assertRaisesRegex(locator.LocatorError, "duplicate"):
+                locator.verify(root)
+        self.fixture(mutate)
+
+    def test_post_capture_mapping_must_have_accepted_case(self):
+        def mutate(root, path, case):
+            payload = {"schema": "rahp-history-successor-assignments/v1",
+                       "assignments": [{
+                           "historical_source_issue": locator.TOOLKIT + "1203",
+                           "registry_successor": locator.REGISTRY + "5",
+                           "case_id": "unreferenced",
+                           "decided_on": "2026-11-19",
+                           "evidence_url": locator.REGISTRY + "5#issuecomment-456"}]}
+            (root / "archive/accepted-successors.json").write_text(json.dumps(payload))
+            with self.assertRaisesRegex(locator.LocatorError, "contradicts archived"):
                 locator.verify(root)
         self.fixture(mutate)
 
