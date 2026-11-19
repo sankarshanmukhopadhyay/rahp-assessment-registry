@@ -17,7 +17,7 @@ class HistoricalRefAuditTests(unittest.TestCase):
             if op == "ls-tree":
                 return audit.WORKFLOW
             if args[-1].endswith(audit.WORKFLOW):
-                return "on:\\n  workflow_dispatch:\\npermissions:\\n  issues: write\\n"
+                return "on:\n  workflow_dispatch:\npermissions:\n  issues: write\n"
             return "def publish(): pass"
         with patch.object(audit, "git", side_effect=fake_git):
             result = audit.audit(Path("."), [("legacy", REVISION)])
@@ -29,8 +29,8 @@ class HistoricalRefAuditTests(unittest.TestCase):
             if op == "ls-tree":
                 return audit.WORKFLOW
             if args[-1].endswith(audit.WORKFLOW):
-                return "on:\\n  workflow_dispatch:\\npermissions:\\n  issues: write\\n"
-            return "TRANSFER_LEDGER = 1\\ndef enforce_live_transfer_boundary(): pass"
+                return "on:\n  workflow_dispatch:\npermissions:\n  issues: write\n"
+            return "TRANSFER_LEDGER = 1\ndef enforce_live_transfer_boundary(): pass"
         with patch.object(audit, "git", side_effect=fake_git):
             result = audit.audit(Path("."), [("guarded", REVISION)])
         self.assertEqual(result["unfenced_source_refs"], [])
