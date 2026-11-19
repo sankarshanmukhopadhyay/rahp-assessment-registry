@@ -45,7 +45,7 @@
   "assessment": {
     "change_classification": "new",
     "determination": "not_assessed",
-    "basis": "Source-level materiality established separately for four upstream findings: new purpose-of-use contract, acknowledged JWT public API compatibility break, strengthened room-read normative clarity, and composite 0.40.0 runtime/security changes. These classifications are source interpretation only; no independent consuming-path evidence or canonical RAHP assurance result has been imported. See ops/assessments/dtg-spec-dependency-source-materiality-2026-11.json.",
+    "basis": "Source-level materiality established separately for four upstream findings: new purpose-of-use contract, acknowledged JWT public API compatibility break, strengthened room-read normative clarity, and composite 0.40.0 runtime/security changes. These classifications are source interpretation only; no independent consuming-path evidence or canonical RAHP assurance result has been imported. See ops/assessments/dtg-spec-dependency-source-materiality-2026-11.json. Pinned upstream Rust source-level replay passed in Registry PR #93/run #44466791200, but representative VTI target-native and independent cross-language replay remain unverified.",
     "independent_review": false
   },
   "evidence": {
@@ -75,6 +75,11 @@
         "url": "https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/88#issuecomment-7000532885",
         "type": "new_source_epoch_observation",
         "claim": "Authenticated exact-digest 18 November two-finding source observation, separately authorized by Registry #77; not a novel finding set or determination."
+      },
+      {
+        "url": "https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/actions/runs/44466791200",
+        "type": "pinned_upstream_rust_runtime_replay",
+        "claim": "Immutable Trust Tasks 0.40.0 Rust consumer execution: 2 extCritical (including handler and replay-record no-effect), 10 JWT unit, 68 HTTPS end-to-end, and 14 HTTPS pipeline tests passed; not VTI downstream or cross-language deployment evidence."
       }
     ],
     "runtime_reproduced": false
