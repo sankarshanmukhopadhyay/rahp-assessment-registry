@@ -96,6 +96,10 @@ jobs:
           print('VTI currently pins Trust Tasks 0.39, NOT 0.40; '
                 'passing this job cannot establish 0.40 consumer upgrade')
           PY
+      - name: Install VTI's declared native build dependencies
+        run: bash vti/scripts/install-build-deps.sh
+      - name: Provide VTI's declared build-memory headroom
+        uses: ./vti/.github/actions/add-swap
       - name: Exercise target-native VTI JWT negative-path tests at current baseline
         working-directory: vti
         env:
