@@ -1,0 +1,69 @@
+{
+  "schema_version": "0.1.0",
+  "case_id": "RAHP-AR-VTI-0001",
+  "title": "VTI session refusal and step-up handoff preservation",
+  "subject": {
+    "system": "OpenVTC VTI vtc-client / session and HTTPS Trust Task consumers",
+    "domain": "dtg",
+    "scope": "typed refusal preservation, step-up binding and non-authorizing outcomes across transport"
+  },
+  "proposition": "A VTC client must preserve the full trust-task-error refusal and stepUpHandoff context over session/TSP transports without granting authority to retry or resume an operation outside its original principal, purpose, context, duration or session.",
+  "source": {
+    "repository": "OpenVTC/verifiable-trust-infrastructure",
+    "revision": "05f4a26ebb3dab6302a2fb8ad0657fa259e175a3",
+    "commit_url": "https://github.com/OpenVTC/verifiable-trust-infrastructure/commit/05f4a26ebb3dab6302a2fb8ad0657fa259e175a3",
+    "pull_request": "https://github.com/OpenVTC/verifiable-trust-infrastructure/pull/2768",
+    "finding_id": "vti-session-refusal-stepup-20261118",
+    "observed_on": "2026-11-19"
+  },
+  "owners": {
+    "registry": "sankarshanmukhopadhyay/rahp-assessment-registry",
+    "current_active_issue": "https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/79",
+    "admission": "direct",
+    "handoff": "not_applicable",
+    "upstream": "OpenVTC/verifiable-trust-infrastructure",
+    "execution": "sankarshanmukhopadhyay/rahp-toolkit"
+  },
+  "lifecycle": {
+    "state": "active",
+    "updated_on": "2026-11-19",
+    "reason": "Exact source-controlled direct Registry intake, operator-mediated GitHub owner reread; not migrated monitored Toolkit case and no change to Toolkit publishers."
+  },
+  "assessment": {
+    "change_classification": "uncertain",
+    "determination": "not_assessed",
+    "basis": "Source-level upstream reported tests and live example are not independently executed RAHP consuming-path evidence; canonical assessment will preserve absent evidence as indeterminate.",
+    "independent_review": false
+  },
+  "evidence": {
+    "state": "partially_verified",
+    "sources": [
+      {
+        "url": "https://github.com/OpenVTC/verifiable-trust-infrastructure/commit/05f4a26ebb3dab6302a2fb8ad0657fa259e175a3",
+        "type": "upstream_commit",
+        "claim": "Merged VTI client transport change and reported upstream regression/e2e tests; no independent RAHP consuming-path replay or assurance determination."
+      }
+    ],
+    "runtime_reproduced": false
+  },
+  "residuals": [
+    {
+      "id": "VTI-0001-R1",
+      "status": "open",
+      "owner": "https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/79",
+      "question": "Are trust-task-error refusals and stepUpHandoff typed and non-authorizing across session/TSP, HTTPS and Parked, including wrong-purpose and target substitution?"
+    },
+    {
+      "id": "VTI-0001-R2",
+      "status": "open",
+      "owner": "https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/79",
+      "question": "Are replay, expired/stale handoff, session binding changes, ambiguous retries and unexpected step-up completion prevented from causing unauthorized execution?"
+    }
+  ],
+  "reassessment": {
+    "trigger": "Source-pinned independent consuming-path negative tests, transport changes, new step-up semantics, or corrected upstream implementation after reviewed merge.",
+    "last_verified_on": "2026-11-19",
+    "not_before_evidence": true
+  },
+  "referrals": []
+}
