@@ -170,3 +170,31 @@ Neither administrative issue creation nor the canonical controller's
 evidence-required result demonstrates specialist execution, independent
 assurance, publication exclusivity for monitored DTG sources, or rollback of
 the wider Toolkit writer fleet.
+
+## Direct-case identity binding for specialist compatibility (19 November 2026)
+
+The reviewed direct-source admission route uses a separate,
+versioned `rahp-registry-direct-intake-authority/v2` ledger. Each exact
+authorization now includes an immutable, source-controlled `case_id`
+(`RAHP-AR-...`) matching the pending intent. The live issue creator
+renders **both** `<!-- registry-assessment-key:... -->` and
+`<!-- rahp-registry-case:... -->` before its first POST. The latter
+is required by the canonical Registry-directed specialist-return
+consumer; an issue that lacks it cannot be treated as an accepted case.
+
+Historical Toolkit-transfer and generic `rahp-registry-pending-intake/v1`
+events that do not use the direct admission route retain their existing
+contracts. A direct intake without a reviewed case ID, or with an
+unapproved, withdrawn, mismatched or v1-only authorization, is rejected
+before any issue write. Replay of an existing direct owner also
+requires its exact case marker. No numeric Registry issue identifier
+is repurposed as a Toolkit execution/referral issue.
+
+The source-controlled ONDTF and VTI direct manifests are migrated
+together with the authority ledger. Their live owners, Registry
+[#47](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/47)
+and [#79](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/79),
+were reconciled to their canonical case IDs. The controlled
+`registry-outbox-replay` PR preflight now verifies those **real
+read-only owner paths**, without triggering a DPIP/Lab referral,
+importing a determination or claiming producer cutover.
