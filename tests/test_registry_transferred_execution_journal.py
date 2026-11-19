@@ -202,6 +202,9 @@ class AcceptedGroupReturnTests(unittest.TestCase):
             {**approved, "REGISTRY_RETURN_COMMIT_MESSAGE": ""},
             {**approved, "REGISTRY_RETURN_COMMIT_MESSAGE":
              "Registry-Case-88-Return-Authorization: " + "a" * 64},
+            {**approved, "REGISTRY_RETURN_COMMIT_MESSAGE":
+             "Registry-Case-88-Return-Authorization: "
+             + binding.GROUP_SHA256.replace("3582951a2f", "358295a2f")},
             {**approved, "GITHUB_ACTOR": "other"},
             {**approved, "GITHUB_REF": "refs/tags/legacy"},
         ]
