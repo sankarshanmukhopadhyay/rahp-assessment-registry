@@ -4,6 +4,8 @@
 Registry case, reviewed intake intent, canonical controller run, or assurance
 determination. Governing migration tracker: [Registry #11](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/11).
 
+> **Publication update, later on 19 November:** Monitor [PR #38](https://github.com/sankarshanmukhopadhyay/dtg-portfolio-monitor/pull/38) subsequently published authentic 18 November findings on `main` at `ee5736fa82a3c969f3c9eb055217c3404ff1815d`. The Registry [PR #81](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/pull/81) then validated current Toolkit/Registry routing parity for 38 qualifying material findings. The source-level triage below is retained as the *earlier* pre-publication finding and is not itself a normalized routing result. VTI refusal case [#79](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/79) is now admitted through explicitly governed direct intake and its canonical controller has executed with evidence-required outcome ([run #44454385308](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/actions/runs/44454385308)). Do not admit it again as a monitored duplicate.
+
 ## Source and authority
 
 The [Portfolio Monitor](https://github.com/sankarshanmukhopadhyay/dtg-portfolio-monitor)
