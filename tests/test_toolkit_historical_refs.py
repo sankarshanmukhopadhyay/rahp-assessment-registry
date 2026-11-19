@@ -13,8 +13,10 @@ REVISION = "a" * 40
 
 class HistoricalRefAuditTests(unittest.TestCase):
     def test_unguarded_workflow_is_source_exposure(self):
-        def fake_git(_repo, _op, path):
-            if path.endswith(audit.WORKFLOW):
+        def fake_git(_repo, op, *args):
+            if op == "ls-tree":
+                return audit.WORKFLOW
+            if args[-1].endswith(audit.WORKFLOW):
                 return "on:\n  workflow_dispatch:\npermissions:\n  issues: write\n"
             return "def publish(): pass"
         with patch.object(audit, "git", side_effect=fake_git):
@@ -23,8 +25,10 @@ class HistoricalRefAuditTests(unittest.TestCase):
         self.assertFalse(result["cutover_authorized"])
 
     def test_guard_does_not_certify_exclusivity(self):
-        def fake_git(_repo, _op, path):
-            if path.endswith(audit.WORKFLOW):
+        def fake_git(_repo, op, *args):
+            if op == "ls-tree":
+                return audit.WORKFLOW
+            if args[-1].endswith(audit.WORKFLOW):
                 return "on:\n  workflow_dispatch:\npermissions:\n  issues: write\n"
             return "TRANSFER_LEDGER = 1\ndef enforce_live_transfer_boundary(): pass"
         with patch.object(audit, "git", side_effect=fake_git):
@@ -32,6 +36,17 @@ class HistoricalRefAuditTests(unittest.TestCase):
         self.assertEqual(result["unfenced_source_refs"], [])
         self.assertFalse(result["server_enforced_exclusion_verified"])
         self.assertFalse(result["cutover_authorized"])
+
+    def test_retired_default_branch_path_is_not_a_fake_source_failure(self):
+        def fake_git(_repo, op, *args):
+            self.assertEqual(op, "ls-tree")
+            return ""
+        with patch.object(audit, "git", side_effect=fake_git):
+            report = audit.audit(Path("."), [("main", REVISION)])
+        self.assertEqual(report["unfenced_source_refs"], [])
+        self.assertFalse(report["refs"][0]["historical_workflow_present"])
+        self.assertFalse(report["server_enforced_exclusion_verified"])
+        self.assertFalse(report["cutover_authorized"])
 
     def test_missing_history_refuses_completion(self):
         with self.assertRaisesRegex(ValueError, "empty branch"):

@@ -38,13 +38,22 @@ def remote_refs(repo: Path) -> list[tuple[str, str]]:
 def inspect_ref(repo: Path, name: str, sha: str) -> dict:
     if not SHA.fullmatch(sha):
         raise ValueError("branch requires pinned commit")
+    # Missing *workflow path* after default-branch entrypoint rotation is
+    # expected. An invalid/unavailable commit remains a Git error and fails.
+    candidate = git(repo, "ls-tree", "--name-only", sha, "--", WORKFLOW).strip()
+    if candidate not in ("", WORKFLOW):
+        raise ValueError("historical workflow discovery returned foreign paths")
+    if not candidate:
+        return {"ref": name, "commit": sha, "historical_workflow_present": False,
+                "issues_write_declared": False, "manual_dispatch_declared": False,
+                "live_transfer_guard_present": None, "unfenced_source_exposure": False}
     workflow = git(repo, "show", f"{sha}:{WORKFLOW}")
     publisher = git(repo, "show", f"{sha}:{PUBLISHER}")
     issue_write = bool(WRITE.search(workflow))
     manual = bool(re.search(r"(?m)^\s*workflow_dispatch\s*:", workflow))
     guarded = ("enforce_live_transfer_boundary" in publisher
                and "TRANSFER_LEDGER" in publisher)
-    return {"ref": name, "commit": sha,
+    return {"ref": name, "commit": sha, "historical_workflow_present": True,
             "issues_write_declared": issue_write,
             "manual_dispatch_declared": manual,
             "live_transfer_guard_present": guarded,
@@ -68,7 +77,7 @@ def audit(repo: Path, refs: list[tuple[str, str]]) -> dict:
         "cutover_authorized": False,
         "limitations": [
             "Excludes tags, deleted refs, in-flight jobs and other writer workflows.",
-            "Does not verify token permissions or real historic dispatch denial.",
+            "Does not verify token permissions, registered workflow status or real historic dispatch denial.",
             "Source guard presence does not prove atomic or server-enforced write exclusion."
         ]
     }

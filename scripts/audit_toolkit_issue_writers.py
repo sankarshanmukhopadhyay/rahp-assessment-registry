@@ -19,10 +19,10 @@ EXPECTED = {
         "consumer": ["tools/dpip_handoff.py", "tools/dpip_return_reconcile.py",
                      "tools/dpip_lifecycle_reconcile.py", "tools/evidence_provenance_router.py"],
     },
-    "dtg-portfolio-materiality-handoff.yml": {
+    "dtg-materiality-main.yml": {
         "publisher": 3, "incident": 0, "consumer": ["tools/dpip_handoff.py"],
     },
-    "instance-watch.yml": {
+    "instance-monitor-main.yml": {
         "publisher": 4, "incident": 1, "consumer": ["tools/dtg_repository_review_worker.py"],
     },
     "review-workers.yml": {
