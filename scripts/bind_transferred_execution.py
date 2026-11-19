@@ -19,6 +19,14 @@ REGISTRY = "sankarshanmukhopadhyay/rahp-assessment-registry"
 TOOLKIT = "sankarshanmukhopadhyay/rahp-toolkit"
 ENGINE_REVISION = "70298566dc897669e22bf37759843d6b7c0597d2"
 CASE_ID = "RAHP-AR-DTG-0002"
+MONITOR_REPOSITORY = "sankarshanmukhopadhyay/dtg-portfolio-monitor"
+MONITOR_REVISION = "7e2813c8daf867a21e4064513cc83612726aeb44"
+GROUP_SHA256 = "3fc843eeaf48f0023582951a2f67a15638bd6c21e929e92765b1394f83718d4c"
+SCOPE_SHA256 = "c60fec82a9671c8080738b5df6afa872dfba7cf08a9e801177322cafeada1c20"
+FINDING_IDS = (
+    "0add1f4cc0f048ce6bfc", "29e39a0329123d8839a6",
+    "a60eaffaf3cbc1394553", "acc9772126b1a3820240",
+)
 KEY = "dtg:portfolio:combined:spec-dependency-alignment"
 TK_ISSUE = f"https://github.com/{TOOLKIT}/issues/272"
 REG_ISSUE = f"https://github.com/{REGISTRY}/issues/88"
@@ -45,7 +53,11 @@ def bind(case, transfer_ledger, spec, evidence_ledger, result, *,
     transfer = rows[0]
     if any((transfer.get(k) != v) for k, v in {
         "state": "accepted_group", "assessment_key": KEY,
-        "toolkit_issue_url": TK_ISSUE, "registry_issue_url": REG_ISSUE
+        "toolkit_issue_url": TK_ISSUE, "registry_issue_url": REG_ISSUE,
+        "monitor_revision": MONITOR_REVISION,
+        "group_sha256": GROUP_SHA256,
+        "finding_ids": list(FINDING_IDS),
+        "maintainer_scope_sha256": SCOPE_SHA256
     }.items()):
         raise TransferBindingError("source ownership is not the accepted group")
     source = case.get("source")
@@ -58,7 +70,8 @@ def bind(case, transfer_ledger, spec, evidence_ledger, result, *,
             or owners.get("current_active_issue") != REG_ISSUE
             or owners.get("historical_source_issue") != TK_ISSUE):
         raise TransferBindingError("Registry case and Toolkit execution namespaces conflict")
-    if (source.get("revision") != transfer.get("monitor_revision")
+    if (source.get("repository") != MONITOR_REPOSITORY
+            or source.get("revision") != transfer.get("monitor_revision")
             or source.get("group_sha256") != transfer.get("group_sha256")
             or source.get("observed_on") != transfer.get("snapshot_date")
             or source.get("finding_ids") != transfer.get("finding_ids")
