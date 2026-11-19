@@ -65,3 +65,39 @@ use this source/execution distinction and add authenticated, source-pinned
 return routing, durable acknowledgments, conflict handling and owner
 reconciliation. Do not mistake a matching SHA-256 hash of locally supplied
 data for external authority.
+
+## Accepted monitored source group: Registry #88
+
+The same [canonical assessment workflow](../.github/workflows/registry-canonical-assessment.yml)
+also executes the accepted, source-scoped historical Toolkit #272 → Registry
+[#88](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/88)
+handoff as a **separate execution case**, without reusing the direct-intake
+binding contract. The [source-scoped specification](../ops/assessments/dtg-spec-dependency-transferred.spec.json)
+is pinned to the original four-finding Portfolio Monitor commit, rather than
+claiming a VTI target-native consuming-path run. The
+[evidence ledger](../ops/assessments/dtg-spec-dependency-transferred.ledger.json)
+is empty because the unresolved JWT, critical-extension and purpose-bound
+consumer obligations have not been independently demonstrated for VTI 0.40.
+
+The [transferred execution binder](../scripts/bind_transferred_execution.py)
+requires the separately checked-out Toolkit `main` ledger's exact
+`accepted_group` record, its authenticated source-scope digest, the
+four original finding identities, original Monitor revision, Registry case #88,
+and historical Toolkit issue #272. The immutable canonical Toolkit controller
+revision remains independently pinned. A passing receipt retains its own
+Toolkit ledger commit, distinct case and execution identifiers, and exact
+result digest. The result must be **INDETERMINATE / evidence-required**.
+
+The [negative tests](../tests/test_transferred_execution_binding.py)
+reject reserved or substituted ownership, simultaneous case/source and ledger
+rewrites, foreign issue-number substitution, a later two-finding subset
+presented as the original four, forged positive evidence or outcome, and an
+unadmitted specialist return. The artifact contains no authorization to
+dispatch Toolkit workers or import a Registry assurance determination.
+This is attributable **case-to-engine execution**, not a demonstration that a
+Registry-addressed reviewer, controller or DPIP return has operated.
+
+For full producer migration, historical writer permission exclusion, a real
+eligible consumer mapping, and governed reversal remain under active
+[Registry #77](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/77).
+The closed #11 tracker preserves original gates but does not accept them.

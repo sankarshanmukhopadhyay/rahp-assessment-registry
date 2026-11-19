@@ -1,0 +1,55 @@
+{
+  "run": {
+    "lineage_prefix": "registry:RAHP-AR-DTG-0002:3fc843eeaf48f0023582951a2f67a15638bd6c21e929e92765b1394f83718d4c"
+  },
+  "target": {
+    "repository": "sankarshanmukhopadhyay/dtg-portfolio-monitor",
+    "revision": "7e2813c8daf867a21e4064513cc83612726aeb44"
+  },
+  "resources": {},
+  "subject": {
+    "type": "monitored-source-materiality",
+    "id": "RAHP-AR-DTG-0002",
+    "components": [
+      "0add1f4cc0f048ce6bfc",
+      "29e39a0329123d8839a6",
+      "a60eaffaf3cbc1394553",
+      "acc9772126b1a3820240"
+    ]
+  },
+  "assurance_contract": {
+    "material": true,
+    "specialist_required": false,
+    "scope": "Source-pinned canonical Toolkit execution for the accepted four-finding Trust Tasks monitoring group, bound to Registry #88. Confirm missing target-native VTI 0.40 JWT/critical-extension/purpose consuming-path assurance evidence without importing a determination.",
+    "non_scope": "No Trust Tasks 0.40 target-native consumer migration, independent cross-language conformance, specialist applicability determination, issue-number dispatch, new source-epoch acceptance, Registry case PASS, or universal publisher cutover.",
+    "required_evidence": [
+      "DTG-0002-R1",
+      "DTG-0002-R2"
+    ],
+    "assurance_propositions": [
+      "A representative VTI consumer upgrading from Trust Tasks 0.39 to 0.40 must preserve JWT public-type compatibility and reject unauthorized or malformed task handling.",
+      "Joint JWT transition, extCritical enforcement and room-bound purpose semantics must not admit unsupported authorization across runtime or transport boundaries."
+    ],
+    "personas": [
+      "VTI relying application integrator",
+      "Trust Task runtime maintainer",
+      "external-case assessment reviewer"
+    ],
+    "scenarios": [
+      "JWT public-type migration 0.39 to 0.40",
+      "critical-extension rejection with absent or invalid handler",
+      "room purpose mismatch and replay on VTI consuming path"
+    ],
+    "harms": [
+      "incorrect authorization after incompatible dependency upgrade",
+      "unverifiable or silently accepted purpose/critical-extension failure"
+    ],
+    "actions": [
+      {
+        "surface": "evidence-test",
+        "action": "Produce pinned VTI-target-native migration and adversarial consuming-path traces for DTG-0002-R1 and DTG-0002-R2.",
+        "acceptance_criterion": "Source-specific required evidence is independently reproducible, attributable, and reconciled before a substantive RAHP determination is considered."
+      }
+    ]
+  }
+}
