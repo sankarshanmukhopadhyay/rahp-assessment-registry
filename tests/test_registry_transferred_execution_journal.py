@@ -182,6 +182,34 @@ class AcceptedGroupReturnTests(unittest.TestCase):
         with self.assertRaisesRegex(journal.ReturnError, "malformed"):
             self.call(rec, comments=lambda: ["invalid"])
 
+    def test_only_owner_main_manual_or_exact_epoch_push_can_publish(self):
+        good = {
+            "GITHUB_REF": "refs/heads/main",
+            "GITHUB_REPOSITORY": binding.REGISTRY,
+            "GITHUB_ACTOR": "sankarshanmukhopadhyay",
+            "GITHUB_EVENT_NAME": "workflow_dispatch",
+        }
+        journal.require_write_context(good)
+        approved = {**good, "GITHUB_EVENT_NAME": "push",
+                    "REGISTRY_RETURN_COMMIT_MESSAGE":
+                    "Registry-Case-88-Return-Authorization: " + binding.GROUP_SHA256}
+        journal.require_write_context(approved)
+        negatives = [
+            {**good, "GITHUB_REF": "refs/heads/old-branch"},
+            {**good, "GITHUB_REPOSITORY": binding.TOOLKIT},
+            {**good, "GITHUB_ACTOR": "unknown-actor"},
+            {**good, "GITHUB_EVENT_NAME": "pull_request"},
+            {**approved, "REGISTRY_RETURN_COMMIT_MESSAGE": ""},
+            {**approved, "REGISTRY_RETURN_COMMIT_MESSAGE":
+             "Registry-Case-88-Return-Authorization: " + "a" * 64},
+            {**approved, "GITHUB_ACTOR": "other"},
+            {**approved, "GITHUB_REF": "refs/tags/legacy"},
+        ]
+        for bad in negatives:
+            with self.subTest(bad=bad), self.assertRaisesRegex(
+                    journal.ReturnError, "owner-authorized"):
+                journal.require_write_context(bad)
+
     def test_no_post_response_without_remote_observation(self):
         rec = self.record()
         with self.assertRaisesRegex(journal.ReturnError, "not durably"):
