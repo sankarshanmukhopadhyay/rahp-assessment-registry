@@ -1,4 +1,5 @@
 import importlib.util
+import subprocess
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -37,8 +38,8 @@ class HistoricalRefAuditTests(unittest.TestCase):
             audit.audit(Path("."), [])
 
     def test_missing_git_object_refuses_completion(self):
-        with patch.object(audit, "git", side_effect=subprocess_error()):
-            with self.assertRaises(Exception):
+        with patch.object(audit, "git", side_effect=subprocess.CalledProcessError(1, ["git", "show"])):
+            with self.assertRaises(subprocess.CalledProcessError):
                 audit.audit(Path("."), [("missing", REVISION)])
 
     def test_unpinned_commit_rejected(self):
@@ -49,11 +50,6 @@ class HistoricalRefAuditTests(unittest.TestCase):
         with patch.object(audit, "git", return_value="refs/remotes/origin/old invalid\n"):
             with self.assertRaisesRegex(ValueError, "invalid remote"):
                 audit.remote_refs(Path("."))
-
-
-def subprocess_error():
-    import subprocess
-    return subprocess.CalledProcessError(1, ["git", "show"])
 
 
 if __name__ == "__main__":
