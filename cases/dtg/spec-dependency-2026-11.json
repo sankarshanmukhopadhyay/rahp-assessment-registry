@@ -80,6 +80,16 @@
         "url": "https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/actions/runs/44466791200",
         "type": "pinned_upstream_rust_runtime_replay",
         "claim": "Immutable Trust Tasks 0.40.0 Rust consumer execution: 2 extCritical (including handler and replay-record no-effect), 10 JWT unit, 68 HTTPS end-to-end, and 14 HTTPS pipeline tests passed; not VTI downstream or cross-language deployment evidence."
+      },
+      {
+        "url": "https://github.com/OpenVTC/verifiable-trust-infrastructure/blob/66a7c2aa362e82cdbbb3b384850d73fa64d97848/Cargo.toml",
+        "type": "pinned_downstream_dependency_manifest",
+        "claim": "At VTI immutable main revision 66a7c2a, Trust Tasks Rust and HTTPS crates still declare 0.39 versions, not upstream 0.40, while VTI separately declares jsonwebtoken 11.1.0 and jsonschema 0.60."
+      },
+      {
+        "url": "https://github.com/OpenVTC/verifiable-trust-infrastructure/blob/66a7c2aa362e82cdbbb3b384850d73fa64d97848/Cargo.lock",
+        "type": "pinned_downstream_dependency_resolution",
+        "claim": "Current VTI lock resolves trust-tasks-rs/https 0.39.0, jsonwebtoken 10.4.0/11.1.0 and jsonschema 0.49.9/0.60.2; a consumer migration to upstream 0.40 is not established."
       }
     ],
     "runtime_reproduced": false
@@ -89,7 +99,7 @@
       "id": "DTG-0002-R1",
       "status": "open",
       "owner": "https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/88",
-      "question": "Source-level classification of all four original findings is recorded. Obtain reproducible target-native consumer evidence for the declared JWT public API break and 0.40.0 cross-runtime critical-extension behavior; preserve #1194 as independent purpose-of-use authority."
+      "question": "Target VTI immutable 66a7c2a still resolves Trust Tasks 0.39 plus jsonwebtoken 10/11 and jsonschema 0.49/0.60. Reproduce a representative VTI consumer upgrade to 0.40, proving JWT v10→v11 public-type adaptation, compilation and negative runtime authorization. Keep separately verified upstream 0.40 Rust extCritical/JWT results, but no VTI-target PASS."
     },
     {
       "id": "DTG-0002-R2",

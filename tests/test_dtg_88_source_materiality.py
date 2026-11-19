@@ -83,6 +83,22 @@ class DTGSourceMaterialityTests(unittest.TestCase):
                          ORIGINAL["protected_issue_urls"])
         self.assertTrue(all(x["status"] == "open" for x in CASE["residuals"]))
 
+    def test_vti_downstream_has_a_distinct_observed_dependency_gap(self):
+        target = REVIEW["downstream_vti_dependency_observation"]
+        self.assertEqual(target["revision"],
+                         "66a7c2aa362e82cdbbb3b384850d73fa64d97848")
+        self.assertEqual(target["lockfile_versions"]["trust-tasks-https"],
+                         ["0.39.0"])
+        self.assertEqual(target["lockfile_versions"]["trust-tasks-rs"],
+                         ["0.39.0"])
+        self.assertEqual(target["lockfile_versions"]["jsonwebtoken"],
+                         ["10.4.0", "11.1.0"])
+        self.assertEqual(target["lockfile_versions"]["jsonschema"],
+                         ["0.49.9", "0.60.2"])
+        self.assertFalse(target["target_native_runtime_reproduced"])
+        self.assertEqual(CASE["assessment"]["determination"], "not_assessed")
+        self.assertFalse(CASE["evidence"]["runtime_reproduced"])
+
     def test_spoofed_post_cutover_scope_is_not_acceptance(self):
         digest = REVIEW["later_epoch"]["source_group_sha256"]
         forged = [{"id": 8, "body": "<!-- rahp-registry-epoch-scope:v1:accept:" +

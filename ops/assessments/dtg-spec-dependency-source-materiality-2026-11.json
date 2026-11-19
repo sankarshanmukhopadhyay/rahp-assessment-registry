@@ -111,5 +111,32 @@
     "https_pipeline_tests_passed": 14,
     "failed_tests": 0,
     "assurance_limit": "Upstream source-native Rust behavior only; not cross-language implementation conformance, representative VTI JWT-v10 consumer migration, deployment behavior or independent RAHP assurance."
+  },
+  "downstream_vti_dependency_observation": {
+    "repository": "OpenVTC/verifiable-trust-infrastructure",
+    "revision": "66a7c2aa362e82cdbbb3b384850d73fa64d97848",
+    "source_manifest": "Cargo.toml",
+    "source_lockfile": "Cargo.lock",
+    "trust_tasks_rs_declared": "0.39.0",
+    "trust_tasks_https_declared": "0.39",
+    "lockfile_versions": {
+      "trust-tasks-rs": [
+        "0.39.0"
+      ],
+      "trust-tasks-https": [
+        "0.39.0"
+      ],
+      "jsonwebtoken": [
+        "10.4.0",
+        "11.1.0"
+      ],
+      "jsonschema": [
+        "0.49.9",
+        "0.60.2"
+      ]
+    },
+    "upstream_issue_url": "https://github.com/OpenVTC/verifiable-trust-infrastructure/issues/2655",
+    "interpretation": "At this exact VTI source revision, VTI still consumes Trust Tasks 0.39 and resolves two JSON Web Token and JSON Schema majors. The upstream 0.40.0 breaking public type transition is not demonstrated as adopted or interoperable by VTI. This evidence is a source/lockfile dependency observation; downstream runtime tests were not executed.",
+    "target_native_runtime_reproduced": false
   }
 }
