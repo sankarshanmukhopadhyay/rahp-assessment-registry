@@ -1,0 +1,180 @@
+name: Registry accepted-group canonical execution return (controlled)
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/registry-transferred-execution-return.yml'
+      - 'scripts/registry_transferred_execution_journal.py'
+      - 'scripts/bind_transferred_execution.py'
+      - 'tests/test_registry_transferred_execution_journal.py'
+      - 'tests/test_transferred_execution_binding.py'
+      - 'ops/assessments/dtg-spec-dependency-transferred.*.json'
+      - 'cases/dtg/spec-dependency-2026-11.json'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/registry-transferred-execution-return.yml'
+      - 'scripts/registry_transferred_execution_journal.py'
+      - 'scripts/bind_transferred_execution.py'
+      - 'tests/test_registry_transferred_execution_journal.py'
+      - 'tests/test_transferred_execution_binding.py'
+      - 'ops/assessments/dtg-spec-dependency-transferred.*.json'
+      - 'cases/dtg/spec-dependency-2026-11.json'
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: 'Only on main: publish or replay exact evidence-required Toolkit execution on existing Registry #88'
+        type: boolean
+        required: true
+        default: false
+concurrency:
+  group: registry-case-publication
+  cancel-in-progress: false
+
+jobs:
+  qualify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      issues: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: sankarshanmukhopadhyay/rahp-toolkit
+          ref: 70298566dc897669e22bf37759843d6b7c0597d2
+          path: toolkit
+          persist-credentials: false
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: sankarshanmukhopadhyay/rahp-toolkit
+          ref: main
+          path: toolkit-authority
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: '3.12'
+      - run: python3 -m pip install -r toolkit/requirements.txt
+      - name: Prove source and return false-success boundaries
+        run: |
+          python3 -m unittest discover -s tests -p 'test_transferred_execution_binding.py' -v
+          python3 -m unittest discover -s tests -p 'test_registry_transferred_execution_journal.py' -v
+      - name: Execute real Toolkit controller and qualify read-only Registry case return
+        shell: bash
+        env:
+          REGISTRY_EXECUTION_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          engine_rev=70298566dc897669e22bf37759843d6b7c0597d2
+          [[ "$(git -C toolkit rev-parse HEAD)" = "$engine_rev" ]]
+          authority_rev="$(git -C toolkit-authority rev-parse HEAD)"
+          mkdir -p build/registry-transferred-execution
+          printf '%s\n' "$authority_rev" > build/registry-transferred-execution/authority-revision
+          python3 toolkit/tools/autonomous_assurance_controller.py \
+            --spec ops/assessments/dtg-spec-dependency-transferred.spec.json \
+            --ledger ops/assessments/dtg-spec-dependency-transferred.ledger.json \
+            --machine-output build/registry-transferred-execution/result.json \
+            --human-output build/registry-transferred-execution/result.md
+          python3 scripts/bind_transferred_execution.py \
+            --case cases/dtg/spec-dependency-2026-11.json \
+            --transfer-ledger toolkit-authority/instances/dtg/registry-transfers.json \
+            --spec ops/assessments/dtg-spec-dependency-transferred.spec.json \
+            --evidence-ledger ops/assessments/dtg-spec-dependency-transferred.ledger.json \
+            --result build/registry-transferred-execution/result.json \
+            --engine-revision "$engine_rev" \
+            --transfer-ledger-revision "$authority_rev" \
+            --out build/registry-transferred-execution/binding.json
+          python3 scripts/registry_transferred_execution_journal.py \
+            --case cases/dtg/spec-dependency-2026-11.json \
+            --transfer-ledger toolkit-authority/instances/dtg/registry-transfers.json \
+            --spec ops/assessments/dtg-spec-dependency-transferred.spec.json \
+            --evidence-ledger ops/assessments/dtg-spec-dependency-transferred.ledger.json \
+            --result build/registry-transferred-execution/result.json \
+            --binding build/registry-transferred-execution/binding.json \
+            --engine-revision "$engine_rev" \
+            --transfer-ledger-revision "$authority_rev" \
+            --receipt build/registry-transferred-execution/read-only-receipt.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          result=json.loads(Path('build/registry-transferred-execution/read-only-receipt.json').read_text())
+          assert result['state'] in ('pending', 'acknowledged')
+          assert result['case_determination_imported'] is False
+          assert result['toolkit_legacy_issue_worker_dispatched'] is False
+          assert result['specialist_return_authenticated'] is False
+          assert result['controller_cutover_qualified'] is False
+          print('PASS Registry #88 read-only canonical return qualification; no legacy issue writes')
+          PY
+      - name: Retain real canonical result, exact binding and read-only delivery receipt
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: registry-88-canonical-return-qualification
+          path: build/registry-transferred-execution/
+          if-no-files-found: warn
+
+  publish:
+    needs: qualify
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      github.actor == 'sankarshanmukhopadhyay' &&
+      (
+        (github.event_name == 'workflow_dispatch' && inputs.apply == true) ||
+        (github.event_name == 'push' &&
+         contains(github.event.head_commit.message,
+         'Registry-Case-88-Return-Authorization: 3fc843eeaf48f0023582951a2f67a15638bd6c21e929e92765b1394f83718d4c'))
+      )
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: sankarshanmukhopadhyay/rahp-toolkit
+          ref: main
+          path: toolkit-authority
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: registry-88-canonical-return-qualification
+          path: build/registry-transferred-execution
+      - name: Deny authority drift and durably return only the existing qualified result
+        shell: bash
+        env:
+          REGISTRY_EXECUTION_TOKEN: ${{ github.token }}
+          REGISTRY_RETURN_COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+        run: |
+          set -euo pipefail
+          authority_rev="$(cat build/registry-transferred-execution/authority-revision)"
+          [[ "$authority_rev" = "$(git -C toolkit-authority rev-parse HEAD)" ]]
+          python3 scripts/registry_transferred_execution_journal.py \
+            --case cases/dtg/spec-dependency-2026-11.json \
+            --transfer-ledger toolkit-authority/instances/dtg/registry-transfers.json \
+            --spec ops/assessments/dtg-spec-dependency-transferred.spec.json \
+            --evidence-ledger ops/assessments/dtg-spec-dependency-transferred.ledger.json \
+            --result build/registry-transferred-execution/result.json \
+            --binding build/registry-transferred-execution/binding.json \
+            --engine-revision 70298566dc897669e22bf37759843d6b7c0597d2 \
+            --transfer-ledger-revision "$authority_rev" \
+            --receipt build/registry-transferred-execution/published-receipt.json \
+            --apply
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          receipt=json.loads(Path('build/registry-transferred-execution/published-receipt.json').read_text())
+          assert receipt['state'] == 'acknowledged' and receipt.get('comment_url')
+          assert receipt['case_determination_imported'] is False
+          assert receipt['toolkit_legacy_issue_worker_dispatched'] is False
+          assert receipt['controller_cutover_qualified'] is False
+          print('ACKNOWLEDGED existing Registry #88 execution only, no assurance import')
+          PY
+      - name: Retain authenticated Registry comment acknowledgment
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: registry-88-canonical-return-acknowledgment
+          path: build/registry-transferred-execution/published-receipt.json
+          if-no-files-found: warn
