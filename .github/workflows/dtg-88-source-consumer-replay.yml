@@ -1,0 +1,61 @@
+name: DTG #88 pinned Trust Tasks runtime replay
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/dtg-88-source-consumer-replay.yml'
+      - 'ops/assessments/dtg-spec-dependency-source-materiality-2026-11.json'
+      - 'cases/dtg/spec-dependency-2026-11.json'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: dtg-88-pinned-runtime-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+jobs:
+  upstream-runtime-replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Checkout exact upstream 0.40.0 release commit
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: trustoverip/dtgwg-trust-tasks-tf
+          ref: 69814c5ef60b5fa2d75fe2687efad1d12d34283f
+          path: trust-tasks
+          persist-credentials: false
+      - name: Confirm immutable source and matching release contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$(git -C trust-tasks rev-parse HEAD)" = 69814c5ef60b5fa2d75fe2687efad1d12d34283f ]]
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          record = json.loads(Path('ops/assessments/dtg-spec-dependency-source-materiality-2026-11.json').read_text())
+          assert record['case_id'] == 'RAHP-AR-DTG-0002'
+          assert record['group_assurance_determination'] == 'not_assessed'
+          release = next(f for f in record['source_findings'] if f['finding_id'] == 'acc9772126b1a3820240')
+          assert release['source_tag_object'] == '0d9d522a6025423ac77836ca6b40ce2893056d66'
+          root = Path('trust-tasks')
+          https = (root / 'trust-tasks-https/Cargo.toml').read_text()
+          rs = (root / 'trust-tasks-rs/Cargo.toml').read_text()
+          assert 'version = "0.40.0"' in https
+          assert 'version = "0.40.0"' in rs
+          assert 'jsonwebtoken = { version = "11"' in https
+          assert 'jsonschema = { version = "0.60"' in rs
+          examples = json.loads((root / 'fixtures/consume/ext-critical.json').read_text())
+          assert any(x.get('expect') == 'unsupportedExtension' for x in examples['cases'])
+          assert any(x.get('expect') == 'malformedRequest' for x in examples['cases'])
+          print('PASS exact 0.40.0 release source, dependency contracts and adversarial vector coverage')
+          PY
+      - name: Execute actual Rust consume_inbound extCritical negative cases
+        working-directory: trust-tasks
+        env:
+          CARGO_TERM_COLOR: never
+        run: cargo test --locked -p trust-tasks-rs --test ext_critical -- --nocapture
+      - name: Execute actual HTTPS JWT-feature runtime tests
+        working-directory: trust-tasks
+        env:
+          CARGO_TERM_COLOR: never
+        run: cargo test --locked -p trust-tasks-https --features jwt --tests -- --nocapture
