@@ -93,8 +93,8 @@ class PublicationInventoryTests(unittest.TestCase):
     def test_rollback_verification_is_not_an_issue_writer(self):
         def exercise(path):
             (path / "validate.yml").write_text(
-                "steps:\\n  - run: python3 " + audit.PUBLISHER +
-                " --verify-transfer-rollback\\n"
+                "steps:\n  - run: python3 " + audit.PUBLISHER +
+                " --verify-transfer-rollback\n"
             )
             errors, report = audit.audit(path, REVISION)
             self.assertEqual(errors, [])
