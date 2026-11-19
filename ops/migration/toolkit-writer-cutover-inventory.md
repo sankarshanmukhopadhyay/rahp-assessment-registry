@@ -37,15 +37,43 @@ real monitored input, and run the authorized cutover only after independent
 review and rollback disposition. No new production source is admitted by this
 inventory.
 
+## Source and consumer recheck (19 November 2026)
+
+The verified GitHub `main` heads remain Toolkit
+`35035303c830c68e7cb759195fb223b0ff9e4255` and Registry
+`70affaa3797bdcd527a24b50f27ac94d71202cb7`. The live
+`instances/dtg/registry-transfers.json` still has an empty `transfers`
+array. These are observation-time facts, not durable writer exclusion.
+
+Both committed Registry cases,
+[`RAHP-AR-DTG-0001`](../../cases/dtg/network-answer-proof-2026-11.json)
+and [`RAHP-AR-ONDTF-0001`](../../cases/ondtf/emergency-authority-v1.json),
+have empty `referrals` arrays and `not_assessed` determinations. Neither
+is a genuine admitted Registry-directed DPIP/Lab return candidate. Toolkit
+#272 remains ineligible for actual combined-review/DPIP dispatch under the
+canonical selectors established by Registry #71/#72. Search results showing
+other Toolkit issues with `assessment-required` do not establish a Registry
+admission, dispatch authority, or specialist referral.
+
+**Stop disposition:** The manual Registry successor workflow's read-only
+nonterminal-run check observes current quiescence but cannot freeze future
+Toolkit dispatch or fence older workflow code. No verified, enforceable
+future-dispatch freeze and drain mechanism was established at this checkpoint.
+Do not write the `reserved_group` ledger entry or invoke `apply=true`
+on this evidence. For G4, admit a *separate* source-pinned specialist
+proposition only after actual referral scope, target acceptance and Toolkit
+controller reconciliation are demonstrable. No G1–G6 gate changes state by
+virtue of this recheck.
+
 ## Controlled #272 transaction rehearsal: mandatory stop conditions
 
 This is an **operator sequence**, not a live cutover command. Run it only
 against the original 2026-11-16 four-finding source pins and exact maintainer
 scope. The Toolkit transfer ledger must remain empty until the required
-exclusion and consumer evidence has been obtained. The two draft PRs
+exclusion and consumer evidence has been obtained. The merged safeguards
 ([Toolkit #1218](https://github.com/sankarshanmukhopadhyay/rahp-toolkit/pull/1218),
 [Registry #67](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/pull/67))
-are preparatory safeguards, not authorization to activate.
+are preparatory controls, not authorization to activate.
 
 1. **Inventory and freeze.** Re-read both `main` commits and the six
    workflow/nine effectful publisher inventory. Establish a documented means
