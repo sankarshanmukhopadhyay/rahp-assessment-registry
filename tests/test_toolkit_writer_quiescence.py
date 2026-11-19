@@ -76,7 +76,7 @@ class ToolkitWriterQuiescenceTests(unittest.TestCase):
     def test_total_and_pagination_drift_fail_closed(self):
         def fetch(url):
             if "status=queued" in url:
-                if "page=1" in url:
+                if url.endswith("&page=1"):
                     return {"total_count": 101, "workflow_runs": [
                         {"id": i + 1, "path": ".github/workflows/validate.yml",
                          "status": "queued"} for i in range(100)]}
@@ -90,7 +90,7 @@ class ToolkitWriterQuiescenceTests(unittest.TestCase):
     def test_repeated_run_identity_across_pages_fails_closed(self):
         def fetch(url):
             if "status=queued" in url:
-                if "page=1" in url:
+                if url.endswith("&page=1"):
                     return {"total_count": 101, "workflow_runs": [
                         {"id": i + 1, "path": ".github/workflows/validate.yml",
                          "status": "queued"} for i in range(100)]}
@@ -104,7 +104,7 @@ class ToolkitWriterQuiescenceTests(unittest.TestCase):
     def test_consistent_multipage_inventory_is_accepted_as_observation(self):
         def fetch(url):
             if "status=queued" in url:
-                if "page=1" in url:
+                if url.endswith("&page=1"):
                     return {"total_count": 101, "workflow_runs": [
                         {"id": i + 1, "path": ".github/workflows/validate.yml",
                          "status": "queued"} for i in range(100)]}
