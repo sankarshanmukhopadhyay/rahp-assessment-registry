@@ -24,7 +24,8 @@ class TransferredBindingTests(unittest.TestCase):
             "monitor_revision": src["revision"],
             "snapshot_date": src["observed_on"],
             "group_sha256": src["group_sha256"],
-            "finding_ids": copy.deepcopy(src["finding_ids"])
+            "finding_ids": copy.deepcopy(src["finding_ids"]),
+            "maintainer_scope_sha256": binding.SCOPE_SHA256
         }]}
 
     def result(self):
@@ -113,6 +114,27 @@ class TransferredBindingTests(unittest.TestCase):
             self.make(case=case)
         with self.assertRaises(binding.TransferBindingError):
             self.make(evidence={"requirements": [{"claim": "PASS"}]})
+
+    def test_coordinated_case_and_transfer_substitution_refused(self):
+        case = copy.deepcopy(self.case)
+        transfer = copy.deepcopy(self.transfer)
+        case["source"]["group_sha256"] = "d" * 64
+        transfer["transfers"][0]["group_sha256"] = "d" * 64
+        spec = copy.deepcopy(self.spec)
+        spec["run"]["lineage_prefix"] = "registry:" + binding.CASE_ID + ":" + "d" * 64
+        result = self.result()
+        result["correlation_key"] = spec["run"]["lineage_prefix"]
+        result["lineage"]["run"] = copy.deepcopy(spec["run"])
+        with self.assertRaises(binding.TransferBindingError):
+            self.make(case=case, transfer=transfer, spec=spec, result=result)
+        case = copy.deepcopy(self.case)
+        spec = copy.deepcopy(self.spec)
+        case["source"]["repository"] = "attacker/monitor"
+        spec["target"]["repository"] = "attacker/monitor"
+        result = self.result()
+        result["source_pins"] = [copy.deepcopy(spec["target"])]
+        with self.assertRaises(binding.TransferBindingError):
+            self.make(case=case, spec=spec, result=result)
 
     def test_direct_case_is_not_silently_accepted(self):
         case = copy.deepcopy(self.case)
