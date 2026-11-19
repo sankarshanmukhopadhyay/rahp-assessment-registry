@@ -84,3 +84,39 @@ Per the 17 November 2026 decision in Registry #11, repository maintainer `sankar
 ## November 17 guarded-publication evidence checkpoint
 
 The real Toolkit DTG workflow [run #44124340556](https://github.com/sankarshanmukhopadhyay/rahp-toolkit/actions/runs/44124340556) completed after Toolkit #1217 merged. The archived `registry-publish-selection.json` explicitly reports `legacy_no_transfer`, three original publication batch paths, three retained events and no held event. The controller, combined-review and DPIP publication steps completed. This verifies the empty-ledger compatibility invariant; **no Registry #272 successor was created, no current source observation was acknowledged and no accepted-group partition was exercised**. The transfer ledger remains empty. Maintain all six gates as open until live source-specific suppression, numeric consumer compatibility and rollback without dual writers are proven.
+
+## Tranches A–D operational disposition (19 November 2026)
+
+**Governance state: no migration gate accepted.** Registry `main`
+`c6d07414c6aa1ee8285148fbff2ae9c077310d69`; Toolkit `main`
+`35035303c830c68e7cb759195fb223b0ff9e4255`; Toolkit transfer
+ledger `{"schema":"rahp-registry-transfers/v1","transfers":[]}`.
+Registry [#75](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/pull/75)
+merged with `validate`, monitored delivery `preflight` and DCO green;
+it rejects inconsistent GitHub Actions `total_count`/returned-row
+inventories. This is a more trustworthy **point-in-time observation**, not
+a future-dispatch exclusion or distributed lock.
+
+| Tranche | Positive existing evidence | Unmet operational criterion / disposition |
+| --- | --- | --- |
+| A: exclusive source producer | Toolkit #1218 partition/ledger guard, Registry #67/#75 negative-path and quiescence tests, Registry #64/#65 owner/ACK recovery rehearsal | **Blocked:** stop future affected Toolkit dispatches, fence older code and drain live writers without interrupting unrelated Toolkit publication. No active reservation, successor #272 POST, ACK or accepted switch. |
+| B: Registry → canonical Toolkit execution and reviewer correlation | Direct Registry case #47 executed a source-pinned Toolkit controller and retained an `INDETERMINATE / evidence-required` result. #71/#72 verified #272 ineligible first-party consumers under deny-write replay. | **Partial / blocked for migrated #272:** Registry identity to actual execution/reviewer/DPIP authorization remains unimplemented and unexecuted; no Registry number may masquerade as a Toolkit issue. |
+| C: DPIP/Lab real specialist interoperability | Read-only portable-result and persisted epoch qualification, historical #304/#305 negative tests | **Blocked:** committed Registry cases #4 and #47 have no admitted referrals; no authenticated live Registry-targeted accepted specialist return or Toolkit controller reconciliation. Do not alter #272 labels just to force dispatch. |
+| D: real cycle and governed reverse transfer | Historical shadow/parity evidence and simulated interruption/replay | **Blocked:** no nonempty accepted ledger, exclusive live cycle, durable Registry writer fence or authorized reverse-transfer proof. Never delete reserved/accepted records as rollback. |
+
+**Materiality readiness:** the Monitor `main` at
+`7e2813c8daf867a21e4064513cc83612726aeb44` has committed
+November finding snapshots dated 13 and 16 November; none newer was
+present on 19 November. Upstream VTI has merged changes after that
+snapshot. [The source-pinned candidate triage](../ops/migration/dtg-vti-materiality-candidates-2026-11-19.md)
+records candidate materiality and overlaps without admitting a new
+Registry case, creating Toolkit fallback issues, or claiming fresh
+monitored observation. Admission requires new authoritative source
+qualification (or explicitly governed direct intake), owner uniqueness,
+and executable assessment/return contracts.
+
+**Operator decision:** proceed with the existing Tranche A–D implementation
+only where its actual runtime preconditions can be positively established.
+Absent a verified future-dispatch freeze and owner/consumer compatibility,
+do not activate #272 transfer or claim migration completion. This status
+does not authorize a new publication, specialist run, PASS or release.
