@@ -3,6 +3,8 @@ on:
   pull_request:
     paths:
       - 'scripts/audit_toolkit_issue_writers.py'
+      - 'scripts/verify_toolkit_legacy_registration_states.py'
+      - 'tests/test_toolkit_legacy_registration_states.py'
       - 'tests/test_toolkit_issue_writers.py'
       - 'tests/test_toolkit_historical_refs.py'
       - 'scripts/audit_toolkit_historical_refs.py'
@@ -11,6 +13,8 @@ on:
     branches: [main]
     paths:
       - 'scripts/audit_toolkit_issue_writers.py'
+      - 'scripts/verify_toolkit_legacy_registration_states.py'
+      - 'tests/test_toolkit_legacy_registration_states.py'
       - 'tests/test_toolkit_issue_writers.py'
       - 'scripts/audit_toolkit_historical_refs.py'
       - 'tests/test_toolkit_historical_refs.py'
@@ -54,6 +58,12 @@ jobs:
             --out build/toolkit-issue-writer-inventory.json
       - name: Test old-ref source audit and false-success boundaries
         run: python3 -m unittest discover -s registry/tests -p 'test_toolkit_historical_refs.py' -v
+      - name: Validate live old-workflow registration failure modes
+        run: python3 -m unittest discover -s registry/tests -p 'test_toolkit_legacy_registration_states.py' -v
+      - name: Independently verify exact Toolkit workflow retirement state
+        run: >-
+          python3 registry/scripts/verify_toolkit_legacy_registration_states.py
+          --out build/toolkit-legacy-registration-state.json
       - name: Qualify historical branch source exposure (operator dispatch)
         if: github.event_name == 'workflow_dispatch'
         run: |
@@ -68,4 +78,5 @@ jobs:
           path: |
             build/toolkit-issue-writer-inventory.json
             build/toolkit-historical-ref-audit.json
+            build/toolkit-legacy-registration-state.json
           if-no-files-found: warn
