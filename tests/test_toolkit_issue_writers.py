@@ -89,6 +89,19 @@ class PublicationInventoryTests(unittest.TestCase):
             self.assertTrue(any("publisher call-site drift" in e for e in errors))
         self.with_fixture(exercise)
 
+
+    def test_rollback_verification_is_not_an_issue_writer(self):
+        def exercise(path):
+            (path / "validate.yml").write_text(
+                "steps:\\n  - run: python3 " + audit.PUBLISHER +
+                " --verify-transfer-rollback\\n"
+            )
+            errors, report = audit.audit(path, REVISION)
+            self.assertEqual(errors, [])
+            self.assertEqual(report["producer_call_count"], 9)
+            self.assertFalse(report["cutover_authorized"])
+        self.with_fixture(exercise)
+
     def test_unexpected_writer_fails_closed(self):
         def exercise(path):
             (path / "surprise.yml").write_text("permissions:\n  issues: write\n")
