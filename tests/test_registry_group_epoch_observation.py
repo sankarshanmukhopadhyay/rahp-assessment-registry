@@ -50,13 +50,20 @@ class NewEpochTests(unittest.TestCase):
                                self.intent["source_group_sha256"] + " -->\n" +
                                self.intent["toolkit_current_issue_url"])}
         self.rev = "a" * 40
+        self.scope_history = [{
+            "id": 55, "author_association": "OWNER",
+            "user": {"login": "sankarshanmukhopadhyay", "type": "User"},
+            "body": ("<!-- rahp-registry-epoch-scope:v1:accept:" +
+                     epoch.group_digest(self.group) + " -->"),
+        }]
         self.posts = []
 
     def observation(self, **kwargs):
         return epoch.observe(
             self.intent, [self.group], self.findings,
             self.ledger, self.issue, kwargs.pop("comments", []),
-            self.rev, **kwargs)
+            self.rev, scope_history=kwargs.pop("scope_history", self.scope_history),
+            **kwargs)
 
     def test_new_epoch_remains_pending_until_replayable_ack(self):
         dry = self.observation()
@@ -93,6 +100,41 @@ class NewEpochTests(unittest.TestCase):
         self.assertEqual(duplicate["state"], "observed")
         self.assertFalse(duplicate["issue_written"])
         self.assertFalse(duplicate["cutover_authorized"])
+
+    def test_source_scope_missing_withdrawn_or_spoofed_never_posts(self):
+        self.scope_history = []
+        receipt = self.observation(
+            apply=True, post=lambda _: self.fail("unapproved POST"),
+            reread=lambda: [])
+        self.assertEqual(receipt["state"], "pending_epoch_approval")
+        self.assertFalse(receipt["maintainer_epoch_authorized"])
+        self.scope_history = [{
+            "id": 55, "author_association": "OWNER",
+            "user": {"login": "sankarshanmukhopadhyay"},
+            "body": ("<!-- rahp-registry-epoch-scope:v1:accept:" +
+                     epoch.group_digest(self.group) + " -->"),
+        }, {
+            "id": 56, "author_association": "OWNER",
+            "user": {"login": "sankarshanmukhopadhyay"},
+            "body": ("<!-- rahp-registry-epoch-scope:v1:withdraw:" +
+                     epoch.group_digest(self.group) + " -->"),
+        }]
+        receipt = self.observation(
+            apply=True, post=lambda _: self.fail("withdrawn POST"),
+            reread=lambda: [])
+        self.assertEqual(receipt["state"], "pending_epoch_approval")
+        self.scope_history[-1]["user"]["login"] = "attacker"
+        with self.assertRaisesRegex(epoch.EpochError, "unauthorized"):
+            self.observation()
+        self.scope_history = [{
+            "id": 1, "author_association": "OWNER",
+            "user": {"login": "sankarshanmukhopadhyay"},
+            "body": ("<!-- rahp-registry-epoch-scope:v1:accept:" +
+                     "f"*64 + " -->"),
+        }]
+        self.assertEqual(self.observation(
+            apply=True, post=lambda _: self.fail("unrelated POST"),
+            reread=lambda: [])["state"], "pending_epoch_approval")
 
     def test_missing_or_forged_comments_are_not_accepted(self):
         digest = epoch.group_digest(self.group)
