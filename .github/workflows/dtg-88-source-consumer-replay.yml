@@ -93,3 +93,57 @@ jobs:
         env:
           CARGO_TERM_COLOR: never
         run: cargo test --locked -p trust-tasks-https --features jwt --tests -- --nocapture
+  vti-current-consumer-baseline:
+    # Cold VTI builds take >10 minutes. Actual source-pinned run #44469222142
+    # passed 13 JWT and 16 receiver-spine tests. Re-run deliberately when
+    # the pinned consumer revision or assessment question changes.
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Checkout immutable VTI current source baseline
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: OpenVTC/verifiable-trust-infrastructure
+          ref: 66a7c2aa362e82cdbbb3b384850d73fa64d97848
+          path: vti
+          persist-credentials: false
+      - name: Establish actual downstream versions before claiming compatibility
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$(git -C vti rev-parse HEAD)" = 66a7c2aa362e82cdbbb3b384850d73fa64d97848 ]]
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          root = Path('vti')
+          source = (root / 'Cargo.toml').read_text()
+          versions = {}
+          for crate in ('trust-tasks-rs', 'trust-tasks-https', 'jsonwebtoken', 'jsonschema'):
+              m = re.search(r'^' + re.escape(crate) + r'\s*=\s*\{\s*version\s*=\s*"([^"]+)"',
+                            source, re.M)
+              assert m, f'missing workspace dependency: {crate}'
+              versions[crate] = m.group(1)
+          assert versions == {'trust-tasks-rs': '0.39.0',
+                              'trust-tasks-https': '0.39',
+                              'jsonwebtoken': '11.1.0',
+                              'jsonschema': '0.60'}, versions
+          print('VTI baseline versions:', versions)
+          print('VTI currently pins Trust Tasks 0.39, NOT 0.40; '
+                'passing this job cannot establish 0.40 consumer upgrade')
+          PY
+      - name: Install VTI's declared native build dependencies
+        run: bash vti/scripts/install-build-deps.sh
+      - name: Provide VTI's declared build-memory headroom
+        uses: ./vti/.github/actions/add-swap
+      - name: Exercise target-native VTI JWT negative-path tests at current baseline
+        working-directory: vti
+        env:
+          CARGO_TERM_COLOR: never
+        run: cargo test --locked -p vti-common --lib auth::jwt::tests -- --nocapture
+      - name: Exercise target-native VTI Trust Task spine tests at current baseline
+        working-directory: vti
+        env:
+          CARGO_TERM_COLOR: never
+        run: cargo test --locked -p vti-trust-task-server --test spine -- --nocapture
