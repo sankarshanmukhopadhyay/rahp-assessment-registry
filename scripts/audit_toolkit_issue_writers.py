@@ -70,7 +70,7 @@ def count_effectful_invocations(body: str, script: str) -> int:
             command = command.rstrip().removesuffix(chr(92)) + " " + following.strip()
         if "--self-test" in command:
             continue
-        if script == PUBLISHER and "--check-transfers" in command:
+        if script == PUBLISHER and ("--check-transfers" in command or "--verify-transfer-rollback" in command):
             continue
         count += 1
     return count
