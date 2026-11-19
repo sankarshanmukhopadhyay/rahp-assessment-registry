@@ -50,7 +50,7 @@ class PublicationInventoryTests(unittest.TestCase):
 
     def test_multiline_transfer_preflight_is_not_a_publisher(self):
         def exercise(path):
-            target = path / "dtg-portfolio-materiality-handoff.yml"
+            target = path / "dtg-materiality-main.yml"
             with target.open("a") as out:
                 out.write("          python3 " + audit.PUBLISHER + " " + chr(92) + "\n")
                 out.write("            --check-transfers " + chr(92) + "\n")
@@ -61,12 +61,12 @@ class PublicationInventoryTests(unittest.TestCase):
         self.with_fixture(exercise)
 
     def test_current_toolkit_baseline_excludes_selftest_and_preflight(self):
-        self.assertEqual(audit.EXPECTED["dtg-portfolio-materiality-handoff.yml"]["publisher"], 3)
+        self.assertEqual(audit.EXPECTED["dtg-materiality-main.yml"]["publisher"], 3)
         self.assertEqual(sum(spec["publisher"] for spec in audit.EXPECTED.values()), 9)
 
     def test_yaml_folded_transfer_preflight_is_not_a_publisher(self):
         def exercise(path):
-            target = path / "dtg-portfolio-materiality-handoff.yml"
+            target = path / "dtg-materiality-main.yml"
             with target.open("a") as out:
                 out.write("      - name: Transfer preflight\n")
                 out.write("        run: >-\n")
@@ -80,7 +80,7 @@ class PublicationInventoryTests(unittest.TestCase):
 
     def test_readonly_flag_in_separate_command_does_not_hide_writer(self):
         def exercise(path):
-            target = path / "dtg-portfolio-materiality-handoff.yml"
+            target = path / "dtg-materiality-main.yml"
             with target.open("a") as out:
                 out.write("          python3 " + audit.PUBLISHER + " " + chr(92) + "\n")
                 out.write("            --events out/combined.json\n")
@@ -111,7 +111,7 @@ class PublicationInventoryTests(unittest.TestCase):
 
     def test_missing_publisher_fails(self):
         def exercise(path):
-            target = path / "instance-watch.yml"
+            target = path / "instance-monitor-main.yml"
             target.write_text(target.read_text().replace(
                 "python3 " + audit.PUBLISHER, "", 1))
             errors, _ = audit.audit(path, REVISION)
