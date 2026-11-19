@@ -1,0 +1,101 @@
+{
+  "schema": "rahp-registry-source-materiality-disposition/v1",
+  "case_id": "RAHP-AR-DTG-0002",
+  "assessment_key": "dtg:portfolio:combined:spec-dependency-alignment",
+  "scope": "Source-level materiality and independently recorded monitored observation; NOT a controller or runtime assurance result",
+  "original_epoch": {
+    "observed_at": "2026-11-16",
+    "monitor_revision": "7e2813c8daf867a21e4064513cc83612726aeb44",
+    "source_group_sha256": "3fc843eeaf48f0023582951a2f67a15638bd6c21e929e92765b1394f83718d4c",
+    "finding_ids": [
+      "0add1f4cc0f048ce6bfc",
+      "29e39a0329123d8839a6",
+      "a60eaffaf3cbc1394553",
+      "acc9772126b1a3820240"
+    ]
+  },
+  "later_epoch": {
+    "observed_at": "2026-11-18",
+    "monitor_revision": "ee5736fa82a3c969f3c9eb055217c3404ff1815d",
+    "source_group_sha256": "ab73e10204e4f6073977634ea98015e8a1cb03cc5142e54e1afef5ce0e91bf85",
+    "finding_ids": [
+      "29e39a0329123d8839a6",
+      "acc9772126b1a3820240"
+    ],
+    "finding_membership_relation": "subset_of_original",
+    "contains_new_finding_ids": false,
+    "scope_decision_url": "https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/77#issuecomment-7000523334",
+    "acknowledgment_url": "https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/88#issuecomment-7000532885",
+    "canonical_workflow_url": "https://github.com/sankarshanmukhopadhyay/rahp-toolkit/actions/runs/44462670290",
+    "observed_producer_mode": "changed_group_acknowledged_retained",
+    "toolkit_issues_created": 0,
+    "toolkit_issues_coalesced": 0
+  },
+  "source_findings": [
+    {
+      "finding_id": "0add1f4cc0f048ce6bfc",
+      "classification": "new",
+      "subject": "Purpose-of-use constraints for ACL grants, memory reads and room authority",
+      "source_url": "https://github.com/trustoverip/dtgwg-trust-tasks-tf/releases/tag/trust-tasks-rs-v0.37.13",
+      "source_tag_object": "4ec7c86d1d0d0495ba605e0ae67e6774628199b9",
+      "finding": "Release notes introduce purpose scope, delegated-purpose subset and memory-read denial semantics; an absent stated purpose does not permit modelTraining.",
+      "disposition": "source_level_review_completed_runtime_unverified",
+      "separate_owner": "https://github.com/sankarshanmukhopadhyay/rahp-toolkit/issues/1194",
+      "falsifier": "Exercise absent purpose, broader delegated purpose, revoked ACL and modelTraining against live VTI; prove no content or error oracle leaks."
+    },
+    {
+      "finding_id": "29e39a0329123d8839a6",
+      "classification": "weakened",
+      "subject": "JWT feature public API compatibility across jsonwebtoken 10→11",
+      "source_url": "https://github.com/trustoverip/dtgwg-trust-tasks-tf/pull/1290",
+      "source_revision": "9397295d183d642c2fd6669822bd895f892bbd38",
+      "finding": "Upstream explicitly documents a source-incompatible public DecodingKey/Validation constructor dependency, while jsonschema 0.49→0.60 is private to trust-tasks-rs and is not established as a public API break.",
+      "disposition": "compatibility_break_confirmed_source_level_runtime_unverified",
+      "separate_owner": "https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/88",
+      "falsifier": "Compile a downstream jwt-feature consumer using jsonwebtoken v10 and v11, then test token signature/claim/expiry and wrong-key rejection after migration."
+    },
+    {
+      "finding_id": "a60eaffaf3cbc1394553",
+      "classification": "strengthened",
+      "subject": "Purpose binding clarification for rooms/records/get 0.4",
+      "source_url": "https://github.com/trustoverip/dtgwg-trust-tasks-tf/releases/tag/trust-tasks-rs-v0.37.14",
+      "source_tag_object": "9d7efdc789b752eabe6a92f8030c89d599384566",
+      "finding": "Release describes wording clarification of existing VTI-ACL-105/-110: every read is purpose-bound; a chain stating none grants any, but not modelTraining. No version bump or implementation enforcement is demonstrated by wording.",
+      "disposition": "normative_clarity_source_level_runtime_unverified",
+      "separate_owner": "https://github.com/sankarshanmukhopadhyay/rahp-toolkit/issues/1194",
+      "falsifier": "Test nested authority chain with omitted and widened purposes across actual room read host and member paths; ensure denial produces no document."
+    },
+    {
+      "finding_id": "acc9772126b1a3820240",
+      "classification": "new",
+      "subject": "Trust Tasks 0.40.0 composite release and cross-runtime compatibility/security changes",
+      "source_url": "https://github.com/trustoverip/dtgwg-trust-tasks-tf/releases/tag/trust-tasks-rs-v0.40.0",
+      "source_tag_object": "0d9d522a6025423ac77836ca6b40ce2893056d66",
+      "finding": "Release bundles public JWT major transition, critical-extension rejection across five language runtimes, room load-older bounds, wake/receipt behavior and messaging additions. No single aggregate PASS follows from a release label.",
+      "disposition": "composite_release_split_by_proposition_runtime_unverified",
+      "separate_owner": "https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/88",
+      "falsifier": "Cross-language unknown extCritical must fail before processing; test bounded room pagination and hostile cursor, and recipient-authenticated delivery receipt versus transport acceptance."
+    }
+  ],
+  "group_source_level_disposition": "new",
+  "group_assurance_determination": "not_assessed",
+  "runtime_consumer_tests_executed": false,
+  "specialist_screening": {
+    "privacy_question_present": true,
+    "source_owner": "https://github.com/sankarshanmukhopadhyay/rahp-toolkit/issues/1194",
+    "dpip_referral_admitted": false,
+    "reason": "Purpose-of-use privacy obligations already have source-qualified owner #1194; no distinct DPIP examination or producer acceptance/return has been established for this transferred dependency group. Do not create duplicate specialist authority from the generic release label."
+  },
+  "recovery": {
+    "accepted_transfer_immutable": true,
+    "reverse_transfer_exercised": false,
+    "reason": "No separate Registry writer exclusion and authenticated reverse-transfer authority evidence; preserve accepted Toolkit ledger and both source epoch acknowledgments."
+  },
+  "disposal": {
+    "source_findings_classified": true,
+    "source_epoch_observation_accepted": true,
+    "assurance_outcome_imported": false,
+    "case_terminal": false,
+    "remaining_owner": "https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/88"
+  }
+}

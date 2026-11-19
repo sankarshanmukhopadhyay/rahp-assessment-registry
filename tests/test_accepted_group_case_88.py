@@ -32,7 +32,7 @@ class TransferredCaseTests(unittest.TestCase):
         self.assertFalse(CASE["assessment"]["independent_review"])
         self.assertFalse(CASE["evidence"]["runtime_reproduced"])
         self.assertEqual(CASE["referrals"], [])
-        self.assertEqual(CASE["assessment"]["change_classification"], "uncertain")
+        self.assertEqual(CASE["assessment"]["change_classification"], "new")
         self.assertEqual({x["status"] for x in CASE["residuals"]}, {"open"})
 
 
