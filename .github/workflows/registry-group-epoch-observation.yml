@@ -77,7 +77,7 @@ jobs:
               'outbox/pending/spec-dependency-2026-11-16.json').read_text())
           active = epoch.accepted_record(intent, ledger) is not None
           with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as output:
-              output.write('active=' + str(active).lower() + '\\n')
+              output.write('active=' + str(active).lower() + '\n')
           if not active:
               receipt = {
                   'schema': 'rahp-registry-new-group-epoch/v1',
@@ -89,7 +89,7 @@ jobs:
                   'cutover_authorized': False,
               }
               Path('build/epoch/new-epoch-receipt.json').write_text(
-                  json.dumps(receipt, indent=2) + '\\n')
+                  json.dumps(receipt, indent=2) + '\n')
           print('Accepted group present:', active)
           PY
       - name: Verify current Monitor source through canonical Toolkit freshness
