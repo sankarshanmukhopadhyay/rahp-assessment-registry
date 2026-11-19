@@ -186,6 +186,23 @@ def reconcile(record, token, *, apply=False, exclusive_lock=False,
             "recovered_ambiguous_post": error is not None, "replay": False}
 
 
+
+def require_write_context(env):
+    is_main_owner = (
+        env.get("GITHUB_REF") == "refs/heads/main"
+        and env.get("GITHUB_REPOSITORY") == gh.REGISTRY
+        and env.get("GITHUB_ACTOR") == "sankarshanmukhopadhyay"
+    )
+    event = env.get("GITHUB_EVENT_NAME")
+    approved_push = (
+        event == "push"
+        and "Registry-Case-88-Return-Authorization: " + GROUP_SHA256
+        in env.get("REGISTRY_RETURN_COMMIT_MESSAGE", "")
+    )
+    if not is_main_owner or not (event == "workflow_dispatch" or approved_push):
+        raise ReturnError("effectful return lacks owner-authorized Registry main dispatch/push")
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     for key in ("case", "transfer-ledger", "spec", "evidence-ledger",
@@ -203,19 +220,7 @@ def main():
         record = record_for(*data, engine_revision=args.engine_revision,
                             transfer_ledger_revision=args.transfer_ledger_revision)
         if args.apply:
-            is_main_owner = (
-                os.getenv("GITHUB_REF") == "refs/heads/main"
-                and os.getenv("GITHUB_REPOSITORY") == gh.REGISTRY
-                and os.getenv("GITHUB_ACTOR") == "sankarshanmukhopadhyay"
-            )
-            event = os.getenv("GITHUB_EVENT_NAME")
-            approved_push = (
-                event == "push"
-                and "Registry-Case-88-Return-Authorization: "
-                + GROUP_SHA256 in os.getenv("REGISTRY_RETURN_COMMIT_MESSAGE", "")
-            )
-            if not is_main_owner or not (event == "workflow_dispatch" or approved_push):
-                raise ReturnError("effectful return lacks owner-authorized Registry main dispatch/push")
+            require_write_context(os.environ)
         receipt = reconcile(record, os.getenv("REGISTRY_EXECUTION_TOKEN", ""),
                             apply=args.apply, exclusive_lock=args.apply)
     except (OSError, ValueError, KeyError, TypeError, gh.IntakeError) as exc:
