@@ -23,6 +23,38 @@ assessment key, case ID, finding ID, exact pending manifest and SHA-256 evidence
 digest. Neither this ledger nor a maintainer comment alone proves the
 corresponding Toolkit writer has been retired.
 
+## Live source prerequisites
+
+The [DTG Portfolio Monitor](https://github.com/sankarshanmukhopadhyay/dtg-portfolio-monitor)
+supplies accepted source observations. Its
+[collector operations guide](https://github.com/sankarshanmukhopadhyay/dtg-portfolio-monitor/blob/main/docs/observation-publication-operations.md)
+requires a repository-installed GitHub App with Contents/Pull requests write
+permission, a numeric **repository variable** `DTG_MONITOR_APP_ID` and a
+private-key **repository secret** `DTG_MONITOR_APP_PRIVATE_KEY`. Its
+[collector run #45096098154](https://github.com/sankarshanmukhopadhyay/dtg-portfolio-monitor/actions/runs/45096098154)
+failed before observation because those inputs were empty, and Toolkit
+[materiality run #45095739377](https://github.com/sankarshanmukhopadhyay/rahp-toolkit/actions/runs/45095739377)
+could not find a published snapshot within its two-day freshness window.
+Do not widen that window to disguise the missing source publication. The
+configuration must be corrected by a repository administrator and a genuine
+App-authored source PR must pass normal protected-main review.
+
+Toolkit [PR #1255](https://github.com/sankarshanmukhopadhyay/rahp-toolkit/pull/1255)
+introduced `registry-observe-instance.yml` and
+`registry-observe-materiality.yml`. Both are **source-only** and stay
+dormant while the Toolkit policy remains `owner: toolkit`. When the
+protected-main policy is switched to `owner: registry`, these registrations
+preserve incremental DTG/CAWG observations, App-signed protected-main
+instance state persistence, and DTG materiality source artifacts without
+external Toolkit issue-write permission. Toolkit-local incidents remain
+handled by `dtg-assurance-reconcile.yml`, including bounded scheduled
+reconciliation when Registry is the external-case owner.
+
+These replacements are prerequisites for disabling the old mixed workflow
+registrations, not proof that the registrations have already been disabled.
+The independent Toolkit DPIP lifecycle and legacy review workers continue
+to consume pre-existing Toolkit case identities, not Registry case numbers.
+
 ## Source and write sequence
 
 1. Preserve a real monitor observation and independently review whether the
