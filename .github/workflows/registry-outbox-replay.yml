@@ -151,7 +151,8 @@ jobs:
           receipt = json.loads(Path('build/outbox/preflight.json').read_text())
           assert receipt.get('schema') in (
               'rahp-registry-intake-receipt/v1',
-              'rahp-registry-direct-intake-qualification/v1')
+              'rahp-registry-direct-intake-qualification/v1',
+              'rahp-registry-monitored-intake-qualification/v1')
           assert receipt.get('mode') == 'dry_run'
           assert receipt.get('assurance_determination') is None
           assert receipt.get('controller_execution') is None
@@ -162,7 +163,9 @@ jobs:
               assert receipt.get('state') == 'qualified'
               assert receipt.get('toolkit_current_policy_is_registry') is True
               assert receipt.get('toolkit_writers_quiescent_at_observation') is True
-              print('Monitored source qualified; historical writer exclusion still required.')
+              assert receipt.get('registered_external_writer_exclusion_verified') is True
+              assert receipt.get('historical_execution_exclusion_proven') is True
+              print('Registered external writer exclusion observed; recheck at final mutation.')
           elif os.environ.get('DIRECT_INTAKE') == 'true':
               assert receipt.get('schema') == 'rahp-registry-direct-intake-qualification/v1'
               assert receipt.get('state') == 'qualified'
