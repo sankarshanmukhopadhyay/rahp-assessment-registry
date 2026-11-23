@@ -38,7 +38,10 @@ class TransferredBindingTests(unittest.TestCase):
             "terminal": True, "outcome": "INDETERMINATE",
             "reason_code": "evidence-required",
             "state": "TERMINAL_INDETERMINATE_EVIDENCE_REQUIRED",
-            "evidence": [], "residuals": [{"id": "missing-1"}],
+            "evidence": [], "residuals": [{
+                "id": "rahp:source-88-test:residual",
+                "summary": "Required evidence is unavailable for: DTG-0002-R1, DTG-0002-R2.",
+            }],
             "lineage": {"clean_room": True, "historical_inputs_used": False,
                         "run": copy.deepcopy(self.spec["run"])}
         }
@@ -114,6 +117,26 @@ class TransferredBindingTests(unittest.TestCase):
             self.make(case=case)
         with self.assertRaises(binding.TransferBindingError):
             self.make(evidence={"requirements": [{"claim": "PASS"}]})
+
+    def test_residual_identity_and_missing_evidence_must_match(self):
+        for residuals in (
+            [{"id": "unrelated:residual", "summary": "Evidence is missing."}],
+            [{"id": "rahp:source-88-test:residual",
+              "summary": "Required evidence is unavailable for: DTG-0002-R1."}],
+            [{"id": "rahp:source-88-test:residual",
+              "summary": "Required evidence is unavailable for: DTG-0002-R1, DTG-0002-R2."},
+             {"id": "extra:residual", "summary": "Invented obligation"}],
+            [],
+        ):
+            result = self.result()
+            result["residuals"] = residuals
+            with self.subTest(residuals=residuals), self.assertRaises(
+                    binding.TransferBindingError):
+                self.make(result=result)
+        result = self.result()
+        result["assessment_id"] = "different-run"
+        with self.assertRaises(binding.TransferBindingError):
+            self.make(result=result)
 
     def test_coordinated_case_and_transfer_substitution_refused(self):
         case = copy.deepcopy(self.case)
