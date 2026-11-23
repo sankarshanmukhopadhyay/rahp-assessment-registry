@@ -113,8 +113,7 @@ def bind(case, transfer_ledger, spec, evidence_ledger, result, *,
             or result.get("outcome") != "INDETERMINATE"
             or result.get("reason_code") != "evidence-required"
             or result.get("state") != "TERMINAL_INDETERMINATE_EVIDENCE_REQUIRED"
-            or result.get("evidence")
-            or not result.get("residuals")):
+            or result.get("evidence")):
         raise TransferBindingError("canonical result is absent, contradictory or elevated")
     lineage = result.get("lineage")
     if (not isinstance(lineage, dict) or lineage.get("clean_room") is not True
@@ -123,6 +122,15 @@ def bind(case, transfer_ledger, spec, evidence_ledger, result, *,
             or not isinstance(result.get("assessment_id"), str)
             or not result["assessment_id"]):
         raise TransferBindingError("canonical run identity/clean-room lineage absent")
+    # This pinned clean-room controller reports one deterministic residual when
+    # all required evidence is missing. Arbitrary nonempty residuals do not bind
+    # the result to the Registry case's actual outstanding obligations.
+    expected_residuals = [{
+        "id": f"{result['assessment_id']}:residual",
+        "summary": "Required evidence is unavailable for: " + ", ".join(required) + ".",
+    }]
+    if result.get("residuals") != expected_residuals:
+        raise TransferBindingError("canonical residuals do not match missing case evidence")
     scope = {
         "case_id": CASE_ID, "registry_case_url": REG_ISSUE,
         "historical_toolkit_issue_url": TK_ISSUE,
