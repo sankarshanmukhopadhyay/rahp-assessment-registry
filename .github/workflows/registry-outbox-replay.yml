@@ -236,8 +236,9 @@ jobs:
           data = json.loads(Path('build/outbox/preflight.json').read_text())
           if (data.get('schema') != 'rahp-registry-monitored-intake-qualification/v1'
                   or data.get('historical_execution_exclusion_proven') is not True
-                  or data.get('cross_repository_atomic_lock_proven') is not True):
-              raise SystemExit('BLOCKED: no independently evidenced historical writer exclusion / cross-repository ownership lock')
+                  or data.get('registered_external_writer_exclusion_verified') is not True
+                  or data.get('toolkit_writers_quiescent_at_observation') is not True):
+              raise SystemExit('BLOCKED: GitHub server-side old-writer exclusion or live quiescence not evidenced')
           PY
       - name: Publish qualified monitored case
         if: inputs.monitored_intake == true
