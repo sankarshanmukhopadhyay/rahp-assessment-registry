@@ -76,7 +76,10 @@ def count_effectful_invocations(body: str, script: str) -> int:
             command = command.rstrip().removesuffix(chr(92)) + " " + following.strip()
         if "--self-test" in command:
             continue
-        if script == PUBLISHER and ("--check-transfers" in command or "--verify-transfer-rollback" in command):
+        if script == PUBLISHER and any(flag in command for flag in (
+                "--check-transfers", "--verify-transfer-rollback", "--publication-owner")):
+            # --publication-owner reads the protected-main policy and prints its
+            # disposition. It cannot create/coalesce an external GitHub issue.
             continue
         count += 1
     return count
