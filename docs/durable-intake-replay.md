@@ -1,5 +1,16 @@
 # Controlled Registry intake replay
 
+## Current ownership and executable admission paths (23 November 2026)
+
+Toolkit external-case publication is now assigned to Registry by the protected-main `instances/dtg/external-case-publication.json` policy (Toolkit [#1256](https://github.com/sankarshanmukhopadhyay/rahp-toolkit/pull/1256)). Legacy Toolkit external-case workflow registrations are disabled or historically absent, with a receiving-side server-registration and in-flight-run gate corrected in Registry [#119](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/pull/119). Toolkit remains authoritative for RAHP methods and canonical execution, not new external-case issue admission.
+
+[The controlled intake workflow](../.github/workflows/registry-outbox-replay.yml) has **three distinct** routes: ordinary `registry_outbox.py` replay of an existing approved owner (no new case), explicitly approved `registry_direct_intake.py` for a novel direct-source proposition, and `registry_monitored_intake.py` for an **exact source-qualified, committed, approved** monitored intent. The monitored route also independently establishes all four current Toolkit writers disabled, absence/disablement of retired registrations, drained historical writes and unique Registry case ownership. A `workflow_dispatch` on Registry `main` with `apply=true` and exactly one appropriate intake mode is needed for an effectful issue POST. The workflow's read-only preflight does not authorize publication by itself.
+
+The 23 November Toolkit materiality observer successfully consumed a recent Monitor snapshot, but its only retained source item was a controller requiring non-issue execution state; no combined or DPIP external-case event qualified. Current monitored-authorization admissions and Toolkit incremental review-event arrays were empty at that observation. **Do not fabricate a case, bypass the admission ledger, repurpose a controller as an assessment issue or infer PASS.** See [Registry #77](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/77) for source reconciliation and remaining live acceptance work.
+
+**Historical note:** the preparatory instructions below document pre-activation restriction phases. In particular, statements that the Toolkit publisher is still authoritative or that external publication has not yet switched are historical; the currently operative distinction is **active Registry owner policy versus unqualified new-case admission**. Earlier source-bound holds, replay caveats, and immutable evidence requirements still apply.
+
+
 This is a **source-controlled, Registry-only publication transport**. It is not a
 RAHP controller, DPIP result consumer, Interop Lab producer or general
 material-change cutover. It does not decide whether an assessment has passed.
@@ -15,13 +26,9 @@ The [Registry durable intake replay workflow](../.github/workflows/registry-outb
 accepts a reviewed manifest path and defaults to **dry-run**. Its PR and
 qualification job has only **Issues-read** privileges. An explicit main-branch
 `workflow_dispatch` with `apply=true` is required to start a separate
-Issues-write job. **Until the Toolkit external-case publisher has an accepted,
-verified coordinated cutover, new Registry issue creation is blocked by this
-workflow even when a reviewed manifest exists.** The write-scoped job may
-reconcile an already existing owner, which requires a second authoritative
-live re-read. It never writes to Toolkit.
+Issues-write job. **External publication ownership has switched to Registry, but this does not approve any specific new case.** A new direct or monitored first-case POST requires the appropriate reviewed source intent, authority ledger, live source/owner verification, explicit selected intake mode and publication-side guard checks. The ordinary replay route remains existing-owner-only. Every effectful route re-reads the owner; none writes to Toolkit.
 
-The Python transport also refuses new-case creation on direct `--apply` invocation while the existing Toolkit publisher remains authoritative. The internal `allow_new_case` test injection exercises the future one-POST/readback consumer path under controlled fixtures, **not** a production operator authorization interface. An accepted transfer and coordinated publisher-suppression evidence must precede any future production authorization mechanism.
+The general-purpose `registry_outbox.py` transport still refuses unqualified first-case creation on direct `--apply` invocation. The separately governed `registry_direct_intake.py` and `registry_monitored_intake.py` routes implement first admission under their own current authorization ledgers. An internal `allow_new_case` fixture for the generic outbox is not a production operator override.
 
 The delivery algorithm:
 
@@ -76,11 +83,7 @@ exclusive publication lock. External concurrent writers are not covered by
 GitHub's issue API. A long-running transaction, human review of new
 material changes and acceptance of a specialist return remain separate.
 
-There is no automatic materiality-to-outbox enqueue, no Registry controller
-execution mapping, no DPIP/Lab handoff or return reconciliation, no historical
-issue migration, and no assertion that Toolkit's operational publishers are
-disabled. The accepted pilot has no RAHP result. Do not declare the
-development-only Toolkit invariant or cutover complete.
+There is no unattended materiality-to-approved-outbox enqueue or demonstrated full first-monitored-case cycle. The Toolkit external-case writers are administratively disabled, but Toolkit-local controller execution, historical issue-number consumers and specialist coordination remain distinct. Source-scoped historical succession (Toolkit #272 → Registry #88) has executed; the new-case execution/return/reversal acceptance gates remain open. The original generic outbox pilot alone has no RAHP result. Do not declare end-to-end G1–G6 acceptance from publication ownership.
 
 A new source revision matching an existing case needs a governed
 reassessment/append protocol, not an automatic replacement or forged
