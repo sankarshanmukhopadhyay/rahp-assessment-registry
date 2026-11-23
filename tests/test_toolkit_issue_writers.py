@@ -14,12 +14,12 @@ def fixtures(base: Path):
     for name, spec in audit.EXPECTED.items():
         if name in audit.LOCAL_EXPECTED:
             (base / name).write_text(
-                "name: local-only\\npermissions:\\n  issues: read\\njobs:\\n"
-                "  reconcile:\\n    steps: []\\n  local_incidents:\\n"
+                "name: local-only\npermissions:\n  issues: read\njobs:\n"
+                "  reconcile:\n    steps: []\n  local_incidents:\n"
                 "    if: github.ref == 'refs/heads/main' && "
-                "github.event_name == 'push'\\n"
-                "    permissions:\\n      issues: write\\n"
-                "    steps:\\n      - run: python3 " + audit.INCIDENT + "\\n"
+                "github.event_name == 'push'\n"
+                "    permissions:\n      issues: write\n"
+                "    steps:\n      - run: python3 " + audit.INCIDENT + "\n"
             )
             continue
         lines = ["name: test", "permissions:", "  issues: write"]
