@@ -2,11 +2,31 @@
 
 The [read-only weekly inventory workflow](../../.github/workflows/toolkit-issue-writer-inventory.yml) inspects **live Toolkit main**, pins its Git revision, and checks every workflow exposing `issues: write`, canonical assessment-publisher calls and the currently identified issue-number consumers. The inventory is intentionally **not a cutover approval**.
 
-The audited **current-workflow inventory** covers six external-operation or mixed workflows: `cross-spec-pressure-test.yml`, `distributed-resilience-assessment.yml`, `dpip-lifecycle.yml`, `dtg-materiality-main.yml`, `instance-monitor-main.yml` and `review-workers.yml`. The retired `dtg-portfolio-materiality-handoff.yml` and `instance-watch.yml` remain historical-dispatch concerns rather than current source paths. Across them there are nine effectful assessment publisher invocations (plus a DTG `--self-test` and a DTG `--check-transfers` preflight, neither of which publishes), one controller-incident publisher invocation, and downstream Toolkit issue-number consumers including bounded reviews, DPIP handoff and return reconciliation. Unrecognized issue-write workflows, changed publication counts or missing listed consumers fail the inventory. The two Toolkit instance configurations and publisher's canonical repository restriction remain separate migration blockers.
+The audited **current-workflow inventory** covers six external-operation or mixed workflows: `cross-spec-pressure-test.yml`, `distributed-resilience-assessment.yml`, `dpip-lifecycle.yml`, `dtg-materiality-main.yml`, `instance-monitor-main.yml` and `review-workers.yml`. The retired `dtg-portfolio-materiality-handoff.yml` and `instance-watch.yml` remain historical-dispatch concerns rather than current source paths. Across them there are nine effectful assessment publisher invocations (plus a DTG `--self-test` and a DTG `--check-transfers` preflight, neither of which publishes), two controller-incident publisher invocations (one in the mixed monitor workflow and one in the accepted-state local reconciliation workflow), and downstream Toolkit issue-number consumers including bounded reviews, DPIP handoff and return reconciliation. Unrecognized issue-write workflows, changed publication counts or missing listed consumers fail the inventory. The two Toolkit instance configurations and publisher's canonical repository restriction remain separate migration blockers.
 
 **Safety interpretation:** passing this inventory proves only that the enumerated active surfaces were found unchanged. It does not assert that non-development Toolkit writes have stopped, nor that Registry has assumed controller/DPIP/Lab obligations. In particular a source-scoped Toolkit publisher switch that leaves `dpip_handoff.py` consuming Toolkit issue numbers is a broken cutover. Conversely, an unexpected additional publisher makes an otherwise plausible cutover unsafe.
 
 For [Registry #11](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/11), maintain a one-to-one migration disposition for these writers **and** each specialist/worker correlation path. Before activating Registry case creation: prove Registry's equivalent route for every external write, migrate issue-number consumers to stable accepted case/controller mappings, demonstrate no-loss outbox replay, and enforce a rollback-qualified, mutually exclusive authority switch. Only then replace Toolkit's policy guard and configured destinations. A passing test suite without an executed transaction cannot substitute for this evidence.
+
+## Current Toolkit-local incident isolation
+
+The live inventory additionally classifies
+`dtg-assurance-reconcile.yml`: its accepted-state `local_incidents` job
+runs on a protected-main push and has `issues: write` only within that
+job, publishing one `publish_dtg_controller_incidents.py` invocation.
+Its sibling `reconcile` job remains read-only, and the workflow has no
+external `publish_assessment_issues.py` route. This is legitimate Toolkit
+controller-local authority and **must not be disabled as an external-case
+publisher**. A separate regression rejects any broadening of its top-level
+write permissions, event scope or publication path.
+
+The read-only inventory therefore covers six external/mixed workflows plus
+one explicitly retained local-only writer. There remain **nine external-case
+publisher invocations** and **two local incident publisher invocations** in
+the current Toolkit workflow graph. The external cutover quiescence check
+intentionally excludes the isolated local-only workflow; the historical-ref
+audit still reports its manually dispatchable issue-write source capability
+as a potential authority surface pending actual server-side/credential proof.
 
 ## Historical writer ref exposure across the full Toolkit portfolio
 
@@ -39,7 +59,7 @@ predecessor paths, `dtg-portfolio-materiality-handoff.yml` and
 workflow observations, but cannot substitute for the current names.
 
 Registry's `verify_toolkit_writer_quiescence.py` now derives its current
-workflow paths from the existing audited `EXPECTED` producer/consumer inventory
+**external** workflow paths from the existing audited `EXTERNAL_EXPECTED` producer/consumer inventory
 and retains the two predecessor paths as additional blockers. A live
 `instance-monitor-main.yml` run is therefore counted as an active writer,
 not reported as quiescent. The regression tests exercise all listed current
