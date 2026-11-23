@@ -42,6 +42,7 @@ class MonitoredIntakeTests(unittest.TestCase):
         self.policy = {"schema": "rahp-external-case-publication/v1", "owner": "registry"}
         self.rows = []
         self.posts = []
+        self.disabled = True
         self.reg = {"commit": {"sha": "c" * 40}}
         self.tk = {"commit": {"sha": "d" * 40}}
 
@@ -69,6 +70,13 @@ class MonitoredIntakeTests(unittest.TestCase):
             return {"sha": self.manifest["event"]["source_revision"]}
         if "/rahp-toolkit/issues?state=all" in url:
             return self.rows
+        if "/rahp-toolkit/actions/workflows?" in url:
+            workflows = [
+                {"id": i + 1, "path": path,
+                 "state": "disabled_manually" if self.disabled else "active"}
+                for i, path in enumerate(sorted(monitored.OLD_WORKFLOWS))
+            ]
+            return {"total_count": len(workflows), "workflows": workflows}
         if "/rahp-toolkit/actions/runs?" in url:
             return {"total_count": 0, "workflow_runs": []}
         self.fail("unexpected live authority read " + url)
@@ -79,7 +87,10 @@ class MonitoredIntakeTests(unittest.TestCase):
         self.assertEqual(result["assessment_key"], KEY)
         self.assertTrue(result["toolkit_current_policy_is_registry"])
         self.assertTrue(result["toolkit_writers_quiescent_at_observation"])
-        self.assertFalse(result["historical_execution_exclusion_proven"])
+        self.assertTrue(result["historical_execution_exclusion_proven"])
+        self.assertTrue(result["registered_external_writer_exclusion_verified"])
+        self.assertEqual(len(result["disabled_external_writer_registrations"]),
+                         len(monitored.OLD_WORKFLOWS))
         self.assertFalse(result["cross_repository_atomic_lock_proven"])
         self.assertIsNone(result["assurance_determination"])
         self.assertEqual(self.posts, [])
@@ -119,6 +130,32 @@ class MonitoredIntakeTests(unittest.TestCase):
                 monitored.qualify(altered, PATH, "", fetch=self.fetch)
         with self.assertRaises(ValueError):
             monitored.qualify(self.manifest, "../outside.json", "", fetch=self.fetch)
+
+    def test_registered_external_writer_must_be_disabled_server_side(self):
+        self.disabled = False
+        with self.assertRaisesRegex(monitored.MonitoredAdmissionError,
+                                    "not demonstrably disabled"):
+            monitored.run(self.manifest, PATH, "", apply=True, fetch=self.fetch,
+                          post=lambda _: self.fail("must not publish"))
+
+    def test_missing_or_duplicate_writer_registration_is_not_exclusion(self):
+        original = self.fetch
+        for variant in ("missing", "duplicate", "incomplete"):
+            with self.subTest(variant=variant):
+                def invalid(url):
+                    result = original(url)
+                    if "/actions/workflows?" not in url:
+                        return result
+                    rows = list(result["workflows"])
+                    if variant == "missing":
+                        rows.pop()
+                    elif variant == "duplicate":
+                        rows.append(dict(rows[0]))
+                    else:
+                        return {"total_count": 3, "workflows": rows}
+                    return {"total_count": len(rows), "workflows": rows}
+                with self.assertRaises(monitored.MonitoredAdmissionError):
+                    monitored.qualify(self.manifest, PATH, "", fetch=invalid)
 
     def test_active_toolkit_external_writer_blocks_admission(self):
         original = self.fetch
@@ -173,7 +210,7 @@ class MonitoredIntakeTests(unittest.TestCase):
         self.assertIn("monitored_intake:", text)
         self.assertIn("inputs.monitored_intake == true", text)
         self.assertIn("historical_execution_exclusion_proven') is not True", text)
-        self.assertIn("cross_repository_atomic_lock_proven') is not True", text)
+        self.assertIn("registered_external_writer_exclusion_verified') is not True", text)
         self.assertIn("scripts/registry_monitored_intake.py", text)
         self.assertIn("if: inputs.direct_intake != true && inputs.monitored_intake != true", text)
         self.assertIn("if: inputs.direct_intake == true && inputs.monitored_intake != true", text)
