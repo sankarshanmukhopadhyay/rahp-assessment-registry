@@ -22,6 +22,7 @@ EVENT = {
     "proposition": "A qualified source-specific proposition requires assessment.",
     "source_repository": "trustoverip/dtgwg-trust-tasks-tf",
     "source_revision": "a" * 40,
+    "toolkit_observation_revision": "d" * 40,
     "source_url": "https://github.com/trustoverip/dtgwg-trust-tasks-tf/commit/" + "a" * 40,
     "finding_id": "f" * 20,
     "responsible_owner": "trustoverip/dtgwg-trust-tasks-tf",
@@ -67,7 +68,9 @@ class MonitoredIntakeTests(unittest.TestCase):
         return {
             "assessment_key": event["assessment_key"], "case_id": event["case_id"],
             "manifest_path": PATH, "source_repository": event["source_repository"],
-            "source_revision": event["source_revision"], "finding_id": event["finding_id"],
+            "source_revision": event["source_revision"],
+            "toolkit_observation_revision": event["toolkit_observation_revision"],
+            "finding_id": event["finding_id"],
             "source_evidence_sha256": event["source_evidence_sha256"], "status": "approved",
         }
 
@@ -84,6 +87,8 @@ class MonitoredIntakeTests(unittest.TestCase):
             return enc(self.policy)
         if "/rahp-toolkit/contents/instances/dtg/generated/review-events.json" in url:
             return enc([self.review_event])
+        if "/rahp-toolkit/compare/" in url:
+            return {"status": "identical"}
         if "/commits/" in url:
             return {"sha": self.manifest["event"]["source_revision"]}
         if "/rahp-toolkit/issues?state=all" in url:
@@ -118,6 +123,33 @@ class MonitoredIntakeTests(unittest.TestCase):
         with self.assertRaisesRegex(monitored.MonitoredAdmissionError, "has not assigned"):
             monitored.run(self.manifest, PATH, "", apply=True, fetch=self.fetch,
                           post=lambda _: self.fail("no unqualified write"))
+
+    def test_observation_commit_requires_accepted_ancestry(self):
+        original = self.fetch
+        def diverged(url):
+            if "/rahp-toolkit/compare/" in url:
+                return {"status": "diverged"}
+            return original(url)
+        with self.assertRaisesRegex(monitored.MonitoredAdmissionError,
+                                    "not in accepted protected-main history"):
+            monitored.qualify(self.manifest, PATH, "", fetch=diverged)
+        malformed = copy.deepcopy(self.manifest)
+        malformed["event"]["toolkit_observation_revision"] = "main"
+        with self.assertRaisesRegex(monitored.MonitoredAdmissionError,
+                                    "pinned Toolkit observation commit"):
+            monitored.qualify(malformed, PATH, "", fetch=self.fetch)
+        # A current main descendant may accept evidence from a historic
+        # approved ancestor whose review-event array has since changed.
+        def advanced(url):
+            if "/rahp-toolkit/compare/" in url:
+                return {"status": "ahead"}
+            if "/rahp-toolkit/branches/main" in url:
+                return {"commit": {"sha": "e" * 40}}
+            return original(url)
+        receipt = monitored.qualify(self.manifest, PATH, "", fetch=advanced)
+        self.assertEqual(receipt["accepted_source"]["accepted_toolkit_commit"],
+                         "d" * 40)
+        self.assertEqual(receipt["toolkit_main_sha"], "e" * 40)
 
     def test_wrong_accepted_source_digest_or_event_cannot_authorize_case(self):
         for changed in (
