@@ -39,7 +39,8 @@ OLD_WORKFLOWS = frozenset({
 })
 FIELDS = frozenset({
     "assessment_key", "case_id", "manifest_path", "source_repository",
-    "source_revision", "finding_id", "source_evidence_sha256", "status",
+    "source_revision", "toolkit_observation_revision",
+    "finding_id", "source_evidence_sha256", "status",
 })
 
 
@@ -117,7 +118,7 @@ def verify_registration_exclusion(fetch):
     return selected
 
 
-def verify_accepted_source_event(fetch, toolkit_head, event):
+def verify_accepted_source_event(fetch, observation_commit, event):
     """Bind exact reviewed case to one immutable, accepted monitor observation.
 
     A digest in a maintainer ledger is not self-authenticating evidence.
@@ -128,7 +129,7 @@ def verify_accepted_source_event(fetch, toolkit_head, event):
         raise MonitoredAdmissionError("unrecognized monitored source instance")
     source_path = f"instances/{instance}/generated/review-events.json"
     data = direct._json_contents(
-        fetch(API + TOOLKIT + "/contents/" + source_path + "?ref=" + toolkit_head),
+        fetch(API + TOOLKIT + "/contents/" + source_path + "?ref=" + observation_commit),
         "accepted Toolkit monitored source events",
     )
     if not isinstance(data, list):
@@ -153,7 +154,7 @@ def verify_accepted_source_event(fetch, toolkit_head, event):
             "Registry source scope does not match the exact accepted material review event"
         )
     return {"instance": instance, "path": source_path,
-            "evidence_sha256": digest, "accepted_toolkit_commit": toolkit_head}
+            "evidence_sha256": digest, "accepted_toolkit_commit": observation_commit}
 
 
 def qualify(manifest, manifest_path, token, *, fetch=None):
@@ -167,6 +168,9 @@ def qualify(manifest, manifest_path, token, *, fetch=None):
         )
     if not CASE_ID.fullmatch(str(event.get("case_id", ""))):
         raise MonitoredAdmissionError("monitored intake requires a stable Registry case ID")
+    observation_commit = event.get("toolkit_observation_revision")
+    if not isinstance(observation_commit, str) or not direct.SHA.fullmatch(observation_commit):
+        raise MonitoredAdmissionError("monitored source requires pinned Toolkit observation commit")
     evidence = event.get("source_evidence_sha256")
     if not isinstance(evidence, str) or not SHA256.fullmatch(evidence):
         raise MonitoredAdmissionError("monitored source evidence must carry immutable SHA-256")
@@ -196,6 +200,7 @@ def qualify(manifest, manifest_path, token, *, fetch=None):
         "manifest_path": manifest_path,
         "source_repository": event["source_repository"],
         "source_revision": event["source_revision"],
+        "toolkit_observation_revision": observation_commit,
         "finding_id": event["finding_id"],
         "source_evidence_sha256": evidence,
         "status": "approved",
@@ -220,11 +225,19 @@ def qualify(manifest, manifest_path, token, *, fetch=None):
             "Toolkit has not assigned exclusive external-case publication to Registry"
         )
 
+    comparison = fetch(
+        API + TOOLKIT + "/compare/" + observation_commit + "..." + tk_head
+    )
+    if (not isinstance(comparison, dict)
+            or comparison.get("status") not in ("ahead", "identical")):
+        raise MonitoredAdmissionError(
+            "pinned Toolkit observation commit is not in accepted protected-main history"
+        )
     commit = fetch(API + event["source_repository"] + "/commits/" + event["source_revision"])
     if (not isinstance(commit, dict)
             or commit.get("sha") != event["source_revision"]):
         raise MonitoredAdmissionError("pinned authoritative source commit unavailable")
-    evidence_record = verify_accepted_source_event(fetch, tk_head, event)
+    evidence_record = verify_accepted_source_event(fetch, observation_commit, event)
     checked = _owner_scan(fetch, event)
 
     retired_workflows = verify_registration_exclusion(fetch)
