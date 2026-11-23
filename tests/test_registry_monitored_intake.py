@@ -186,6 +186,20 @@ class MonitoredIntakeTests(unittest.TestCase):
         self.assertFalse(result["first_case_execution"])
         self.assertIsNone(result["assurance_determination"])
 
+    def test_existing_owner_requires_same_monitored_source_digest(self):
+        ev = self.manifest["event"]
+        owner = {
+            "number": 92, "state": "open",
+            "html_url": "https://github.com/" + intake.REGISTRY + "/issues/92",
+            "body": intake.render_body({
+                **ev, "source_evidence_sha256": "c" * 64,
+            }),
+        }
+        with self.assertRaisesRegex(ValueError, "source evidence digest"):
+            monitored.run(self.manifest, PATH, "", apply=True, fetch=self.fetch,
+                          load_issues=lambda: [owner],
+                          post=lambda _: self.fail("must not create duplicate"))
+
     def test_post_ambiguity_recovers_without_duplicate(self):
         ev = self.manifest["event"]
         owner = {"number": 94, "state": "open", "body": intake.render_body(ev),
