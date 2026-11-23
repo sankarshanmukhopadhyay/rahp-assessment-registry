@@ -2,6 +2,46 @@
 
 **Status:** working ledger, not an acceptance record. Governing tracker: [Registry #11](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/11). Evidence updated through merged Registry PRs #61/#62/#64/#65/#67/#69 and Toolkit PRs #1215–#1218 (2026-11-17), including the post-merge real DTG handoff run #44124340556. The new #67 recovery tests are simulated; #1218 source-specific publisher checks are tested, not live cutover evidence. This is a maintained evidence record, not a declaration that the six gates have been accepted. Update this file in the same PR that moves a gate; a PR should state which row it moves and which executable-path gap it closes.
 
+## 23 November 2026 checkpoint: operational qualification versus case-owner exclusivity
+
+The active operational tracker is [Registry #77](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/77).
+The following verified increments qualify **specific controls**, without accepting any
+G1–G6 gate as a whole:
+
+- **Protected-main state persistence, qualified:** Toolkit [#1244](https://github.com/sankarshanmukhopadhyay/rahp-toolkit/pull/1244),
+  [#1246](https://github.com/sankarshanmukhopadhyay/rahp-toolkit/pull/1246)
+  and [#1247](https://github.com/sankarshanmukhopadhyay/rahp-toolkit/pull/1247)
+  installed a repository-scoped App-token path with early authentication preflight;
+  actual App-created state PR [#1248](https://github.com/sankarshanmukhopadhyay/rahp-toolkit/pull/1248)
+  completed native required checks and merged as
+  `5ffdf6e0b1df17b61160ed725ffc3188def028d4`. Canonical reconcile,
+  Toolkit-local incidents, validation, build and Pages observation succeeded.
+- **Current writer visibility, corrected:** Registry [#106](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/pull/106)
+  merged at `d4437dca3aebbd1520e5ad15db3f2e78fb38e37f`. It counts the
+  present `dtg-materiality-main.yml` / `instance-monitor-main.yml`
+  issue-writing workflows and the historical predecessor paths in the
+  quiescence guard. This is **not a future-dispatch exclusion lock**.
+- **Stale publisher mutation, hardened:** Toolkit [#1250](https://github.com/sankarshanmukhopadhyay/rahp-toolkit/pull/1250)
+  merged at `55c4bae85825f4d4317b1b82797008c4efadc63f`, following
+  full required PR checks. A current-code Actions writer now rechecks that its
+  execution commit equals live Toolkit `main` before each issue mutation,
+  in addition to current-ledger transfer ownership checks. Old script
+  revisions and independently authorized issue writers are **not** fenced by this.
+- **Reader-facing information architecture:** Toolkit [#1249](https://github.com/sankarshanmukhopadhyay/rahp-toolkit/pull/1249)
+  and Registry [#107](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/pull/107)
+  removed dated cutover narrative from root READMEs; operator evidence
+  remains in this ledger, the migration plan and issue #77.
+
+**Outstanding gate conditions:** enforced retirement or source-specific exclusion
+of all affected old and future external-case writer entry points; admitted
+Registry-native new-case issue publication with unique owner/readback and
+interruption-safe replay; first-party Toolkit case/controller/reviewer issue
+identity mapping; an authenticated specialist return only where independently
+applicable; and governed reverse transfer with exclusive Registry writer
+exclusion. Passing CI or a clean live quiescence snapshot does not substitute
+for these controls. No general Registry external-case publication authority,
+G1–G6 final acceptance, RAHP PASS or release is claimed.
+
 **Rules of this ledger**
 
 - A row is *evidence* only when it is an executed run, a merged test or a live re-read. Design documents, preflights and schema validity are listed separately as *preparation*.
