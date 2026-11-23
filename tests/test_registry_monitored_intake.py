@@ -306,6 +306,10 @@ class MonitoredIntakeTests(unittest.TestCase):
     def test_workflow_does_not_allow_unproven_monitored_publish(self):
         text = (ROOT / ".github/workflows/registry-outbox-replay.yml").read_text()
         self.assertIn("monitored_intake:", text)
+        # The publish preflight must admit the same exact monitored receipt
+        # schema emitted by the read-only qualify job.
+        self.assertIn("'rahp-registry-monitored-intake-qualification/v1')", text)
+        self.assertIn("assert receipt.get('schema') in (", text)
         self.assertIn("inputs.monitored_intake == true", text)
         self.assertIn("historical_execution_exclusion_proven') is not True", text)
         self.assertIn("registered_external_writer_exclusion_verified') is not True", text)
