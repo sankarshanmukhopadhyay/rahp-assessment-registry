@@ -1,5 +1,46 @@
 # RAHP assessment operations migration: authority and cutover gates
 
+## Operational checkpoint (23 November 2026)
+
+This document is the **operator migration plan**, not reader-facing Registry
+README material. The authoritative active work tracker remains
+[Registry #77](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/77);
+the evidence ledger is [migration-gate-status.md](migration-gate-status.md).
+
+**Verified and accepted within their narrow bounds:**
+
+- Toolkit [PR #1248](https://github.com/sankarshanmukhopadhyay/rahp-toolkit/pull/1248)
+  exercised a real GitHub App-authored, DCO-signed, native-check state PR,
+  merged through protected main. Post-merge `reconcile`, `local_incidents`,
+  `validate`, build and Pages checks succeeded. This proves **Toolkit state
+  persistence**, not Registry external-case publication exclusivity.
+- Toolkit's transfer ledger retains the source-qualified, accepted
+  Toolkit #272 → Registry #88 group. This does not grant authority to
+  re-admit or retransfer its historical owner.
+- Registry [PR #106](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/pull/106)
+  corrected the pre-publication quiescence guard to recognize current
+  `dtg-materiality-main.yml` and `instance-monitor-main.yml` paths as
+  well as retired names. A clean snapshot is still **not a dispatch fence**.
+
+**Remaining authority switch conditions:** independently verify all current and
+historical writer dispatch routes are excluded during handover, preserve
+legitimate Toolkit-local controller and development issues, demonstrate
+Registry new-case delivery/readback and interruption-safe replay using an
+admitted source-qualified case, and exercise canonical Toolkit consumer
+identity mapping. DPIP/Lab specialist return requires an independently
+admitted applicable proposition; never create one merely to check a box.
+A governed reverse-owner operation must reject simultaneous Registry/Toolkit
+writes. Until those conditions are met, leave existing fences in effect and
+do not claim universal Registry case ownership, G1–G6 acceptance, or a release.
+
+**Names and source authority:** the earlier document and historical evidence
+below deliberately refer to `dtg-portfolio-materiality-handoff.yml` and
+`instance-watch.yml`; the current live workflows are
+`dtg-materiality-main.yml` and `instance-monitor-main.yml`. Current writer
+counts and consumer inventory are maintained in
+[the operational writer inventory](../ops/migration/toolkit-writer-cutover-inventory.md),
+not inferred from dated examples below.
+
 ## Boundary
 
 **Toolkit retains canonical portable RAHP methods, engine, schemas, reusable inference/validation algorithms, SDK, developer tests, security and release governance.** Registry takes operational *application* of those capabilities: monitored-source adapters, DTG/CAWG instance routing, materiality review, assessment execution scheduling and artifacts, controller correlation, DPIP/Interop Lab handoffs, issue publication and full history. The registry should invoke a **pinned Toolkit engine contract**, not fork a second assurance engine or change result semantics.
