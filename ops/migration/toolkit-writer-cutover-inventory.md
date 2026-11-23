@@ -8,6 +8,32 @@ The current 2026-11-17 baseline covers six external-operation or mixed workflows
 
 For [Registry #11](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/11), maintain a one-to-one migration disposition for these writers **and** each specialist/worker correlation path. Before activating Registry case creation: prove Registry's equivalent route for every external write, migrate issue-number consumers to stable accepted case/controller mappings, demonstrate no-loss outbox replay, and enforce a rollback-qualified, mutually exclusive authority switch. Only then replace Toolkit's policy guard and configured destinations. A passing test suite without an executed transaction cannot substitute for this evidence.
 
+## 23 November 2026: live workflow-name drift and quiescence boundary
+
+The active Toolkit `main` issue writers now include
+`dtg-materiality-main.yml` and `instance-monitor-main.yml`. Their retired
+predecessor paths, `dtg-portfolio-materiality-handoff.yml` and
+`instance-watch.yml`, remain relevant to historical queued or in-flight
+workflow observations, but cannot substitute for the current names.
+
+Registry's `verify_toolkit_writer_quiescence.py` now derives its current
+workflow paths from the existing audited `EXPECTED` producer/consumer inventory
+and retains the two predecessor paths as additional blockers. A live
+`instance-monitor-main.yml` run is therefore counted as an active writer,
+not reported as quiescent. The regression tests exercise all listed current
+and historical paths through the same `evaluate()` function used by the
+operator qualification.
+
+This correction closes a **false-negative classification defect**, not the
+exclusive-writer cutover gate. A clean nonterminal-run snapshot remains a
+point-in-time observation; it does not disable future dispatches, prove
+historical workflow retirement, ensure source-qualified Registry delivery,
+or establish an atomic GitHub issue write. Source-scoped Toolkit #272 →
+Registry #88 already has an accepted-group ledger entry, but the broader
+producer and consumer migration under Registry #77 remains unresolved.
+No additional Registry publication or Toolkit suppression is authorized by
+this inventory correction.
+
 ## Writer and issue-number consumer cutover dispositions (17 November 2026)
 
 The dispositions below are migration **requirements**, not executed switches.
