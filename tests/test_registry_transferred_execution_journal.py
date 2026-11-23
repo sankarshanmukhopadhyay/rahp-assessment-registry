@@ -41,7 +41,10 @@ class AcceptedGroupReturnTests(unittest.TestCase):
             "outcome": "INDETERMINATE",
             "reason_code": "evidence-required",
             "state": "TERMINAL_INDETERMINATE_EVIDENCE_REQUIRED",
-            "evidence": [], "residuals": [{"id": "gap", "summary": "No target-native evidence"}],
+            "evidence": [], "residuals": [{
+                "id": "rahp:source88-execution:residual",
+                "summary": "Required evidence is unavailable for: DTG-0002-R1, DTG-0002-R2.",
+            }],
             "lineage": {"clean_room": True, "historical_inputs_used": False,
                         "run": copy.deepcopy(self.spec["run"])},
         }
@@ -127,6 +130,7 @@ class AcceptedGroupReturnTests(unittest.TestCase):
         rec = self.record()
         changed = self.result()
         changed["assessment_id"] = "rahp:different"
+        changed["residuals"][0]["id"] = "rahp:different:residual"
         other = self.record(result=changed)
         self.assertEqual(rec["epoch_id"], other["epoch_id"])
         with self.assertRaisesRegex(journal.ReturnError, "conflicting"):
