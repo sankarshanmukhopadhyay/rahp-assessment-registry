@@ -151,7 +151,8 @@ jobs:
           receipt = json.loads(Path('build/outbox/preflight.json').read_text())
           assert receipt.get('schema') in (
               'rahp-registry-intake-receipt/v1',
-              'rahp-registry-direct-intake-qualification/v1')
+              'rahp-registry-direct-intake-qualification/v1',
+              'rahp-registry-monitored-intake-qualification/v1')
           assert receipt.get('mode') == 'dry_run'
           assert receipt.get('assurance_determination') is None
           assert receipt.get('controller_execution') is None
