@@ -41,6 +41,60 @@ counts and consumer inventory are maintained in
 [the operational writer inventory](../ops/migration/toolkit-writer-cutover-inventory.md),
 not inferred from dated examples below.
 
+## Final activation contract: conditions and ordered go/no-go decisions
+
+This is the bounded **execution contract for the eventual authority switch**,
+not evidence that the switch has occurred. It is governed by
+[Registry #77](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/77)
+and [G1–G6](migration-gate-status.md). An already accepted source case (#88)
+cannot be used to manufacture new-case admission evidence, and unrelated
+Toolkit-local controller incidents remain legitimate.
+
+The final activation must use the existing Toolkit and Registry source contracts.
+No generic issue-number substitution, duplicate RAHP engine, unreviewed specialist
+referral, or branch-protection exception is permitted. Stop at the first failed
+condition, retain original observations and intent, and keep both producer states
+visible rather than claiming a completed switch.
+
+| Ordered stage | Positive evidence required before advancing | Failure disposition |
+| --- | --- | --- |
+| 1. Source and destination scope | Exact case key, upstream revision, material findings, owner/previous owner, residuals, fresh maintainer authorization and existing-owner comparison. Existing #88 remains singly owned. | Retain observed source; no new case. |
+| 2. Exclusive old-writer exclusion | Current Toolkit external/mixed issue-publishing jobs lose external issue mutation authority for the admitted scope, **without** disabling accepted-state local incident writes. Old workflow registrations, branch/tag dispatch paths, independent writer credentials and in-flight runs must be checked under an enforceable exclusion. | Toolkit stays active for untransferred keys; Registry new-case writes remain blocked. |
+| 3. Durable Registry delivery | Committed source-qualified pending intent; unique owner read from full live Registry history; one authorized serialized POST when needed; read-after-write owner acknowledgment; timeout-after-commit and replay; no duplicate on a repeated or changed epoch. | Keep pending outbox; do not fall back to Toolkit publication. |
+| 4. Canonical execution binding | Immutable Registry case and source scope bound to a Toolkit-native controller execution and raw/normalized result; separate case ID, execution ID, historical Toolkit issue URL and specialist ID; replay and wrong-namespace negative checks. | Keep case as `not_assessed`, or retain the actual qualified `INDETERMINATE` execution record without importing PASS. |
+| 5. Specialist applicability | Independently admitted source-specific DPIP/Lab proposition **if applicable**, authorized transport and source/epoch/referral-bound return consumed by canonical Toolkit semantics; contradictory/duplicate/stale negatives. If not applicable to the chosen case, preserve the explicit non-referral decision; that does not qualify global specialist interoperability. | Retain residual with independent owner; do not fabricate a referral or import a specialist PASS. |
+| 6. Reversible owner handover | Authoritative Registry owner and acknowledgment, Toolkit transfer guard, exclusion of Registry writes before any governed return, preserved historical issue URLs and nondeletion of accepted transfer evidence. Demonstrate interrupted transfer and return with both sides independently read back. | Quarantine writes and retain evidence; no dual-active publishers or rollback-by-ledger-deletion. |
+| 7. Live operational verification | One fresh materially relevant source cycle proves observation → qualified Registry owner/reassessment → canonical execution binding → residual/terminal disposition, with zero duplicate Toolkit external-case writes and intact Toolkit-local incidents; checks and protection pass. | Reopen gate evidence, not an assessment PASS. |
+
+The *activation tranche* can be final only if it includes both the switch and
+these observed acceptance results. A source-code PR or test-only rehearsal
+cannot satisfy an effectful gate. In particular, the independently governed
+specialist round trip cannot be promised in advance if no genuine accepted
+specialist proposition exists. It is legitimate to leave that specific
+interoperability gate open and operate the subset that is independently
+qualified; it is not legitimate to label full G1–G6 cutover complete.
+
+### Current readiness and activation blockers
+
+[Toolkit #1248](https://github.com/sankarshanmukhopadhyay/rahp-toolkit/pull/1248)
+proves App-authored state persistence and protected-main reconciliation.
+[Registry #106](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/pull/106)
+prevents false quiescence from obsolete workflow names.
+[Toolkit #1250](https://github.com/sankarshanmukhopadhyay/rahp-toolkit/pull/1250)
+refuses stale current-code Actions issue mutations. The
+[all-ref writer audit](../ops/migration/toolkit-writer-cutover-inventory.md)
+now enumerates historical source exposure and preserves legitimate local
+incidents. Existing transferred case #88 has a source-pinned Toolkit
+`INDETERMINATE/evidence-required` execution return and a distinct accepted
+administrative owner; it is not proof of general Registry case publication.
+
+**Not yet established:** server-enforced old-ref/future-dispatch exclusion,
+universal Registry new-case producer activation, reusable first-party controller
+consumer eligibility across newly admitted external cases, genuine
+Registry-directed specialist return where warranted, and tested exclusive
+reverse transfer. Until each relevant condition is positively proved,
+maintain the current source-specific guards and conditional intake authority.
+
 ## Boundary
 
 **Toolkit retains canonical portable RAHP methods, engine, schemas, reusable inference/validation algorithms, SDK, developer tests, security and release governance.** Registry takes operational *application* of those capabilities: monitored-source adapters, DTG/CAWG instance routing, materiality review, assessment execution scheduling and artifacts, controller correlation, DPIP/Interop Lab handoffs, issue publication and full history. The registry should invoke a **pinned Toolkit engine contract**, not fork a second assurance engine or change result semantics.
