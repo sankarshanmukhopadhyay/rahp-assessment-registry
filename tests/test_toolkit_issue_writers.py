@@ -110,11 +110,11 @@ class PublicationInventoryTests(unittest.TestCase):
             for name in ("instance-monitor-main.yml", "dtg-materiality-main.yml"):
                 with (path / name).open("a") as out:
                     out.write("      - run: python3 " + audit.PUBLISHER +
-                              " --publication-owner\\n")
+                              " --publication-owner\n")
             (path / "registry-observe-instance.yml").write_text(
-                "permissions:\\n  issues: read\\nsteps:\\n"
+                "permissions:\n  issues: read\nsteps:\n"
                 "  - run: python3 " + audit.PUBLISHER +
-                " --publication-owner\\n")
+                " --publication-owner\n")
             errors, report = audit.audit(path, REVISION)
             self.assertEqual(errors, [])
             self.assertEqual(report["producer_call_count"], 9)
@@ -125,8 +125,8 @@ class PublicationInventoryTests(unittest.TestCase):
         def exercise(path):
             with (path / "instance-monitor-main.yml").open("a") as out:
                 out.write("      - run: python3 " + audit.PUBLISHER +
-                          " --events build/actual-external-cases.json\\n")
-                out.write("      - run: echo --publication-owner\\n")
+                          " --events build/actual-external-cases.json\n")
+                out.write("      - run: echo --publication-owner\n")
             errors, _ = audit.audit(path, REVISION)
             self.assertTrue(any("publisher call-site drift" in e
                                 for e in errors))
