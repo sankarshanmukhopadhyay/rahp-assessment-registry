@@ -32,7 +32,10 @@ class PublicationInventoryTests(unittest.TestCase):
             errors, receipt = audit.audit(path, REVISION)
             self.assertEqual(errors, [])
             self.assertEqual(receipt["producer_call_count"], 9)
-            self.assertEqual(receipt["incident_call_count"], 1)
+            self.assertEqual(receipt["incident_call_count"], 2)
+            self.assertEqual(receipt["legitimate_toolkit_local_issue_workflows"],
+                             ["dtg-assurance-reconcile.yml"])
+            self.assertEqual(len(receipt["external_writer_workflows"]), 6)
             self.assertTrue(receipt["inventory_complete"])
             self.assertFalse(receipt["cutover_authorized"])
             self.assertFalse(receipt["registry_issue_publication_authorized"])
@@ -45,7 +48,7 @@ class PublicationInventoryTests(unittest.TestCase):
             )
             errors, report = audit.audit(path, REVISION)
             self.assertEqual(errors, [])
-            self.assertEqual(report["incident_call_count"], 1)
+            self.assertEqual(report["incident_call_count"], 2)
         self.with_fixture(exercise)
 
     def test_multiline_transfer_preflight_is_not_a_publisher(self):
@@ -132,6 +135,42 @@ class PublicationInventoryTests(unittest.TestCase):
             (path / "safe-other.yml").write_text("steps:\n  - run: gh issue create --title incident\n")
             errors, _ = audit.audit(path, REVISION)
             self.assertTrue(any("direct issue API writer" in e for e in errors))
+        self.with_fixture(exercise)
+
+    def test_legitimate_toolkit_local_issue_authority_is_explicit(self):
+        def exercise(path):
+            # A realistic job boundary is mandatory for the local-only
+            # exception; a generic issues:write whitelist is insufficient.
+            file = path / "dtg-assurance-reconcile.yml"
+            file.write_text(
+                "name: Reconcile DTG\npermissions:\n  contents: read\n"
+                "  issues: read\njobs:\n  reconcile:\n"
+                "    steps: []\n  local_incidents:\n"
+                "    if: github.ref == 'refs/heads/main' && "
+                "github.event_name == 'push'\n"
+                "    permissions:\n      issues: write\n"
+                "    steps:\n      - run: python3 " + audit.INCIDENT + "\n"
+            )
+            errors, report = audit.audit(path, REVISION)
+            self.assertEqual(errors, [])
+            local = [row for row in report["workflows"]
+                     if row["workflow"] == "dtg-assurance-reconcile.yml"]
+            self.assertEqual(len(local), 1)
+            self.assertEqual(local[0]["migration_disposition"], "retained_toolkit_local")
+        self.with_fixture(exercise)
+
+    def test_local_exception_rejects_broadened_issue_writer(self):
+        def exercise(path):
+            file = path / "dtg-assurance-reconcile.yml"
+            file.write_text(
+                "permissions:\n  issues: write\njobs:\n"
+                "  local_incidents:\n    if: github.event_name == 'workflow_dispatch'\n"
+                "    permissions:\n      issues: write\n"
+                "    steps:\n      - run: python3 " + audit.INCIDENT + "\n"
+            )
+            errors, _ = audit.audit(path, REVISION)
+            self.assertTrue(any("local incident authority boundary drift" in e
+                                for e in errors))
         self.with_fixture(exercise)
 
     def test_expected_workflow_missing_fails(self):
