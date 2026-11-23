@@ -60,6 +60,8 @@ class MonitoredIntakeTests(unittest.TestCase):
         self.rows = []
         self.posts = []
         self.disabled = True
+        self.absent_registrations = set()
+        self.workflow_states = {}
         self.reg = {"commit": {"sha": "c" * 40}}
         self.tk = {"commit": {"sha": "d" * 40}}
 
@@ -96,8 +98,10 @@ class MonitoredIntakeTests(unittest.TestCase):
         if "/rahp-toolkit/actions/workflows?" in url:
             workflows = [
                 {"id": i + 1, "path": path,
-                 "state": "disabled_manually" if self.disabled else "active"}
+                 "state": self.workflow_states.get(
+                     path, "disabled_manually" if self.disabled else "active")}
                 for i, path in enumerate(sorted(monitored.OLD_WORKFLOWS))
+                if path not in self.absent_registrations
             ]
             return {"total_count": len(workflows), "workflows": workflows}
         if "/rahp-toolkit/actions/runs?" in url:
@@ -235,6 +239,49 @@ class MonitoredIntakeTests(unittest.TestCase):
             monitored.run(self.manifest, PATH, "", apply=True, fetch=self.fetch,
                           post=lambda _: self.fail("must not publish"))
 
+    def test_absent_retired_workflows_qualify_with_four_disabled_current_writers(self):
+        self.absent_registrations = set(monitored.RETIRED_WRITER_WORKFLOWS)
+        receipt = monitored.run(self.manifest, PATH, "", fetch=self.fetch)
+        self.assertEqual(receipt["state"], "qualified")
+        self.assertEqual(
+            {row["path"] for row in receipt["disabled_external_writer_registrations"]},
+            monitored.CURRENT_WRITER_WORKFLOWS,
+        )
+        self.assertTrue(receipt["registered_external_writer_exclusion_verified"])
+
+    def test_absent_current_publisher_is_not_writer_exclusion(self):
+        for path in sorted(monitored.CURRENT_WRITER_WORKFLOWS):
+            with self.subTest(path=path):
+                self.absent_registrations = {path}
+                with self.assertRaisesRegex(monitored.MonitoredAdmissionError,
+                                            "not demonstrably disabled"):
+                    monitored.qualify(self.manifest, PATH, "", fetch=self.fetch)
+        self.absent_registrations.clear()
+
+    def test_active_or_unknown_retired_registration_fails_closed(self):
+        retired = sorted(monitored.RETIRED_WRITER_WORKFLOWS)[0]
+        for state in ("active", "disabled_inactivity", "unknown"):
+            with self.subTest(state=state):
+                self.workflow_states[retired] = state
+                with self.assertRaisesRegex(monitored.MonitoredAdmissionError,
+                                            "not demonstrably disabled"):
+                    monitored.qualify(self.manifest, PATH, "", fetch=self.fetch)
+        self.workflow_states.clear()
+
+    def test_duplicate_retired_registration_fails_closed(self):
+        retired = sorted(monitored.RETIRED_WRITER_WORKFLOWS)[0]
+        original = self.fetch
+        def duplicate(url):
+            response = original(url)
+            if "/actions/workflows?" not in url:
+                return response
+            rows = list(response["workflows"])
+            rows.append(dict(next(row for row in rows if row["path"] == retired)))
+            return {"total_count": len(rows), "workflows": rows}
+        with self.assertRaisesRegex(monitored.MonitoredAdmissionError,
+                                    "not demonstrably disabled"):
+            monitored.qualify(self.manifest, PATH, "", fetch=duplicate)
+
     def test_missing_or_duplicate_writer_registration_is_not_exclusion(self):
         original = self.fetch
         for variant in ("missing", "duplicate", "incomplete"):
@@ -245,7 +292,8 @@ class MonitoredIntakeTests(unittest.TestCase):
                         return result
                     rows = list(result["workflows"])
                     if variant == "missing":
-                        rows.pop()
+                        current = sorted(monitored.CURRENT_WRITER_WORKFLOWS)[0]
+                        rows = [row for row in rows if row["path"] != current]
                     elif variant == "duplicate":
                         rows.append(dict(rows[0]))
                     else:

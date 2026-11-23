@@ -36,12 +36,15 @@ DISABLED = frozenset({"disabled_manually", "deleted"})
 # already existing Toolkit issue identities. They are not direct first-case
 # publishers and must remain operable for historical cases. Require disabled
 # registrations for the four *actual* external case publisher workflows.
-OLD_WORKFLOWS = frozenset({
-    *(f".github/workflows/{name}" for name, spec in EXTERNAL_EXPECTED.items()
-      if spec["publisher"] > 0),
+CURRENT_WRITER_WORKFLOWS = frozenset(
+    f".github/workflows/{name}" for name, spec in EXTERNAL_EXPECTED.items()
+    if spec["publisher"] > 0
+)
+RETIRED_WRITER_WORKFLOWS = frozenset({
     ".github/workflows/dtg-portfolio-materiality-handoff.yml",
     ".github/workflows/instance-watch.yml",
 })
+OLD_WORKFLOWS = CURRENT_WRITER_WORKFLOWS | RETIRED_WRITER_WORKFLOWS
 FIELDS = frozenset({
     "assessment_key", "case_id", "manifest_path", "source_repository",
     "source_revision", "toolkit_observation_revision",
@@ -78,7 +81,7 @@ def _owner_scan(fetch, event):
 
 
 def verify_registration_exclusion(fetch):
-    """Require server-side disabled registration for every known Toolkit external writer.
+    """Require disabled current writers and absent or disabled retired registrations.
 
     The policy file blocks current-code mutation; disabled registrations
     additionally prevent executing prior workflow revisions on historical
@@ -113,6 +116,10 @@ def verify_registration_exclusion(fetch):
     for path in sorted(OLD_WORKFLOWS):
         matches = [row for row in observed
                    if isinstance(row, dict) and row.get("path") == path]
+        # A retired workflow may have no server-side registration. Active
+        # workflows and missing current publishers must still fail closed.
+        if not matches and path in RETIRED_WRITER_WORKFLOWS:
+            continue
         if (len(matches) != 1 or type(matches[0].get("id")) is not int
                 or matches[0]["id"] < 1 or matches[0].get("state") not in DISABLED):
             raise MonitoredAdmissionError(
