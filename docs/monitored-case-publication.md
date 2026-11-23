@@ -60,11 +60,19 @@ corresponding Toolkit writer has been retired.
    current issue-number-based case/DPIP effects without discarding the
    retained observation artifacts. An old branch's unpatched code cannot
    be assumed to honor this policy.
-5. Disable the superseded **external writer workflow registrations**, confirm
-   each expected old/current registration is inactive through the GitHub
-   Actions API, and drain queued/in-progress/waiting/requested/pending runs.
-   The Toolkit-only incident workflow is not in this list. Source audits
-   alone do not establish runtime exclusion.
+5. Disable the superseded **direct external-case publisher workflow
+   registrations**, confirm each expected old/current registration is inactive
+   through the GitHub Actions API, and drain all nonterminal runs. These are
+   `cross-spec-pressure-test.yml`, `distributed-resilience-assessment.yml`,
+   `dtg-materiality-main.yml`, `instance-monitor-main.yml` and the retired
+   `dtg-portfolio-materiality-handoff.yml` / `instance-watch.yml` names.
+   The current mixed monitors must have read-only observation successors
+   before the registrations are disabled. Consumer-only `dpip-lifecycle.yml`
+   and `review-workers.yml` remain under Toolkit authority **for their
+   pre-existing Toolkit issue identities**; they cannot be used to substitute
+   Toolkit issue numbers for Registry cases. The separate Toolkit-local
+   incident workflow likewise remains active. A source scan or clean run
+   snapshot alone does not prove durable registration exclusion.
 6. Dispatch
    [the controlled outbox workflow](../.github/workflows/registry-outbox-replay.yml)
    on `main` with `monitored_intake=true` and the exact committed manifest.
