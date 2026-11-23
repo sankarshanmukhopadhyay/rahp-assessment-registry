@@ -10,6 +10,7 @@ exclusion. Current-main policy and quiescence alone cannot prove that exclusion.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -116,6 +117,45 @@ def verify_registration_exclusion(fetch):
     return selected
 
 
+def verify_accepted_source_event(fetch, toolkit_head, event):
+    """Bind exact reviewed case to one immutable, accepted monitor observation.
+
+    A digest in a maintainer ledger is not self-authenticating evidence.
+    Recompute SHA-256 over the complete event stored on protected Toolkit main.
+    """
+    instance = event["assessment_key"].split(":", 1)[0]
+    if instance not in ("dtg", "cawg"):
+        raise MonitoredAdmissionError("unrecognized monitored source instance")
+    source_path = f"instances/{instance}/generated/review-events.json"
+    data = direct._json_contents(
+        fetch(API + TOOLKIT + "/contents/" + source_path + "?ref=" + toolkit_head),
+        "accepted Toolkit monitored source events",
+    )
+    if not isinstance(data, list):
+        raise MonitoredAdmissionError("accepted monitor source batch is not an array")
+    matches = [row for row in data if isinstance(row, dict)
+               and row.get("assessment_key") == event["assessment_key"]]
+    if len(matches) != 1:
+        raise MonitoredAdmissionError("missing or duplicate accepted monitored source event")
+    source = matches[0]
+    canonical = json.dumps(
+        source, sort_keys=True, separators=(",", ":"),
+        ensure_ascii=False, allow_nan=False,
+    ).encode("utf-8")
+    digest = hashlib.sha256(canonical).hexdigest()
+    if (digest != event["source_evidence_sha256"]
+            or event["finding_id"] != digest[:20]
+            or source.get("repository") != event["source_repository"]
+            or source.get("new") != event["source_revision"]
+            or source.get("event_class") not in (None, "assessment-required")
+            or "assessment-required" not in (source.get("labels") or [])):
+        raise MonitoredAdmissionError(
+            "Registry source scope does not match the exact accepted material review event"
+        )
+    return {"instance": instance, "path": source_path,
+            "evidence_sha256": digest, "accepted_toolkit_commit": toolkit_head}
+
+
 def qualify(manifest, manifest_path, token, *, fetch=None):
     event = outbox.require_event(manifest)
     if not isinstance(manifest_path, str) or not direct.PENDING.fullmatch(manifest_path):
@@ -184,8 +224,7 @@ def qualify(manifest, manifest_path, token, *, fetch=None):
     if (not isinstance(commit, dict)
             or commit.get("sha") != event["source_revision"]):
         raise MonitoredAdmissionError("pinned authoritative source commit unavailable")
-    # This proves the source revision exists. The independently reviewed
-    # source_evidence_sha256 must still correspond to the cited monitor record.
+    evidence_record = verify_accepted_source_event(fetch, tk_head, event)
     checked = _owner_scan(fetch, event)
 
     retired_workflows = verify_registration_exclusion(fetch)
@@ -201,6 +240,7 @@ def qualify(manifest, manifest_path, token, *, fetch=None):
         "finding_id": event["finding_id"],
         "source_revision": event["source_revision"],
         "source_evidence_sha256": evidence,
+        "accepted_source": evidence_record,
         "registry_main_sha": registry_head,
         "toolkit_main_sha": tk_head,
         "toolkit_historical_issues_scanned": checked,
