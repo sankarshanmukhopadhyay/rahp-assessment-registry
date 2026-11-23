@@ -1,9 +1,11 @@
 import importlib.util
 import subprocess
+import sys
 import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 MODULE = Path(__file__).resolve().parents[1] / "scripts/audit_toolkit_historical_refs.py"
 SPEC = importlib.util.spec_from_file_location("historical_ref_audit", MODULE)
 audit = importlib.util.module_from_spec(SPEC)
