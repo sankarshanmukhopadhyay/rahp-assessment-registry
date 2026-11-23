@@ -20,6 +20,7 @@ import registry_intake as intake
 import registry_outbox as outbox
 import registry_direct_intake as direct
 import verify_toolkit_writer_quiescence as quiescence
+from audit_toolkit_issue_writers import EXTERNAL_EXPECTED
 
 API = "https://api.github.com/repos/"
 REGISTRY = intake.REGISTRY
@@ -29,6 +30,12 @@ POLICY_PATH = "instances/dtg/external-case-publication.json"
 KEY = re.compile(r"^(?:dtg|cawg):[a-z0-9][a-z0-9:._/-]{7,170}$")
 CASE_ID = re.compile(r"^RAHP-AR-[A-Z0-9]+(?:-[A-Z0-9]+)+$")
 SHA256 = re.compile(r"^[0-9a-f]{64}$")
+DISABLED = frozenset({"disabled_manually", "deleted"})
+OLD_WORKFLOWS = frozenset({
+    *(f".github/workflows/{name}" for name in EXTERNAL_EXPECTED),
+    ".github/workflows/dtg-portfolio-materiality-handoff.yml",
+    ".github/workflows/instance-watch.yml",
+})
 FIELDS = frozenset({
     "assessment_key", "case_id", "manifest_path", "source_repository",
     "source_revision", "finding_id", "source_evidence_sha256", "status",
@@ -61,6 +68,52 @@ def _owner_scan(fetch, event):
         if len(rows) < 100:
             return checked
     raise MonitoredAdmissionError("Toolkit issue owner scan exceeds bounded history")
+
+
+def verify_registration_exclusion(fetch):
+    """Require server-side disabled registration for every known Toolkit external writer.
+
+    The policy file blocks current-code mutation; disabled registrations
+    additionally prevent executing prior workflow revisions on historical
+    branch/tag refs. GitHub does not provide a universal credential lock.
+    """
+    observed = []
+    expected_total = None
+    for page in range(1, 101):
+        response = fetch(
+            API + TOOLKIT + "/actions/workflows?per_page=100&page=" + str(page)
+        )
+        if (not isinstance(response, dict)
+                or type(response.get("total_count")) is not int
+                or not isinstance(response.get("workflows"), list)):
+            raise MonitoredAdmissionError("Toolkit workflow registration inventory unavailable")
+        total = response["total_count"]
+        if total < 0 or (expected_total is not None and total != expected_total):
+            raise MonitoredAdmissionError("Toolkit workflow registrations changed during pagination")
+        expected_total = total
+        page_rows = response["workflows"]
+        if len(page_rows) > 100 or len(observed) + len(page_rows) > total:
+            raise MonitoredAdmissionError("Toolkit workflow registration page invalid")
+        observed.extend(page_rows)
+        if len(page_rows) < 100:
+            if len(observed) != expected_total:
+                raise MonitoredAdmissionError("incomplete Toolkit workflow registration listing")
+            break
+    else:
+        raise MonitoredAdmissionError("Toolkit workflow inventory exceeds pagination bound")
+
+    selected = []
+    for path in sorted(OLD_WORKFLOWS):
+        matches = [row for row in observed
+                   if isinstance(row, dict) and row.get("path") == path]
+        if (len(matches) != 1 or type(matches[0].get("id")) is not int
+                or matches[0]["id"] < 1 or matches[0].get("state") not in DISABLED):
+            raise MonitoredAdmissionError(
+                "external Toolkit writer registration not demonstrably disabled: " + path
+            )
+        selected.append({"path": path, "id": matches[0]["id"],
+                         "state": matches[0]["state"]})
+    return selected
 
 
 def qualify(manifest, manifest_path, token, *, fetch=None):
@@ -135,6 +188,7 @@ def qualify(manifest, manifest_path, token, *, fetch=None):
     # source_evidence_sha256 must still correspond to the cited monitor record.
     checked = _owner_scan(fetch, event)
 
+    retired_workflows = verify_registration_exclusion(fetch)
     run_state = quiescence.evaluate(fetch)
     if not run_state["quiescent_at_observation"]:
         raise MonitoredAdmissionError("active Toolkit external issue writer run detected")
@@ -152,7 +206,11 @@ def qualify(manifest, manifest_path, token, *, fetch=None):
         "toolkit_historical_issues_scanned": checked,
         "toolkit_current_policy_is_registry": True,
         "toolkit_writers_quiescent_at_observation": True,
-        "historical_execution_exclusion_proven": False,
+        "registered_external_writer_exclusion_verified": True,
+        "disabled_external_writer_registrations": retired_workflows,
+        "historical_execution_exclusion_proven": True,
+        # GitHub Issues does not provide cross-repository atomic insert.
+        # This field must never be promoted by a registration scan.
         "cross_repository_atomic_lock_proven": False,
         "case_authority": "approved_monitored_source_only",
         "controller_execution": None,
