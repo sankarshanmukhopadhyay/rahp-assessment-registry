@@ -8,6 +8,28 @@ The audited **current-workflow inventory** covers six external-operation or mixe
 
 For [Registry #11](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/11), maintain a one-to-one migration disposition for these writers **and** each specialist/worker correlation path. Before activating Registry case creation: prove Registry's equivalent route for every external write, migrate issue-number consumers to stable accepted case/controller mappings, demonstrate no-loss outbox replay, and enforce a rollback-qualified, mutually exclusive authority switch. Only then replace Toolkit's policy guard and configured destinations. A passing test suite without an executed transaction cannot substitute for this evidence.
 
+## Historical writer ref exposure across the full Toolkit portfolio
+
+The explicit-dispatch [writer inventory workflow](../../.github/workflows/toolkit-issue-writer-inventory.yml)
+now inspects both remote **branches and tags**, and every one of the six
+current Toolkit issue-writing workflows plus the two retired workflow paths.
+It records the immutable commit for each ref and each workflow's declared
+`issues: write` and `workflow_dispatch` capability. A source-level
+`enforce_live_transfer_boundary` symbol is captured as context, **not** accepted
+as a substitute for server-enforced exclusion; a manually dispatchable,
+issue-writable historical ref remains exposed even if current-main code is
+guarded. Unavailable git objects, malformed refs, or incomplete inventories
+fail closed.
+
+Run the workflow manually to retain the JSON report as an artifact. A blocked
+result is actionable evidence for ref-specific registration/dispatch retirement,
+not an instruction to delete historical source material or remove legitimate
+Toolkit-local incident publishing. Independent validation of disabled
+registrations, no successful old-ref dispatch, drained in-flight runs,
+credential permissions, source-scoped Registry intake and target-side owner
+acknowledgment is still necessary. **A clean source audit alone never accepts
+the writer-exclusivity gate.**
+
 ## 23 November 2026: live workflow-name drift and quiescence boundary
 
 The active Toolkit `main` issue writers now include
