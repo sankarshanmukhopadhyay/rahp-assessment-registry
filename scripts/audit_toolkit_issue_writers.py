@@ -11,7 +11,7 @@ import json
 import re
 from pathlib import Path
 
-EXPECTED = {
+EXTERNAL_EXPECTED = {
     "cross-spec-pressure-test.yml": {"publisher": 1, "incident": 0, "consumer": []},
     "distributed-resilience-assessment.yml": {"publisher": 1, "incident": 0, "consumer": []},
     "dpip-lifecycle.yml": {
@@ -30,6 +30,12 @@ EXPECTED = {
         "consumer": ["tools/combined_review_worker.py", "tools/dtg_repository_review_worker.py"],
     },
 }
+# Toolkit local incidents are legitimate owner-controlled development/instance
+# effects. Never confuse the local publisher with external case routing.
+LOCAL_EXPECTED = {
+    "dtg-assurance-reconcile.yml": {"publisher": 0, "incident": 1, "consumer": []},
+}
+EXPECTED = {**EXTERNAL_EXPECTED, **LOCAL_EXPECTED}
 PUBLISHER = "tools/publish_assessment_issues.py"
 INCIDENT = "tools/publish_dtg_controller_incidents.py"
 ISSUE_WRITE = re.compile(r"(?m)^\s*issues:\s*write\s*(?:#.*)?$")
@@ -116,13 +122,25 @@ def audit(workflow_directory: Path, toolkit_revision: str):
             problems.append(f"{name}: issue publisher call-site drift")
         if missing:
             problems.append(f"{name}: issue-number or specialist consumer drift")
+        if name in LOCAL_EXPECTED:
+            before, separator, after = body.partition("\n  local_incidents:")
+            if (not separator or ISSUE_WRITE.search(before)
+                    or len(ISSUE_WRITE.findall(after)) != 1
+                    or "github.ref == 'refs/heads/main'" not in after
+                    or "github.event_name == 'push'" not in after
+                    or count_effectful_invocations(after, INCIDENT) != 1
+                    or PUBLISHER in after):
+                problems.append(f"{name}: Toolkit-local incident authority boundary drift")
         findings.append({
             "workflow": name,
             "issues_write_permission": has_write,
             "publisher_calls": count_pub,
             "incident_publisher_calls": count_inc,
             "downstream_issue_consumers": expected_consumers,
-            "migration_disposition": "needs_explicit_authority_transfer",
+            "migration_disposition": (
+                "retained_toolkit_local" if name in LOCAL_EXPECTED
+                else "needs_explicit_authority_transfer"
+            ),
             "source_authority": "toolkit_main",
         })
     for name in EXPECTED:
@@ -135,6 +153,8 @@ def audit(workflow_directory: Path, toolkit_revision: str):
         "toolkit_revision": toolkit_revision,
         "workflow_count": len(workflows),
         "known_operational_issue_workflows": sorted(EXPECTED),
+        "external_writer_workflows": sorted(EXTERNAL_EXPECTED),
+        "legitimate_toolkit_local_issue_workflows": sorted(LOCAL_EXPECTED),
         "producer_call_count": sum(v["publisher_calls"] for v in findings),
         "incident_call_count": sum(v["incident_publisher_calls"] for v in findings),
         "workflows": findings,

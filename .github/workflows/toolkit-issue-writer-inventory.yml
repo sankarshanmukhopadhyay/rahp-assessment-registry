@@ -42,7 +42,7 @@ jobs:
         with:
           repository: sankarshanmukhopadhyay/rahp-toolkit
           ref: main
-          fetch-depth: 0 # historical branches must be locally resolvable
+          fetch-depth: 0 # all remote branches and tags must be locally resolvable
           path: toolkit
           persist-credentials: false
       - name: Test inventory false-success and drift boundaries
@@ -64,8 +64,11 @@ jobs:
         run: >-
           python3 registry/scripts/verify_toolkit_legacy_registration_states.py
           --out build/toolkit-legacy-registration-state.json
-      - name: Qualify historical branch source exposure (operator dispatch)
-        if: github.event_name == 'workflow_dispatch'
+      - name: Audit all historical writer paths across branch and tag refs
+        if: github.event_name == 'workflow_dispatch' || github.event_name == 'pull_request'
+        # Exposed historical writers are expected discovery evidence in a PR;
+        # only an explicit operator dispatch treats exposure as a blocking gate.
+        continue-on-error: ${{ github.event_name == 'pull_request' }}
         run: |
           python3 registry/scripts/audit_toolkit_historical_refs.py \
             --toolkit toolkit \

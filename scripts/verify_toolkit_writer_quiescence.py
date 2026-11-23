@@ -13,7 +13,7 @@ import sys
 from pathlib import Path
 
 import registry_intake
-from audit_toolkit_issue_writers import EXPECTED as CURRENT_WRITERS
+from audit_toolkit_issue_writers import EXTERNAL_EXPECTED as CURRENT_WRITERS
 
 TOOLKIT = "sankarshanmukhopadhyay/rahp-toolkit"
 API = "https://api.github.com/repos/" + TOOLKIT
