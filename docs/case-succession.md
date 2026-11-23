@@ -15,6 +15,12 @@ The existing case validator now rejects accepted handoffs with malformed/out-of-
 
 For future cases, first establish a uniquely accepted proposition and Registry case owner. If several assessments share findings or a Toolkit wrapper, do not infer one-to-one ownership from a single finding ID. Preserve cross-issue relations and residual duties explicitly before transferring source-specific writes. Further workflow consolidation should occur only once substitute checks preserve the existing invariants; no new scheduled workflow is needed for this step.
 
+The [generated historical issue locator](../archive/issue-index.md) and
+[accepted successor index](../archive/succession-index.md) offer a
+readable view of the committed baseline and accepted handoffs, without
+changing source identities or claiming that similarly named issues are
+equivalent. They are rebuilt deterministically and checked during CI.
+
 ## Local metadata locator qualification
 
 `python3 scripts/validate_history_locator.py` verifies the complete committed

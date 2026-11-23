@@ -76,9 +76,12 @@ No specialist result is inferred from an empty referral list.
 
 Cases reference authoritative source commits, issue threads, evidence and
 result artifacts rather than silently copying or rewriting upstream history.
-Use the [historical locator](archive/README.md) and
+Use the [historical locator](archive/README.md),
+[browsable historical issue index](archive/issue-index.md),
+[accepted case succession index](archive/succession-index.md) and
 [case succession rules](docs/case-succession.md) to follow provenance across
-owners. See the [execution journal](docs/registry-execution-journal.md) for
+owners. These are references to source-owned evidence, not reconstructed case
+history or additional admission authority. See the [execution journal](docs/registry-execution-journal.md) for
 stable execution and evidence identities.
 
 Operational procedures, source-ownership controls and implementation
