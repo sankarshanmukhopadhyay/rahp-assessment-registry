@@ -42,6 +42,37 @@ exclusion. Passing CI or a clean live quiescence snapshot does not substitute
 for these controls. No general Registry external-case publication authority,
 G1–G6 final acceptance, RAHP PASS or release is claimed.
 
+## 23 November 2026: complete publisher inventory and historical-ref exposure
+
+The live [Toolkit writer inventory run #45093157714](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/actions/runs/45093157714)
+and merged [Registry PR #109](https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/pull/109)
+provide the following additional evidence for **Tranche A preparation**:
+
+- Six external or mixed Toolkit workflows still contain nine effectful
+  external-assessment publisher call sites. They are **not disabled**.
+- The separate `dtg-assurance-reconcile.yml` accepted-state job is a
+  legitimate Toolkit-local controller incident writer with job-level
+  `issues: write` on a protected-main push, not an external case producer.
+  Together with the mixed instance monitor, there are two local incident
+  publisher call sites. The current external quiescence check does not
+  incorrectly require local incident shutdown.
+- The expanded historical-source audit covers all seven currently classified
+  issue-write workflows and the two retired predecessors, over both remote
+  branches and tags. The first executed audit inspected **38 refs** and found
+  **35 with potentially writable source-level entry points**. Guard presence
+  is reported but is not equated with authorization exclusion.
+- The historical-source report does **not** establish that all 35 refs are
+  currently dispatchable. Only server-side registration state, branch/tag
+  trigger behavior, credentials and actual old-ref dispatch exclusion can
+  qualify that assertion. The ref report is evidence of work to classify,
+  not evidence to remove historical source data or bypass required checks.
+
+**No G1–G6 acceptance changes.** Current source/worker discovery is stronger,
+but exclusive writer authority, source-qualified Registry new-case publication,
+recovery and reverse transfer still require executed controls. The full live
+audit JSON is retained in the workflow artifact; this report does not
+unilaterally change the owner of any case.
+
 **Rules of this ledger**
 
 - A row is *evidence* only when it is an executed run, a merged test or a live re-read. Design documents, preflights and schema validity are listed separately as *preparation*.
