@@ -13,17 +13,20 @@ import sys
 from pathlib import Path
 
 import registry_intake
+from audit_toolkit_issue_writers import EXPECTED as CURRENT_WRITERS
 
 TOOLKIT = "sankarshanmukhopadhyay/rahp-toolkit"
 API = "https://api.github.com/repos/" + TOOLKIT
-WRITERS = frozenset({
-    ".github/workflows/cross-spec-pressure-test.yml",
-    ".github/workflows/distributed-resilience-assessment.yml",
-    ".github/workflows/dpip-lifecycle.yml",
+# Reuse the audited current writer inventory rather than maintaining a second
+# list that can silently miss renamed live workflows. Retired workflow paths
+# remain blocking because historical dispatched/in-flight runs may still exist.
+HISTORICAL_WRITERS = frozenset({
     ".github/workflows/dtg-portfolio-materiality-handoff.yml",
     ".github/workflows/instance-watch.yml",
-    ".github/workflows/review-workers.yml",
 })
+WRITERS = frozenset(
+    {f".github/workflows/{name}" for name in CURRENT_WRITERS}
+) | HISTORICAL_WRITERS
 NONTERMINAL = ("queued", "in_progress", "waiting", "requested", "pending")
 
 
