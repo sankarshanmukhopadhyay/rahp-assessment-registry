@@ -19,17 +19,45 @@ class ToolkitWriterQuiescenceTests(unittest.TestCase):
         self.assertFalse(result["cutover_authorized"])
         self.assertEqual(len(calls), len(guard.NONTERMINAL))
 
-    def test_active_toolkit_writer_blocks(self):
+    def test_all_current_and_retired_toolkit_issue_writers_block(self):
+        current = {f".github/workflows/{name}" for name in guard.CURRENT_WRITERS}
+        historical = guard.HISTORICAL_WRITERS
+        self.assertEqual(guard.WRITERS, current | historical)
+        self.assertIn(".github/workflows/dtg-materiality-main.yml", guard.WRITERS)
+        self.assertIn(".github/workflows/instance-monitor-main.yml", guard.WRITERS)
+        self.assertIn(".github/workflows/instance-watch.yml", guard.WRITERS)
+        self.assertIn(".github/workflows/dtg-portfolio-materiality-handoff.yml", guard.WRITERS)
+
+        for path in sorted(guard.WRITERS):
+            with self.subTest(path=path):
+                def fetch(url):
+                    if "status=in_progress" in url:
+                        return {"total_count": 1, "workflow_runs": [{
+                            "id": 44, "path": path, "status": "in_progress"
+                        }]}
+                    return {"total_count": 0, "workflow_runs": []}
+                result = guard.evaluate(fetch)
+                self.assertFalse(result["quiescent_at_observation"])
+                self.assertEqual(result["active_writer_runs"], [{
+                    "id": 44, "workflow": path, "status": "in_progress"
+                }])
+                self.assertFalse(result["exclusive_lock_established"])
+                self.assertFalse(result["cutover_authorized"])
+
+    def test_actual_current_monitor_run_cannot_look_quiescent(self):
+        # GitHub's real run.path for the installed App monitor is the *new*
+        # filename, not the predecessor instance-watch.yml.
         def fetch(url):
-            if "status=in_progress" in url:
+            if "status=queued" in url:
                 return {"total_count": 1, "workflow_runs": [{
-                    "id": 44, "path": ".github/workflows/dtg-portfolio-materiality-handoff.yml",
-                    "status": "in_progress"
+                    "id": 45089579389,
+                    "path": ".github/workflows/instance-monitor-main.yml",
+                    "status": "queued",
                 }]}
             return {"total_count": 0, "workflow_runs": []}
-        result = guard.evaluate(fetch)
-        self.assertFalse(result["quiescent_at_observation"])
-        self.assertEqual(result["active_writer_runs"][0]["id"], 44)
+        receipt = guard.evaluate(fetch)
+        self.assertFalse(receipt["quiescent_at_observation"])
+        self.assertEqual(receipt["active_writer_runs"][0]["id"], 45089579389)
 
     def test_unrelated_workflow_is_not_classified_as_a_writer(self):
         def fetch(url):
