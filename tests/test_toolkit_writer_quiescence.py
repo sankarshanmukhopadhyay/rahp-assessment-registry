@@ -44,6 +44,34 @@ class ToolkitWriterQuiescenceTests(unittest.TestCase):
                 self.assertFalse(result["exclusive_lock_established"])
                 self.assertFalse(result["cutover_authorized"])
 
+    def test_legacy_toolkit_case_consumers_are_not_new_case_publishers(self):
+        for name in ("dpip-lifecycle.yml", "review-workers.yml"):
+            self.assertNotIn(".github/workflows/" + name, guard.WRITERS)
+            with self.subTest(legacy_consumer=name):
+                def fetch(url):
+                    if "status=in_progress" in url:
+                        return {"total_count": 1, "workflow_runs": [{
+                            "id": 51, "path": ".github/workflows/" + name,
+                            "status": "in_progress",
+                        }]}
+                    return {"total_count": 0, "workflow_runs": []}
+                result = guard.evaluate(fetch)
+                self.assertTrue(result["quiescent_at_observation"])
+                self.assertEqual(result["checked_nonterminal_runs"], 1)
+                self.assertFalse(result["exclusive_lock_established"])
+                self.assertFalse(result["cutover_authorized"])
+
+    def test_exact_current_direct_publishers_remain_blocking(self):
+        expected = {
+            ".github/workflows/cross-spec-pressure-test.yml",
+            ".github/workflows/distributed-resilience-assessment.yml",
+            ".github/workflows/dtg-materiality-main.yml",
+            ".github/workflows/instance-monitor-main.yml",
+        }
+        self.assertEqual(
+            guard.WRITERS - guard.HISTORICAL_WRITERS, expected,
+        )
+
     def test_actual_current_monitor_run_cannot_look_quiescent(self):
         # GitHub's real run.path for the installed App monitor is the *new*
         # filename, not the predecessor instance-watch.yml.

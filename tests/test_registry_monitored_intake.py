@@ -104,6 +104,19 @@ class MonitoredIntakeTests(unittest.TestCase):
             return {"total_count": 0, "workflow_runs": []}
         self.fail("unexpected live authority read " + url)
 
+    def test_only_actual_case_publisher_registrations_require_retirement(self):
+        expected = {
+            ".github/workflows/cross-spec-pressure-test.yml",
+            ".github/workflows/distributed-resilience-assessment.yml",
+            ".github/workflows/dtg-materiality-main.yml",
+            ".github/workflows/instance-monitor-main.yml",
+            ".github/workflows/dtg-portfolio-materiality-handoff.yml",
+            ".github/workflows/instance-watch.yml",
+        }
+        self.assertEqual(monitored.OLD_WORKFLOWS, expected)
+        self.assertNotIn(".github/workflows/review-workers.yml", expected)
+        self.assertNotIn(".github/workflows/dpip-lifecycle.yml", expected)
+
     def test_valid_approved_source_qualifies_without_mutation_or_assurance(self):
         result = monitored.run(self.manifest, PATH, "", fetch=self.fetch)
         self.assertEqual(result["state"], "qualified")

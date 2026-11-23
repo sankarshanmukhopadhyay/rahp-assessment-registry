@@ -13,7 +13,16 @@ import sys
 from pathlib import Path
 
 import registry_intake
-from audit_toolkit_issue_writers import EXTERNAL_EXPECTED as CURRENT_WRITERS
+from audit_toolkit_issue_writers import EXTERNAL_EXPECTED
+
+# Only workflows that actually invoke the canonical external case publisher
+# can create competing Toolkit cases. DPIP lifecycle and review workers retain
+# Toolkit-local, historical issue-number consumer duties; these are governed
+# separately and cannot be counted as Registry first-case writers.
+CURRENT_WRITERS = {
+    name: spec for name, spec in EXTERNAL_EXPECTED.items()
+    if spec["publisher"] > 0
+}
 
 TOOLKIT = "sankarshanmukhopadhyay/rahp-toolkit"
 API = "https://api.github.com/repos/" + TOOLKIT

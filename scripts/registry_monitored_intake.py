@@ -32,8 +32,13 @@ KEY = re.compile(r"^(?:dtg|cawg):[a-z0-9][a-z0-9:._/-]{7,170}$")
 CASE_ID = re.compile(r"^RAHP-AR-[A-Z0-9]+(?:-[A-Z0-9]+)+$")
 SHA256 = re.compile(r"^[0-9a-f]{64}$")
 DISABLED = frozenset({"disabled_manually", "deleted"})
+# Legacy Toolkit case consumers (DPIP lifecycle and review workers) update
+# already existing Toolkit issue identities. They are not direct first-case
+# publishers and must remain operable for historical cases. Require disabled
+# registrations for the four *actual* external case publisher workflows.
 OLD_WORKFLOWS = frozenset({
-    *(f".github/workflows/{name}" for name in EXTERNAL_EXPECTED),
+    *(f".github/workflows/{name}" for name, spec in EXTERNAL_EXPECTED.items()
+      if spec["publisher"] > 0),
     ".github/workflows/dtg-portfolio-materiality-handoff.yml",
     ".github/workflows/instance-watch.yml",
 })
