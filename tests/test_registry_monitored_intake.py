@@ -1,5 +1,6 @@
 import base64
 import copy
+import hashlib
 import json
 import sys
 import unittest
@@ -37,6 +38,21 @@ def enc(obj):
 class MonitoredIntakeTests(unittest.TestCase):
     def setUp(self):
         self.manifest = copy.deepcopy(MANIFEST)
+        self.review_event = {
+            "assessment_key": KEY,
+            "repository": "trustoverip/dtgwg-trust-tasks-tf",
+            "new": "a" * 40,
+            "title": "[RAHP review required] Reviewed source fixture",
+            "body": "Material change requires a bounded assessment.",
+            "labels": ["assessment-required", "dtg-instance"],
+            "event_class": "assessment-required",
+        }
+        full_digest = hashlib.sha256(json.dumps(
+            self.review_event, sort_keys=True, separators=(",", ":"),
+            ensure_ascii=False, allow_nan=False,
+        ).encode("utf-8")).hexdigest()
+        self.manifest["event"]["source_evidence_sha256"] = full_digest
+        self.manifest["event"]["finding_id"] = full_digest[:20]
         self.authority = {"schema": "rahp-registry-monitored-intake-authority/v1",
                           "admissions": [self.approval()]}
         self.policy = {"schema": "rahp-external-case-publication/v1", "owner": "registry"}
@@ -66,6 +82,8 @@ class MonitoredIntakeTests(unittest.TestCase):
             return enc(self.authority)
         if "/rahp-toolkit/contents/" + monitored.POLICY_PATH in url:
             return enc(self.policy)
+        if "/rahp-toolkit/contents/instances/dtg/generated/review-events.json" in url:
+            return enc([self.review_event])
         if "/commits/" in url:
             return {"sha": self.manifest["event"]["source_revision"]}
         if "/rahp-toolkit/issues?state=all" in url:
@@ -100,6 +118,40 @@ class MonitoredIntakeTests(unittest.TestCase):
         with self.assertRaisesRegex(monitored.MonitoredAdmissionError, "has not assigned"):
             monitored.run(self.manifest, PATH, "", apply=True, fetch=self.fetch,
                           post=lambda _: self.fail("no unqualified write"))
+
+    def test_wrong_accepted_source_digest_or_event_cannot_authorize_case(self):
+        for changed in (
+            {"body": "modified after approval"},
+            {"new": "e" * 40},
+            {"repository": "other/subject"},
+            {"labels": ["change-triage"]},
+            {"event_class": "change-triage"},
+        ):
+            with self.subTest(changed=changed):
+                before = dict(self.review_event)
+                self.review_event.update(changed)
+                try:
+                    with self.assertRaisesRegex(monitored.MonitoredAdmissionError,
+                                                "exact accepted material review"):
+                        monitored.qualify(self.manifest, PATH, "", fetch=self.fetch)
+                finally:
+                    self.review_event = before
+        before = dict(self.review_event)
+        self.review_event["assessment_key"] = "dtg:repository:wrong"
+        with self.assertRaisesRegex(monitored.MonitoredAdmissionError,
+                                    "missing or duplicate accepted"):
+            monitored.qualify(self.manifest, PATH, "", fetch=self.fetch)
+        self.review_event = before
+
+    def test_unavailable_accepted_source_blocks_even_with_valid_approval(self):
+        original = self.fetch
+        def missing(url):
+            if "/generated/review-events.json" in url:
+                return enc([])
+            return original(url)
+        with self.assertRaisesRegex(monitored.MonitoredAdmissionError,
+                                    "missing or duplicate accepted"):
+            monitored.qualify(self.manifest, PATH, "", fetch=missing)
 
     def test_existing_toolkit_owner_requires_governed_transfer(self):
         self.rows = [{"number": 272, "state": "closed",

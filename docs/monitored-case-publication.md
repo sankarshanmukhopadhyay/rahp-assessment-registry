@@ -31,6 +31,14 @@ corresponding Toolkit writer has been retired.
    `source_evidence_sha256`. The source repository must be authoritative
    for its own commit. Keep the source record and SHA-256 digest independently
    retrievable; a signed review cannot replace the underlying evidence.
+   Registry independently retrieves the accepted `instances/{dtg,cawg}/generated/review-events.json`
+   batch at the exact current Toolkit protected-main SHA, requires a unique
+   `assessment_key`, canonicalizes the complete matching event as sorted
+   compact UTF-8 JSON, and recomputes `source_evidence_sha256`. The source
+   event's `repository` and `new` commit must equal the approved Registry
+   scope, `finding_id` must equal the first 20 hex digits of the full digest,
+   and its labels must designate a material assessment rather than change triage.
+   Missing accepted events, changed digests, or duplicate keys fail closed.
 2. Approve the exact manifest fields in the Registry's monitored authorization
    ledger through normal protected-main review. Absence, withdrawal,
    substitution or duplicate approval is a rejection.
