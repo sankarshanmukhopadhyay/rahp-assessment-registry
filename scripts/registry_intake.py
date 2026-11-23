@@ -160,6 +160,11 @@ def render_body(event):
         "- Revision: `" + event["source_revision"] + "`",
         "- Source: " + event["source_url"],
         "- Finding ID: `" + event["finding_id"] + "`",
+        *(["<!-- rahp-registry-monitored-evidence:sha256:" +
+           event["source_evidence_sha256"] + " -->",
+           "- Reviewed monitored source evidence: `sha256:" +
+           event["source_evidence_sha256"] + "`"]
+          if event.get("source_evidence_sha256") else []),
         "- Responsible external owner: " + event["responsible_owner"],
         *(["- RAHP controller anchor (execution only): " + event["controller_issue_url"]]
           if event.get("controller_issue_url") else []),

@@ -8,6 +8,9 @@ on:
       - 'scripts/registry_materiality_intake.py'
       - 'tests/test_registry_outbox.py'
       - 'scripts/registry_direct_intake.py'
+      - 'scripts/registry_monitored_intake.py'
+      - 'tests/test_registry_monitored_intake.py'
+      - 'ops/migration/monitored-intake-authorizations.json'
       - 'tests/test_registry_direct_intake.py'
       - 'ops/migration/direct-intake-authorizations.json'
       - 'outbox/pending/**'
@@ -26,6 +29,11 @@ on:
         default: false
       direct_intake:
         description: 'Enable only reviewed direct-source first intake (not historical Toolkit transfer)'
+        required: true
+        type: boolean
+        default: false
+      monitored_intake:
+        description: 'Exact approved monitored source intake (requires independent writer exclusion)'
         required: true
         type: boolean
         default: false
@@ -65,7 +73,15 @@ jobs:
             exit 1
           fi
           test -f "$REQUEST_MANIFEST" && test ! -L "$REQUEST_MANIFEST"
-          if [[ "${{ inputs.direct_intake }}" = "true" ]]; then
+          if [[ "${{ inputs.direct_intake }}" = "true" && "${{ inputs.monitored_intake }}" = "true" ]]; then
+            echo 'INVALID: direct and monitored intake are mutually exclusive' >&2
+            exit 1
+          fi
+          if [[ "${{ inputs.monitored_intake }}" = "true" ]]; then
+            python3 scripts/registry_monitored_intake.py \
+              --manifest "$REQUEST_MANIFEST" \
+              --receipt build/outbox/preflight.json
+          elif [[ "${{ inputs.direct_intake }}" = "true" ]]; then
             python3 scripts/registry_direct_intake.py \
               --manifest "$REQUEST_MANIFEST" \
               --receipt build/outbox/preflight.json
@@ -127,6 +143,7 @@ jobs:
       - name: Refuse new-case dual publication before coordinated Toolkit cutover
         env:
           DIRECT_INTAKE: ${{ inputs.direct_intake }}
+          MONITORED_INTAKE: ${{ inputs.monitored_intake }}
         run: |
           python3 - <<'PY'
           import json
@@ -139,7 +156,14 @@ jobs:
           assert receipt.get('assurance_determination') is None
           assert receipt.get('controller_execution') is None
           import os
-          if os.environ.get('DIRECT_INTAKE') == 'true':
+          if os.environ.get('MONITORED_INTAKE') == 'true':
+              assert os.environ.get('DIRECT_INTAKE') != 'true'
+              assert receipt.get('schema') == 'rahp-registry-monitored-intake-qualification/v1'
+              assert receipt.get('state') == 'qualified'
+              assert receipt.get('toolkit_current_policy_is_registry') is True
+              assert receipt.get('toolkit_writers_quiescent_at_observation') is True
+              print('Monitored source qualified; historical writer exclusion still required.')
+          elif os.environ.get('DIRECT_INTAKE') == 'true':
               assert receipt.get('schema') == 'rahp-registry-direct-intake-qualification/v1'
               assert receipt.get('state') == 'qualified'
               assert receipt.get('source_only_direct_intake') is True
@@ -156,7 +180,7 @@ jobs:
               print('Existing owner-only replay authorized; no new issue creation.')
           PY
       - name: Reconcile only the existing owner with authoritative re-read
-        if: inputs.direct_intake != true
+        if: inputs.direct_intake != true && inputs.monitored_intake != true
         env:
           REGISTRY_INTAKE_TOKEN: ${{ github.token }}
           REQUEST_MANIFEST: ${{ inputs.manifest }}
@@ -178,7 +202,7 @@ jobs:
           print('Existing Registry case verified again; no new issue, no RAHP PASS.')
           PY
       - name: Publish strictly approved direct case with authoritative re-read
-        if: inputs.direct_intake == true
+        if: inputs.direct_intake == true && inputs.monitored_intake != true
         env:
           REGISTRY_INTAKE_TOKEN: ${{ github.token }}
           REQUEST_MANIFEST: ${{ inputs.manifest }}
@@ -203,6 +227,28 @@ jobs:
           assert after['first_case_execution'] is False
           print('Source-qualified case owner observed; controller/assurance not executed.')
           PY
+      - name: Require independent historical-writer exclusion before monitored issue creation
+        if: inputs.monitored_intake == true
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          data = json.loads(Path('build/outbox/preflight.json').read_text())
+          if (data.get('schema') != 'rahp-registry-monitored-intake-qualification/v1'
+                  or data.get('historical_execution_exclusion_proven') is not True
+                  or data.get('registered_external_writer_exclusion_verified') is not True
+                  or data.get('toolkit_writers_quiescent_at_observation') is not True):
+              raise SystemExit('BLOCKED: GitHub server-side old-writer exclusion or live quiescence not evidenced')
+          PY
+      - name: Publish qualified monitored case
+        if: inputs.monitored_intake == true
+        env:
+          REGISTRY_INTAKE_TOKEN: ${{ github.token }}
+          REQUEST_MANIFEST: ${{ inputs.manifest }}
+        run: |
+          python3 scripts/registry_monitored_intake.py \
+            --manifest "$REQUEST_MANIFEST" \
+            --receipt build/outbox/replayed.json --apply
       - name: Retain replay acknowledgment
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2

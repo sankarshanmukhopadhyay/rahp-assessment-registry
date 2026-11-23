@@ -40,6 +40,13 @@ def owner_for(event, issues):
             raise DeliveryError("existing owner lacks the approved Registry case identity")
         if event["source_revision"] not in body or event["finding_id"] not in body:
             raise DeliveryError("existing owner does not acknowledge this exact source revision/finding; reassessment required")
+        digest = event.get("source_evidence_sha256")
+        if digest and (
+                "<!-- rahp-registry-monitored-evidence:sha256:" + digest + " -->"
+                not in body):
+            raise DeliveryError(
+                "existing owner does not acknowledge the exact monitored source evidence digest; reassessment required"
+            )
     return decision
 
 
