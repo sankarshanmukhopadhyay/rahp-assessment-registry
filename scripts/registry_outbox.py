@@ -26,6 +26,21 @@ def require_event(value):
 
 
 def owner_for(event, issues):
+    if "source_routing_key" in event:
+        routing = event["source_routing_key"]
+        key_marker = intake.marker(event["assessment_key"])
+        for issue in issues:
+            if "pull_request" in issue:
+                continue
+            body = issue.get("body") or ""
+            matches = (
+                "<!-- rahp-registry-source-routing:" + routing + " -->" in body
+                or intake.marker(routing) in body
+                or "<!-- rahp-registry-case:" + event["case_id"] + " -->" in body
+                or "<!-- rahp-registry-monitored-evidence:sha256:" + event["source_evidence_sha256"] + " -->" in body
+            )
+            if matches and key_marker not in body:
+                raise DeliveryError("conflicting Registry source lineage, case or evidence owner")
     decisions = intake.plan([event], issues)
     if len(decisions) != 1:
         raise DeliveryError("ambiguous source event planning")
@@ -40,6 +55,9 @@ def owner_for(event, issues):
             raise DeliveryError("existing owner lacks the approved Registry case identity")
         if event["source_revision"] not in body or event["finding_id"] not in body:
             raise DeliveryError("existing owner does not acknowledge this exact source revision/finding; reassessment required")
+        if "source_routing_key" in event and (
+                "<!-- rahp-registry-source-routing:" + event["source_routing_key"] + " -->" not in body):
+            raise DeliveryError("existing owner lacks exact monitored routing identity")
         digest = event.get("source_evidence_sha256")
         if digest and (
                 "<!-- rahp-registry-monitored-evidence:sha256:" + digest + " -->"
@@ -64,6 +82,8 @@ def verify_live_reservation(manifest, manifest_path, token, *, fetch=None):
     workflows. A separate operator cutover gate must exclude in-flight publishers.
     """
     event = require_event(manifest)
+    if "source_routing_key" in event:
+        raise DeliveryError("historical lineage requires monitored qualification, not transfer")
     if not isinstance(manifest_path, str) or not PENDING_PATH.fullmatch(manifest_path):
         raise DeliveryError("reservation requires a committed canonical pending-intake path")
     if fetch is None:
