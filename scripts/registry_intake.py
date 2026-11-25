@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -14,6 +15,39 @@ REGISTRY = "sankarshanmukhopadhyay/rahp-assessment-registry"
 MARKER = re.compile(r"<!-- registry-assessment-key:([^<>\n]+) -->")
 KEY = re.compile(r"^[a-z0-9][a-z0-9:._/-]{7,180}$")
 SHA = re.compile(r"^[0-9a-f]{40}$")
+REPO_KEY = re.compile(r"^(dtg|cawg):repository:([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)(?:@([A-Za-z0-9_.@/+-]+))?$")
+PROPOSITION_KEY = re.compile(r"^(dtg|cawg):proposition:[a-z0-9][a-z0-9-]{7,100}$")
+
+def repository_key_matches(key, repository):
+    match = REPO_KEY.fullmatch(key)
+    if not match or match[2] != repository or any(p in (".", "..") for p in repository.split("/")):
+        return False
+    branch = match[3]
+    return branch is None or (branch != "main" and branch != "@"
+        and ".." not in branch and "@{" not in branch
+        and not branch.startswith("-") and not branch.endswith(".")
+        and all(p and not p.startswith(".") and not p.endswith(".lock") for p in branch.split("/")))
+
+def routing_alias(left, right):
+    """Detect ambiguous spelling, never normalize a producer identity."""
+    if not isinstance(left, str) or not isinstance(right, str) or left == right:
+        return False
+    a, b = REPO_KEY.fullmatch(left), REPO_KEY.fullmatch(right)
+    return bool(a and b and a[1] == b[1] and a[2].casefold() == b[2].casefold()
+                and a[3] == b[3])
+
+
+def manifest_digest(event):
+    manifest = {"schema": "rahp-registry-pending-intake/v1", "event": event}
+    return hashlib.sha256(json.dumps(manifest, sort_keys=True, separators=(",", ":"),
+                                     ensure_ascii=False, allow_nan=False).encode("utf-8")).hexdigest()
+
+
+def valid_key(key, repository):
+    if key.startswith(("dtg:repository:", "cawg:repository:")):
+        return repository_key_matches(key, repository)
+    return KEY.fullmatch(key) is not None
+
 URL = "https://api.github.com/repos/" + REGISTRY + "/issues"
 # Reviewed, bounded manual transfer. A finding-to-case map is not inferred from a release.
 MIGRATED_FINDINGS = {
@@ -39,8 +73,19 @@ def validate_event(event):
               "source_revision", "source_url", "finding_id", "responsible_owner")
     if any(not isinstance(event.get(k), str) or not event[k].strip() for k in fields):
         raise IntakeError("missing mandatory identity, source pin, proposition or owner")
-    if not KEY.fullmatch(event["assessment_key"]):
+    if not valid_key(event["assessment_key"], event["source_repository"]):
         raise IntakeError("invalid assessment key")
+    key = event["assessment_key"]
+    lineage_fields = {"source_routing_key", "historical_lineage"}
+    if PROPOSITION_KEY.fullmatch(key):
+        if (not lineage_fields <= event.keys()
+                or any("<!--" in event[f] for f in ("title", "proposition", "source_url"))
+                or not isinstance(event["source_routing_key"], str)
+                or not repository_key_matches(event["source_routing_key"], event["source_repository"])
+                or key.split(":")[0] != event["source_routing_key"].split(":")[0]):
+            raise IntakeError("proposition key requires exact monitored routing and historical lineage")
+    elif lineage_fields & event.keys() or key.startswith(("dtg:proposition:", "cawg:proposition:")):
+        raise IntakeError("historical lineage requires a valid monitored proposition key")
     case_id = event.get("case_id")
     if case_id is not None and (not isinstance(case_id, str) or
             not re.fullmatch(r"RAHP-AR-[A-Z0-9]+(?:-[A-Z0-9]+)+", case_id)):
@@ -165,6 +210,13 @@ def render_body(event):
            "- Reviewed monitored source evidence: `sha256:" +
            event["source_evidence_sha256"] + "`"]
           if event.get("source_evidence_sha256") else []),
+        *(["<!-- rahp-registry-source-routing:" + event["source_routing_key"] + " -->",
+           "<!-- rahp-registry-monitored-manifest:sha256:" + manifest_digest(event) + " -->",
+           "- Source routing identity: `" + event["source_routing_key"] + "`",
+           "- Historical Toolkit records (closed; not transferred): " + ", ".join(
+               "https://github.com/sankarshanmukhopadhyay/rahp-toolkit/issues/" + str(row["number"])
+               for row in event["historical_lineage"])]
+          if "source_routing_key" in event else []),
         "- Responsible external owner: " + event["responsible_owner"],
         *(["- RAHP controller anchor (execution only): " + event["controller_issue_url"]]
           if event.get("controller_issue_url") else []),

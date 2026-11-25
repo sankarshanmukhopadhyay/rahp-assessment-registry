@@ -57,7 +57,7 @@ def qualify(manifest, manifest_path, token, *, fetch=None):
     if not isinstance(event.get("case_id"), str) or not re.fullmatch(
             r"RAHP-AR-[A-Z0-9]+(?:-[A-Z0-9]+)+", event["case_id"]):
         raise AdmissionError("direct first intake requires canonical case ID")
-    if not DIRECT.fullmatch(key) or event.get("controller_issue_url"):
+    if not DIRECT.fullmatch(key) or event.get("controller_issue_url") or "source_routing_key" in event:
         raise AdmissionError("first-time intake requires Registry-exclusive namespace and no historic controller issue")
     if event["responsible_owner"] != event["source_repository"]:
         raise AdmissionError("direct intake cannot assume another source owner's authority")

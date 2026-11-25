@@ -380,5 +380,142 @@ class MonitoredIntakeTests(unittest.TestCase):
         self.assertNotIn("  schedule:", text)
 
 
+class ClosedLineageTests(unittest.TestCase):
+    def setUp(self):
+        self.fixture = MonitoredIntakeTests()
+        self.fixture.setUp()
+        self.f = self.fixture
+        self.ev = self.f.manifest["event"]
+        repo = "OpenVTC/dtg-credentials"
+        self.routing = "dtg:repository:" + repo
+        self.f.review_event.update(assessment_key=self.routing, repository=repo)
+        self.ev.update(assessment_key="dtg:proposition:ceremony-hold-fixture",
+                       source_routing_key=self.routing, source_repository=repo,
+                       responsible_owner=repo, source_url="https://github.com/" + repo + "/commit/" + "a"*40)
+        self.f.rows = [{"number": n, "state": "closed", "closed_at": "2026-11-20T00:00:00Z",
+                        "updated_at": "2026-11-21T00:00:00Z",
+                        "body": "<!-- rahp-assessment-key:" + self.routing + " -->"} for n in (5, 7)]
+        self.ev["historical_lineage"] = [
+            {**{k: row[k] for k in ("number", "closed_at", "updated_at")},
+             "body_sha256": hashlib.sha256(row["body"].encode()).hexdigest()} for row in self.f.rows]
+        self.registry = []
+        self.approve()
+
+    def approve(self):
+        self.ev["source_evidence_sha256"] = monitored.canonical_digest(self.f.review_event)
+        self.ev["finding_id"] = self.ev["source_evidence_sha256"][:20]
+        self.f.authority["admissions"] = [{**self.f.approval(),
+            "source_routing_key": self.ev["source_routing_key"],
+            "historical_lineage": copy.deepcopy(self.ev["historical_lineage"]),
+            "manifest_sha256": monitored.canonical_digest(self.f.manifest)}]
+
+    def fetch(self, url):
+        if "/rahp-assessment-registry/issues?" in url:
+            return self.registry
+        return self.f.fetch(url)
+
+    def qualify(self):
+        return monitored.qualify(self.f.manifest, PATH, "", fetch=self.fetch)
+
+    def test_closed_history_qualifies_and_replay_does_not_rewrite(self):
+        old = copy.deepcopy(self.f.rows)
+        self.assertEqual(self.qualify()["source_routing_key"], self.routing)
+        def post(payload):
+            self.registry.append({"number": 99, "state": "open",
+                "html_url": "https://github.com/" + monitored.REGISTRY + "/issues/99",
+                "body": payload["body"]})
+            return self.registry[0]
+        for _ in range(2):
+            receipt = monitored.run(self.f.manifest, PATH, "", apply=True, fetch=self.fetch,
+                                    load_issues=lambda: self.registry, post=post)
+            self.assertEqual(receipt["owner_number"], 99)
+            self.assertIsNone(receipt["assurance_determination"])
+        self.assertEqual(len(self.registry), 1)
+        self.assertEqual(old, self.f.rows)
+
+    def test_history_changes_fail(self):
+        original = copy.deepcopy(self.f.rows)
+        for rows in ([{**original[0], "state": "open"}, original[1]],
+                     original[:1], original + [{**original[0], "number": 8}],
+                     original + [original[0]], [{**original[0], "body": original[0]["body"]+"changed"}, original[1]],
+                     [{**original[0], "updated_at": "later"}, original[1]]):
+            self.f.rows = rows
+            with self.subTest(rows=rows), self.assertRaises(monitored.MonitoredAdmissionError):
+                self.qualify()
+
+    def test_approval_and_conflicting_registry_owner_fail(self):
+        self.ev["proposition"] += " substituted"
+        with self.assertRaises(monitored.MonitoredAdmissionError):
+            self.qualify()
+        self.approve()
+        self.registry = [{"number": 11, "state": "open",
+                         "body": "<!-- rahp-registry-case:" + self.ev["case_id"] + " -->"}]
+        with self.assertRaises(monitored.outbox.DeliveryError):
+            self.qualify()
+
+    def test_exact_mixed_case_and_branch_binding(self):
+        self.assertTrue(intake.valid_key(self.routing, self.ev["source_repository"]))
+        self.assertFalse(intake.valid_key(self.routing.lower(), self.ev["source_repository"]))
+        self.assertTrue(intake.valid_key(self.routing + "@release/V2", self.ev["source_repository"]))
+        self.assertFalse(intake.valid_key(self.routing + "@../V2", self.ev["source_repository"]))
+        self.f.review_event["branch"] = "release/V2"
+        self.approve()
+        with self.assertRaisesRegex(monitored.MonitoredAdmissionError, "branch identity"):
+            self.qualify()
+
+    def test_reapproved_changed_manifest_cannot_replay_prior_case(self):
+        self.registry = [{"number": 99, "state": "open",
+                          "body": intake.render_body(self.ev)}]
+        self.ev["proposition"] += " changed scope"
+        self.approve()
+        with self.assertRaisesRegex(monitored.outbox.DeliveryError, "exact approved monitored manifest"):
+            self.qualify()
+
+    def test_source_case_alias_is_a_conflict_not_normalization(self):
+        alias = self.routing.lower()
+        self.f.rows.append({**self.f.rows[0], "number": 12,
+                            "body": "<!-- rahp-assessment-key:" + alias + " -->"})
+        with self.assertRaisesRegex(monitored.MonitoredAdmissionError, "ambiguous historical"):
+            self.qualify()
+
+    def test_registry_route_alias_is_a_conflict(self):
+        self.registry = [{"number": 99, "state": "open",
+                          "body": intake.marker(self.routing.lower())}]
+        with self.assertRaisesRegex(monitored.outbox.DeliveryError, "conflicting Registry"):
+            self.qualify()
+
+    def test_authority_change_after_initial_qualification_blocks_post(self):
+        def load():
+            self.f.reg = {"commit": {"sha": "e"*40}}
+            return self.registry
+        with self.assertRaisesRegex(monitored.MonitoredAdmissionError, "changed before delivery"):
+            monitored.run(self.f.manifest, PATH, "", apply=True, fetch=self.fetch,
+                          load_issues=load, post=lambda _: self.fail("no stale write"))
+
+    def test_producer_branch_positive_and_foreign_instance_negative(self):
+        branch = "release/V2"
+        self.routing += "@" + branch
+        self.ev["source_routing_key"] = self.routing
+        self.f.review_event.update(assessment_key=self.routing, branch=branch)
+        for row in self.f.rows:
+            row["body"] = "<!-- rahp-assessment-key:" + self.routing + " -->"
+        self.ev["historical_lineage"] = [
+            {**{k: row[k] for k in ("number", "closed_at", "updated_at")},
+             "body_sha256": hashlib.sha256(row["body"].encode()).hexdigest()} for row in self.f.rows]
+        self.approve()
+        self.assertEqual(self.qualify()["source_routing_key"], self.routing)
+        self.f.review_event["instance"] = "cawg"
+        self.approve()
+        with self.assertRaisesRegex(monitored.MonitoredAdmissionError, "branch identity"):
+            self.qualify()
+
+    def test_competing_approval_rejected(self):
+        row = copy.deepcopy(self.f.authority["admissions"][0])
+        row["assessment_key"] = "dtg:proposition:alternate-fixture"
+        self.f.authority["admissions"].append(row)
+        with self.assertRaisesRegex(monitored.MonitoredAdmissionError, "conflicting approved"):
+            self.qualify()
+
+
 if __name__ == "__main__":
     unittest.main()
