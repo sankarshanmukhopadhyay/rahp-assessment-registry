@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -26,6 +27,21 @@ def repository_key_matches(key, repository):
         and ".." not in branch and "@{" not in branch
         and not branch.startswith("-") and not branch.endswith(".")
         and all(p and not p.startswith(".") and not p.endswith(".lock") for p in branch.split("/")))
+
+def routing_alias(left, right):
+    """Detect ambiguous spelling, never normalize a producer identity."""
+    if not isinstance(left, str) or not isinstance(right, str) or left == right:
+        return False
+    a, b = REPO_KEY.fullmatch(left), REPO_KEY.fullmatch(right)
+    return bool(a and b and a[1] == b[1] and a[2].casefold() == b[2].casefold()
+                and a[3] == b[3])
+
+
+def manifest_digest(event):
+    manifest = {"schema": "rahp-registry-pending-intake/v1", "event": event}
+    return hashlib.sha256(json.dumps(manifest, sort_keys=True, separators=(",", ":"),
+                                     ensure_ascii=False, allow_nan=False).encode("utf-8")).hexdigest()
+
 
 def valid_key(key, repository):
     if key.startswith(("dtg:repository:", "cawg:repository:")):
@@ -63,6 +79,7 @@ def validate_event(event):
     lineage_fields = {"source_routing_key", "historical_lineage"}
     if PROPOSITION_KEY.fullmatch(key):
         if (not lineage_fields <= event.keys()
+                or any("<!--" in event[f] for f in ("title", "proposition", "source_url"))
                 or not isinstance(event["source_routing_key"], str)
                 or not repository_key_matches(event["source_routing_key"], event["source_repository"])
                 or key.split(":")[0] != event["source_routing_key"].split(":")[0]):
@@ -194,6 +211,7 @@ def render_body(event):
            event["source_evidence_sha256"] + "`"]
           if event.get("source_evidence_sha256") else []),
         *(["<!-- rahp-registry-source-routing:" + event["source_routing_key"] + " -->",
+           "<!-- rahp-registry-monitored-manifest:sha256:" + manifest_digest(event) + " -->",
            "- Source routing identity: `" + event["source_routing_key"] + "`",
            "- Historical Toolkit records (closed; not transferred): " + ", ".join(
                "https://github.com/sankarshanmukhopadhyay/rahp-toolkit/issues/" + str(row["number"])

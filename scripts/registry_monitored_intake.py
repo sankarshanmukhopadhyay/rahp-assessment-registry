@@ -66,7 +66,7 @@ def routing_key(event):
 
 
 def _owner_scan(fetch, event):
-    """Current or historical Toolkit issue identity always prevails."""
+    """Reject prior owners except an explicitly reviewed closed historical set."""
     checked = 0
     marker = "<!-- rahp-assessment-key:" + routing_key(event) + " -->"
     expected = event.get("historical_lineage")
@@ -75,7 +75,7 @@ def _owner_scan(fetch, event):
     for page in range(1, 101):
         url = API + TOOLKIT + "/issues?state=all&per_page=100&page=" + str(page)
         rows = fetch(url)
-        if not isinstance(rows, list):
+        if not isinstance(rows, list) or len(rows) > 100:
             raise MonitoredAdmissionError("Toolkit issue owner enumeration unavailable")
         for issue in rows:
             if not isinstance(issue, dict):
@@ -87,7 +87,13 @@ def _owner_scan(fetch, event):
                 if type(number) is not int or number < 1 or number in seen:
                     raise MonitoredAdmissionError("invalid or duplicate historical issue enumeration")
                 seen.add(number)
-            if marker in (issue.get("body") or ""):
+            body = issue.get("body") or ""
+            if not isinstance(body, str):
+                raise MonitoredAdmissionError("invalid historical issue body")
+            if any(intake.routing_alias(k, routing_key(event)) for k in
+                   re.findall(r"<!-- rahp-assessment-key:([^<>\n]+) -->", body)):
+                raise MonitoredAdmissionError("ambiguous historical source repository spelling")
+            if marker in body:
                 if expected is None:
                     raise MonitoredAdmissionError(
                         "Toolkit already owns this assessment key; use governed transfer"
@@ -176,6 +182,9 @@ def verify_accepted_source_event(fetch, observation_commit, event):
     if len(matches) != 1:
         raise MonitoredAdmissionError("missing or duplicate accepted monitored source event")
     source = matches[0]
+    if any(intake.routing_alias(row.get("assessment_key"), routing_key(event))
+           for row in data if isinstance(row, dict)):
+        raise MonitoredAdmissionError("ambiguous accepted source repository spelling")
     if routing_key(event).startswith(("dtg:repository:", "cawg:repository:")):
         branch = source.get("branch", "main")
         expected_key = f"{instance}:repository:{source.get('repository')}"
@@ -194,7 +203,8 @@ def verify_accepted_source_event(fetch, observation_commit, event):
             or source.get("repository") != event["source_repository"]
             or source.get("new") != event["source_revision"]
             or source.get("event_class") not in (None, "assessment-required")
-            or "assessment-required" not in (source.get("labels") or [])):
+            or not isinstance(source.get("labels"), list)
+            or "assessment-required" not in source["labels"]):
         raise MonitoredAdmissionError(
             "Registry source scope does not match the exact accepted material review event"
         )
@@ -263,14 +273,16 @@ def qualify(manifest, manifest_path, token, *, fetch=None):
     if lineage is not None:
         exact.update(source_routing_key=routing_key(event), manifest_sha256=canonical_digest(manifest),
                      historical_lineage=lineage)
-        # One approved source-event digest and one case ID may not be reassigned.
-        conflicts = [row for row in authority["admissions"] if isinstance(row, dict)
-                     and row.get("assessment_key") != key
-                     and (row.get("source_evidence_sha256") == evidence
-                          or row.get("case_id") == event["case_id"]
-                          or row.get("source_routing_key", row.get("assessment_key")) == routing_key(event))]
-        if conflicts:
-            raise MonitoredAdmissionError("conflicting approved monitored lineage scope")
+    # Do not reassign a source digest, case ID or routing lineage across modes.
+    conflicts = [row for row in authority["admissions"] if isinstance(row, dict)
+                 and row.get("assessment_key") != key
+                 and (row.get("source_evidence_sha256") == evidence
+                      or row.get("case_id") == event["case_id"]
+                      or row.get("source_routing_key", row.get("assessment_key")) == routing_key(event)
+                      or intake.routing_alias(row.get("source_routing_key", row.get("assessment_key")),
+                                              routing_key(event)))]
+    if conflicts:
+        raise MonitoredAdmissionError("conflicting approved monitored lineage scope")
     matches = [
         row for row in authority["admissions"]
         if isinstance(row, dict) and row.get("assessment_key") == key
@@ -364,9 +376,23 @@ def run(manifest, path, token, *, apply=False, fetch=None, load_issues=None, pos
     if not apply:
         return {**proof, "mode": "dry_run", "state": "qualified",
                 "owner_url": None, "owner_number": None}
+    event = outbox.require_event(manifest)
+    if "source_routing_key" in event:
+        read = fetch or (lambda url: intake.request("GET", url, token))
+        if load_issues is None:
+            load_issues = lambda: _registry_issues(read)
+
+        def before_post():
+            # Requalify immediately before a new POST, not after an effect.
+            # This is a bounded re-read, not an atomic cross-repository lock.
+            current = qualify(manifest, path, token, fetch=read)
+            if current != proof:
+                raise MonitoredAdmissionError("source or publication authority changed before delivery")
+    else:
+        before_post = None
     receipt = outbox.deliver(
         manifest, token, apply=True, allow_new_case=True,
-        load_issues=load_issues, post=post,
+        load_issues=load_issues, post=post, before_post=before_post,
     )
     if receipt["state"] != "owner_observed":
         raise MonitoredAdmissionError("Registry monitored case owner unacknowledged")

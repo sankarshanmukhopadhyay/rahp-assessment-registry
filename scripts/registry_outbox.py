@@ -33,9 +33,11 @@ def owner_for(event, issues):
             if "pull_request" in issue:
                 continue
             body = issue.get("body") or ""
+            source_keys = re.findall(r"<!-- rahp-registry-source-routing:([^<>\n]+) -->", body)
+            source_keys.extend(intake.MARKER.findall(body))
             matches = (
-                "<!-- rahp-registry-source-routing:" + routing + " -->" in body
-                or intake.marker(routing) in body
+                routing in source_keys
+                or any(intake.routing_alias(k, routing) for k in source_keys)
                 or "<!-- rahp-registry-case:" + event["case_id"] + " -->" in body
                 or "<!-- rahp-registry-monitored-evidence:sha256:" + event["source_evidence_sha256"] + " -->" in body
             )
@@ -55,9 +57,11 @@ def owner_for(event, issues):
             raise DeliveryError("existing owner lacks the approved Registry case identity")
         if event["source_revision"] not in body or event["finding_id"] not in body:
             raise DeliveryError("existing owner does not acknowledge this exact source revision/finding; reassessment required")
-        if "source_routing_key" in event and (
-                "<!-- rahp-registry-source-routing:" + event["source_routing_key"] + " -->" not in body):
-            raise DeliveryError("existing owner lacks exact monitored routing identity")
+        if "source_routing_key" in event:
+            routes = re.findall(r"<!-- rahp-registry-source-routing:([^<>\n]+) -->", body)
+            manifests = re.findall(r"<!-- rahp-registry-monitored-manifest:sha256:([^<>\n]+) -->", body)
+            if routes != [event["source_routing_key"]] or manifests != [intake.manifest_digest(event)]:
+                raise DeliveryError("existing owner lacks exact approved monitored manifest/routing identity")
         digest = event.get("source_evidence_sha256")
         if digest and (
                 "<!-- rahp-registry-monitored-evidence:sha256:" + digest + " -->"
@@ -143,7 +147,7 @@ def verify_live_reservation(manifest, manifest_path, token, *, fetch=None):
             "assessment_key": event["assessment_key"]}
 
 
-def deliver(manifest, token, *, apply=False, allow_new_case=False, load_issues=None, post=None):
+def deliver(manifest, token, *, apply=False, allow_new_case=False, load_issues=None, post=None, before_post=None):
     """Only a live issue re-read acknowledges a delivery, not an HTTP POST.
 
     Publication workers must be serialized; GitHub has no atomic unique issue key.
@@ -178,6 +182,8 @@ def deliver(manifest, token, *, apply=False, allow_new_case=False, load_issues=N
             "new Registry issue creation blocked: publisher cutover authority not established"
         )
 
+    if before_post is not None:
+        before_post()
     failure = None
     response = None
     try:
