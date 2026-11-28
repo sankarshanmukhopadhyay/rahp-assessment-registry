@@ -7,6 +7,7 @@ on:
       - 'cases/dtg/spec-dependency-2026-11.json'
       - 'scripts/verify_vti_041_replay.py'
       - 'tests/test_vti_041_replay.py'
+      - 'ops/assessments/vti-041-critical-extension-probe.rs'
   workflow_dispatch:
 permissions:
   contents: read
@@ -171,3 +172,39 @@ jobs:
         env:
           CARGO_TERM_COLOR: never
         run: python3 scripts/verify_vti_041_replay.py vti
+  vti-041-critical-extension-probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: OpenVTC/verifiable-trust-infrastructure
+          ref: 0366ad0b3ce4604d2b4cd634cb93486c12dcff03
+          path: vti
+          persist-credentials: false
+      - run: bash vti/scripts/install-build-deps.sh
+      - uses: ./vti/.github/actions/add-swap
+      - name: Execute signed service probe with isolated test-only overlay
+        shell: bash
+        env:
+          CARGO_TERM_COLOR: never
+        run: |
+          set -euo pipefail
+          target=vti/vtc-service/tests/it/single_admin_mode.rs
+          test "$(git -C vti rev-parse HEAD)" = 0366ad0b3ce4604d2b4cd634cb93486c12dcff03
+          test -z "$(git -C vti status --porcelain)"
+          echo '7c0a1d33d7039f5e93a027495750c4a3b19b9fe785801363da31c04297787b3d  '"$target" | sha256sum -c -
+          cat ops/assessments/vti-041-critical-extension-probe.rs >> "$target"
+          test "$(git -C vti diff --name-only)" = vtc-service/tests/it/single_admin_mode.rs
+          (cd vti && cargo test --locked -p vtc-service --test it registry_88_nested_critical_extensions -- --nocapture) | tee critical-extension-probe.log
+          grep -E '^test result: ok\. 1 passed; 0 failed; 0 ignored;' critical-extension-probe.log
+      - name: Retain observations even on failure
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: vti-041-critical-extension-probe
+          path: critical-extension-probe.log
+          if-no-files-found: warn
