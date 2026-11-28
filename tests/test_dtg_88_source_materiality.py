@@ -55,7 +55,7 @@ class DTGSourceMaterialityTests(unittest.TestCase):
         self.assertFalse(CASE["evidence"]["runtime_reproduced"])
         self.assertEqual(REVIEW["group_assurance_determination"], "not_assessed")
         self.assertTrue(REVIEW["runtime_consumer_tests_executed"])
-        self.assertFalse(REVIEW["target_native_vti_tests_executed"])
+        self.assertTrue(REVIEW["target_native_vti_tests_executed"])
         baseline = REVIEW["downstream_vti_dependency_observation"]["baseline_vti_0_39_runtime_replay"]
         self.assertTrue(baseline["executed"])
         self.assertEqual(baseline["source_revision"], "66a7c2aa362e82cdbbb3b384850d73fa64d97848")

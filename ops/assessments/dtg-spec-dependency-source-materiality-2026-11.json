@@ -99,7 +99,7 @@
     "remaining_owner": "https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/88"
   },
   "runtime_consumer_test_scope": "immutable upstream Trust Tasks v0.40.0 Rust release only; no VTI downstream or cross-language replay",
-  "target_native_vti_tests_executed": false,
+  "target_native_vti_tests_executed": true,
   "upstream_rust_replay": {
     "source_repository": "trustoverip/dtgwg-trust-tasks-tf",
     "source_commit": "69814c5ef60b5fa2d75fe2687efad1d12d34283f",
@@ -194,8 +194,19 @@
       ]
     },
     "producer_ci_run_url": "https://github.com/OpenVTC/verifiable-trust-infrastructure/actions/runs/45926099793",
-    "target_native_runtime_reproduced": false,
+    "target_native_runtime_reproduced": true,
     "critical_extension_consumer_reproduced": false,
-    "interpretation": "Actual VTI adoption beyond 0.40 is established by the pinned manifest and lockfile; the Trust Tasks-specific old JWT/schema split is removed, not graph-wide duplication. Producer CI is not independent Registry replay. The historical 0.39 baseline and upstream 0.40 replay remain unchanged. New native replay is bounded to 13 JWT and 16 receiver-spine tests; it cannot establish extCritical, purpose, cross-language or deployment conformance."
+    "interpretation": "Actual VTI adoption beyond 0.40 is established by the pinned manifest and lockfile; the Trust Tasks-specific old JWT/schema split is removed, not graph-wide duplication. Producer CI is not independent Registry replay. The historical 0.39 baseline and upstream 0.40 replay remain unchanged. New native replay is bounded to 13 JWT and 16 receiver-spine tests; it cannot establish extCritical, purpose, cross-language or deployment conformance. Actual Registry replay on 28 November passed all 29 named native tests; independent semantic determination and remaining consuming-path propositions are not established.",
+    "native_replay": {
+      "source_revision": "0366ad0b3ce4604d2b4cd634cb93486c12dcff03",
+      "registry_tested_revision": "597725a9209f6f4d2f22a28b17656c96e97acc2d",
+      "workflow_job_url": "https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/actions/runs/46102841589/job/140848950272",
+      "jwt_unit_tests_passed": 13,
+      "trust_task_spine_tests_passed": 16,
+      "failed_tests": 0,
+      "ignored_tests": 0,
+      "executed": true,
+      "scope": "Existing native JWT and receiver-spine tests at the migrated target; exact named tests, lockfile dependency edges and clean checkout qualified. Not actual-service extCritical enforcement, purpose-chain, cross-language or deployment conformance."
+    }
   }
 }
