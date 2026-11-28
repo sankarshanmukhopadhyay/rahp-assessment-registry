@@ -147,5 +147,55 @@
       "executed": true,
       "contract_scope": "Current VTI 0.39 JWT and receiver-spine tests only, with source-native build prerequisites. Does not demonstrate downstream Trust Tasks 0.40 adoption, cross-language critical extension behavior or independent assurance."
     }
+  },
+  "downstream_vti_041_observation": {
+    "repository": "OpenVTC/verifiable-trust-infrastructure",
+    "revision": "0366ad0b3ce4604d2b4cd634cb93486c12dcff03",
+    "observed_on": "2026-11-28",
+    "source_manifest": "Cargo.toml",
+    "source_lockfile": "Cargo.lock",
+    "declared_versions": {
+      "trust-tasks-rs": "0.41.0",
+      "trust-tasks-https": "0.41",
+      "jsonwebtoken": "12.0.0",
+      "jsonschema": "0.61"
+    },
+    "lockfile_versions": {
+      "trust-tasks-rs": [
+        "0.41.2"
+      ],
+      "trust-tasks-https": [
+        "0.41.0"
+      ],
+      "jsonwebtoken": [
+        "11.1.0",
+        "12.0.0"
+      ],
+      "jsonschema": [
+        "0.60.2",
+        "0.61.2"
+      ]
+    },
+    "dependency_edges": {
+      "trust-tasks-https": [
+        "jsonwebtoken 12.0.0",
+        "trust-tasks-rs"
+      ],
+      "trust-tasks-rs": [
+        "jsonschema 0.61.2"
+      ],
+      "vti-common": [
+        "jsonwebtoken 12.0.0",
+        "trust-tasks-rs"
+      ],
+      "vti-trust-task-server": [
+        "trust-tasks-https",
+        "trust-tasks-rs"
+      ]
+    },
+    "producer_ci_run_url": "https://github.com/OpenVTC/verifiable-trust-infrastructure/actions/runs/45926099793",
+    "target_native_runtime_reproduced": false,
+    "critical_extension_consumer_reproduced": false,
+    "interpretation": "Actual VTI adoption beyond 0.40 is established by the pinned manifest and lockfile; the Trust Tasks-specific old JWT/schema split is removed, not graph-wide duplication. Producer CI is not independent Registry replay. The historical 0.39 baseline and upstream 0.40 replay remain unchanged. New native replay is bounded to 13 JWT and 16 receiver-spine tests; it cannot establish extCritical, purpose, cross-language or deployment conformance."
   }
 }
