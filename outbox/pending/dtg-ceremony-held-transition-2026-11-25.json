@@ -1,0 +1,50 @@
+{
+  "schema": "rahp-registry-pending-intake/v1",
+  "event": {
+    "kind": "external_assessment",
+    "assessment_key": "dtg:proposition:ceremony-held-transition-authority",
+    "source_routing_key": "dtg:repository:trustoverip/dtgwg-trust-tasks-spec",
+    "historical_lineage": [
+      {
+        "number": 85,
+        "closed_at": "2026-08-27T04:10:14Z",
+        "updated_at": "2026-11-19T12:54:29Z",
+        "body_sha256": "7716a694eb335859b777c68d053cd01c7eb671802e18b357cb822e25cc263e00"
+      },
+      {
+        "number": 467,
+        "closed_at": "2026-09-08T03:12:11Z",
+        "updated_at": "2026-10-02T10:02:15Z",
+        "body_sha256": "7a944546d759d9029f32cae2eb571a78002d48d24c7aa9b90cc53150d236c088"
+      },
+      {
+        "number": 493,
+        "closed_at": "2026-09-09T05:36:31Z",
+        "updated_at": "2026-09-09T05:36:31Z",
+        "body_sha256": "94c2fc6cfae6da0c63327bfe29eec7f5072a2ca732ff25720aaa4af49e2885a1"
+      },
+      {
+        "number": 556,
+        "closed_at": "2026-09-10T15:26:49Z",
+        "updated_at": "2026-09-10T15:26:49Z",
+        "body_sha256": "561f0bd1723987855a69d9a9e1a98cfeffcb3bb3a93dff2bf9775e1e95c360f4"
+      },
+      {
+        "number": 600,
+        "closed_at": "2026-09-11T15:13:49Z",
+        "updated_at": "2026-09-11T15:13:49Z",
+        "body_sha256": "a75693b4e482925e46aaedded8a14d14a491dbd37ea59200bcd263ddf39d44ca"
+      }
+    ],
+    "case_id": "RAHP-AR-DTG-0003",
+    "title": "RAHP materiality: Trust Ceremony held-transition authority and effect boundaries",
+    "proposition": "At Trust Tasks Specification PR #53, assess normative verdict rules 2, 3 and 6: a consequential transition held for referral or further evidence must not interpret an approval/evidence item for a different exchange or party, stale authority, a non-allow verdict or partial execution as permission for a further effect. Assess rule 4 unknown evidence and rule 5 hold lifetime as contextual boundaries; multi-party enactment is informative, not global atomicity. Source-level controls are strengthened; implementation and runtime assurance are not established. Historic Toolkit #85 (superseded by #89) and #467/#493/#556/#600 cover earlier revisions, not this proposition. Related #690/#691/#826/#837 retain their narrower obligations. Registry #77 comment 7164185351 records falsifiers and nonduplication. No independent reviewer acceptance or RAHP determination inferred.",
+    "source_repository": "trustoverip/dtgwg-trust-tasks-spec",
+    "source_revision": "26597aabe1406b9ed8035ff264cc6eadef6149f8",
+    "toolkit_observation_revision": "f12762890d7aa2e3e0cce47733a85d79fa0db701",
+    "source_url": "https://github.com/trustoverip/dtgwg-trust-tasks-spec/commit/26597aabe1406b9ed8035ff264cc6eadef6149f8",
+    "finding_id": "9960d1ff9915877f2bea",
+    "responsible_owner": "trustoverip/dtgwg-trust-tasks-spec",
+    "source_evidence_sha256": "9960d1ff9915877f2bea6c3cfd886ce5f7c6997a4e7b6fd2c290bfa8954f4613"
+  }
+}
