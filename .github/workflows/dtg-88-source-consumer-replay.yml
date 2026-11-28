@@ -5,6 +5,8 @@ on:
       - '.github/workflows/dtg-88-source-consumer-replay.yml'
       - 'ops/assessments/dtg-spec-dependency-source-materiality-2026-11.json'
       - 'cases/dtg/spec-dependency-2026-11.json'
+      - 'scripts/verify_vti_041_replay.py'
+      - 'tests/test_vti_041_replay.py'
   workflow_dispatch:
 permissions:
   contents: read
@@ -24,7 +26,7 @@ jobs:
           ref: 69814c5ef60b5fa2d75fe2687efad1d12d34283f
           path: trust-tasks
           persist-credentials: false
-      - name: Checkout current pinned VTI consumer dependency evidence
+      - name: Checkout historical pinned VTI consumer dependency evidence
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           repository: OpenVTC/verifiable-trust-infrastructure
@@ -102,7 +104,7 @@ jobs:
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-      - name: Checkout immutable VTI current source baseline
+      - name: Checkout immutable historical VTI source baseline
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           repository: OpenVTC/verifiable-trust-infrastructure
@@ -147,3 +149,25 @@ jobs:
         env:
           CARGO_TERM_COLOR: never
         run: cargo test --locked -p vti-trust-task-server --test spine -- --nocapture
+  vti-041-consumer-reassessment:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Checkout immutable VTI 0.41 consumer
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: OpenVTC/verifiable-trust-infrastructure
+          ref: 0366ad0b3ce4604d2b4cd634cb93486c12dcff03
+          path: vti
+          persist-credentials: false
+      - name: Install pinned target build dependencies
+        run: bash vti/scripts/install-build-deps.sh
+      - name: Provide target build-memory headroom
+        uses: ./vti/.github/actions/add-swap
+      - name: Verify subject and execute nonvacuous native JWT and receiver tests
+        env:
+          CARGO_TERM_COLOR: never
+        run: python3 scripts/verify_vti_041_replay.py vti

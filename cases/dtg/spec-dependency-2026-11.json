@@ -45,7 +45,7 @@
   "assessment": {
     "change_classification": "new",
     "determination": "not_assessed",
-    "basis": "Source-level materiality established separately for four upstream findings: new purpose-of-use contract, acknowledged JWT public API compatibility break, strengthened room-read normative clarity, and composite 0.40.0 runtime/security changes. These classifications are source interpretation only; no independent consuming-path evidence or canonical RAHP assurance result has been imported. See ops/assessments/dtg-spec-dependency-source-materiality-2026-11.json. Pinned upstream Rust source-level replay passed in Registry PR #93/run #44466791200, but representative VTI target-native and independent cross-language replay remain unverified. Pinned VTI 0.39 baseline JWT (13) and receiver (16) tests passed in run #44469222142, but downstream Trust Tasks 0.40 adoption and independent conformance remain unverified.",
+    "basis": "Source-level materiality established separately for four upstream findings: new purpose-of-use contract, acknowledged JWT public API compatibility break, strengthened room-read normative clarity, and composite 0.40.0 runtime/security changes. These classifications are source interpretation only; no independent consuming-path evidence or canonical RAHP assurance result has been imported. See ops/assessments/dtg-spec-dependency-source-materiality-2026-11.json. Pinned upstream Rust source-level replay passed in Registry PR #93/run #44466791200, but representative VTI target-native and independent cross-language replay remain unverified. Pinned VTI 0.39 baseline JWT (13) and receiver (16) tests passed in run #44469222142, but downstream Trust Tasks 0.40 adoption and independent conformance remain unverified. Later immutable VTI 0366ad0b3ce4604d2b4cd634cb93486c12dcff03 declares Trust Tasks 0.41 and resolves Rust 0.41.2, HTTPS 0.41.0, JWT 12.0.0 and JSON Schema 0.61.2 on the relevant dependency edges. This establishes adoption beyond 0.40, not independent current-target runtime assurance; the earlier 0.39 baseline remains historical.",
     "independent_review": false
   },
   "evidence": {
@@ -95,6 +95,21 @@
         "url": "https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/actions/runs/44469222142",
         "type": "pinned_downstream_vti_0_39_runtime_baseline",
         "claim": "At immutable current VTI revision 66a7c2aa362e82cdbbb3b384850d73fa64d97848, 13 JWT tests and 16 Trust Task receiver-spine tests passed. This is a 0.39 baseline, not Trust Tasks 0.40 integration or target-native migration assurance."
+      },
+      {
+        "url": "https://github.com/OpenVTC/verifiable-trust-infrastructure/blob/0366ad0b3ce4604d2b4cd634cb93486c12dcff03/Cargo.toml",
+        "type": "pinned_downstream_vti_041_manifest",
+        "claim": "VTI declares Trust Tasks 0.41, JWT 12.0.0 and JSON Schema 0.61; later dependency adoption does not change the original source group."
+      },
+      {
+        "url": "https://github.com/OpenVTC/verifiable-trust-infrastructure/blob/0366ad0b3ce4604d2b4cd634cb93486c12dcff03/Cargo.lock",
+        "type": "pinned_downstream_vti_041_resolution",
+        "claim": "Rust 0.41.2 and HTTPS 0.41.0 resolve to JSON Schema 0.61.2 and JWT 12.0.0 respectively; graph still contains JSON Schema 0.60.2 and JWT 11.1.0."
+      },
+      {
+        "url": "https://github.com/OpenVTC/verifiable-trust-infrastructure/actions/runs/45926099793",
+        "type": "producer_ci_observation",
+        "claim": "Producer workspace, VTC, feature combination and lockfile checks passed at the pinned VTI revision; not independent Registry replay or extCritical/purpose conformance."
       }
     ],
     "runtime_reproduced": false
@@ -104,7 +119,7 @@
       "id": "DTG-0002-R1",
       "status": "open",
       "owner": "https://github.com/sankarshanmukhopadhyay/rahp-assessment-registry/issues/88",
-      "question": "Target VTI immutable 66a7c2a still resolves Trust Tasks 0.39 plus jsonwebtoken 10/11 and jsonschema 0.49/0.60. Reproduce a representative VTI consumer upgrade to 0.40, proving JWT v10→v11 public-type adaptation, compilation and negative runtime authorization. Keep separately verified upstream 0.40 Rust extCritical/JWT results, but no VTI-target PASS."
+      "question": "Historical VTI 66a7c2a consumed Trust Tasks 0.39; later VTI 0366ad0b3ce4604d2b4cd634cb93486c12dcff03 now resolves Rust 0.41.2 and HTTPS 0.41.0 with JWT 12.0.0. Reproduce the actual migrated consumer build and native JWT/receiver negative paths with exact executed test identities. Preserve prior 0.39 baseline and upstream 0.40 replay; no current-target PASS before evidence and independent determination."
     },
     {
       "id": "DTG-0002-R2",
